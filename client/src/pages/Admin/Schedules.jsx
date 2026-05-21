@@ -23,29 +23,30 @@ const DAYS = [
   { value: '6', label: 'Saturday' },
 ]
 
-function makeCron(day, timeStr) {
-  const [h, m] = timeStr.split(':').map(Number)
-  return `${m} ${h} * * ${day}`
-}
+const HOURS = ['1','2','3','4','5','6','7','8','9','10','11','12']
+const MINUTES = ['00','05','10','15','20','25','30','35','40','45','50','55']
 
 function parseCron(expr) {
-  if (!expr) return { day: '0', time: '08:00' }
+  if (!expr) return { day: '0', hour24: 8, minute: 0 }
   const parts = expr.trim().split(/\s+/)
-  if (parts.length < 5) return { day: '0', time: '08:00' }
-  const [minute, hour, , , dow] = parts
-  const h = String(hour).padStart(2, '0')
-  const m = String(minute).padStart(2, '0')
-  return { day: dow, time: `${h}:${m}` }
+  if (parts.length < 5) return { day: '0', hour24: 8, minute: 0 }
+  const [min, hr, , , dow] = parts
+  return { day: dow, hour24: parseInt(hr, 10), minute: parseInt(min, 10) }
+}
+
+function makeCronExpr(day, hour12, minute, ampm) {
+  let h = parseInt(hour12, 10)
+  if (ampm === 'PM' && h !== 12) h += 12
+  if (ampm === 'AM' && h === 12) h = 0
+  return `${parseInt(minute, 10)} ${h} * * ${day}`
 }
 
 function describeCron(expr) {
-  const { day, time } = parseCron(expr)
+  const { day, hour24, minute } = parseCron(expr)
   const dayLabel = DAYS.find(d => d.value === day)?.label ?? `Day ${day}`
-  const [h, m] = time.split(':').map(Number)
-  const suffix = h < 12 ? 'AM' : 'PM'
-  const h12 = h % 12 === 0 ? 12 : h % 12
-  const timeLabel = `${h12}:${String(m).padStart(2, '0')} ${suffix}`
-  return `${dayLabel} at ${timeLabel}`
+  const ampm = hour24 < 12 ? 'AM' : 'PM'
+  const h12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+  return `${dayLabel} at ${h12}:${String(minute).padStart(2, '0')} ${ampm}`
 }
 
 function formatLastRun(str) {
@@ -113,14 +114,20 @@ function Toggle({ checked, onChange }) {
 // ── Schedule form (shared for add & edit) ─────────────────────────────────────
 
 function ScheduleForm({ initial, onSave, onCancel, formClass }) {
-  const parsed = parseCron(initial?.cron_expr)
-  const [day, setDay] = useState(parsed.day)
-  const [time, setTime] = useState(parsed.time)
+  const { day: initDay, hour24, minute: initMin } = parseCron(initial?.cron_expr)
+  const initAmpm = hour24 < 12 ? 'AM' : 'PM'
+  const initHour = String(hour24 % 12 === 0 ? 12 : hour24 % 12)
+  const initMinute = String(initMin).padStart(2, '0')
+
+  const [day, setDay] = useState(initDay)
+  const [hour, setHour] = useState(initHour)
+  const [minute, setMinute] = useState(initMinute)
+  const [ampm, setAmpm] = useState(initAmpm)
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
     setSaving(true)
-    const cron_expr = makeCron(day, time)
+    const cron_expr = makeCronExpr(day, hour, minute, ampm)
     await onSave({ cron_expr })
     setSaving(false)
   }
@@ -134,14 +141,23 @@ function ScheduleForm({ initial, onSave, onCancel, formClass }) {
         </select>
       </div>
       <div className={styles.formGroup}>
-        <span className={styles.formLabel}>Time</span>
-        <input
-          type="time"
-          className={styles.formInput}
-          value={time}
-          onChange={e => setTime(e.target.value)}
-          style={{ width: 110 }}
-        />
+        <span className={styles.formLabel}>Hour</span>
+        <select className={styles.formSelect} value={hour} onChange={e => setHour(e.target.value)} style={{ minWidth: 58 }}>
+          {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <span className={styles.formLabel}>Min</span>
+        <select className={styles.formSelect} value={minute} onChange={e => setMinute(e.target.value)} style={{ minWidth: 58 }}>
+          {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <span className={styles.formLabel}>&nbsp;</span>
+        <select className={styles.formSelect} value={ampm} onChange={e => setAmpm(e.target.value)} style={{ minWidth: 58 }}>
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
       </div>
       <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={handleSave} disabled={saving}>
         {saving ? 'Saving…' : (initial ? 'Update' : 'Add schedule')}
