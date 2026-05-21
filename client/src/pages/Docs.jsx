@@ -6,6 +6,12 @@ const NAV = [
   { id: 'overview',      label: 'Overview' },
   { id: 'first-run',     label: 'First Run / Setup' },
   { id: 'getting-started', label: 'Getting Started' },
+  { id: 'dashboard',     label: 'Dashboard', children: [
+      { id: 'dashboard-screens',  label: 'Screens Card' },
+      { id: 'dashboard-services', label: 'Services Card' },
+      { id: 'dashboard-people',   label: 'People Card' },
+    ]
+  },
   { id: 'organization',  label: 'Organization',
     children: [
       { id: 'display-login',  label: 'Display Login' },
@@ -170,6 +176,34 @@ export default function Docs() {
             </Callout>
           </Section>
 
+          {/* ── Dashboard ── */}
+          <Section id="dashboard" title="Dashboard">
+            <p>The <strong>Dashboard</strong> is the first page you see after logging in. It gives you a quick at-a-glance view of your system without requiring you to navigate to individual pages.</p>
+            <p>It is organized into <strong>cards</strong> — each card represents one area of the app. Clicking the card's title bar takes you directly to that page's full management view. On wide screens, cards sit 2–3 across; on smaller screens they stack vertically.</p>
+
+            <SubSection id="dashboard-screens" title="Screens Card">
+              <p>Shows all screens in your organization, with a <strong>Live</strong> badge and a pulsing green dot for any screen that is currently open in a browser. The <strong>live detection</strong> works via a heartbeat: whenever a display screen is open, it silently pings the server every 30 seconds. If a screen hasn't pinged in the last 90 seconds it is considered inactive.</p>
+              <p>Each screen row also shows its <strong>location</strong> (campus) and the current service name and musician count, so you can tell at a glance what's showing where.</p>
+              <p>The active/inactive status also appears as a filter on the <Link to="/docs#screens">Screens</Link> management page — use it to quickly isolate which displays are currently running.</p>
+            </SubSection>
+
+            <SubSection id="dashboard-services" title="Services Card">
+              <p>Shows upcoming or active services, with a toggle between two sources:</p>
+              <ul className={styles.ul}>
+                <li><strong>Manual</strong> — services that were pushed to a screen manually (by pushing a musician list from the admin panel or via share code). These always work, with or without a PCO connection.</li>
+                <li><strong>PCO</strong> — upcoming plans pulled from Planning Center Online. If your PCO account isn't connected yet, this tab shows a "not connected" notice. See <Link to="/docs#pco-integration">Planning Center OAuth</Link> for connection instructions.</li>
+              </ul>
+            </SubSection>
+
+            <SubSection id="dashboard-people" title="People Card">
+              <p>Shows a preview of your worship team roster, also with a Manual/PCO toggle:</p>
+              <ul className={styles.ul}>
+                <li><strong>Manual</strong> — people added directly through the People page, including anyone imported from PCO.</li>
+                <li><strong>PCO</strong> — shows how many roster members came from PCO sync vs. were added manually. Useful for spotting sync drift.</li>
+              </ul>
+            </SubSection>
+          </Section>
+
           {/* ── Organization ── */}
           <Section id="organization" title="Organization">
             <p>The <strong>Organization</strong> page (Admin → Organization) holds your top-level settings. Beacon is designed for a single organization per installation — there's no multi-tenant setup. The <strong>org slug</strong> is a short URL-safe identifier for your organization (e.g. <code>first-church</code>) and is embedded in display screen login URLs.</p>
@@ -332,7 +366,7 @@ export default function Docs() {
           {/* ── Screens ── */}
           <Section id="screens" title="Screens">
             <p>A <strong>screen</strong> represents a single display — a TV backstage, a monitor at the front of house, a tablet at the door. Each screen gets a permanent URL that you load in a browser (or kiosk-mode browser) and never have to change.</p>
-            <p>Use the <strong>filter bar</strong> at the top of the Screens page to narrow the list by location or by screen type (independent vs. mirror).</p>
+            <p>Use the <strong>filter bar</strong> at the top of the Screens page to narrow the list by location, screen type (independent vs. mirror), or <strong>status</strong>. A screen is <strong>Active</strong> when it is currently open in a browser and has sent a heartbeat within the last 90 seconds — the same signal shown as a pulsing dot on the <Link to="/docs#dashboard">Dashboard</Link>.</p>
 
             <SubSection id="display-url" title="Display URL">
               <p>Every screen gets a unique URL like:</p>

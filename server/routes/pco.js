@@ -1,6 +1,12 @@
 const express = require('express')
 const router = express.Router()
 const { pcoGet } = require('../pco-client')
+const db = require('../db')
+
+router.get('/status', (req, res) => {
+  const token = db.prepare('SELECT id FROM pco_tokens LIMIT 1').get()
+  res.json({ connected: !!token })
+})
 
 router.get('/service-types', async (req, res) => {
   try {

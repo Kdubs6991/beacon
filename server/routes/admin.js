@@ -412,12 +412,80 @@ router.post('/run-automation', (req, res) => {
   res.json({ ok: true, updated: totalCount })
 })
 
+// --- Dashboard ---
+router.get('/dashboard', (req, res) => {
+  const orgId = req.session.orgId
+  const screens = db.prepare(`${SCREENS_SELECT} WHERE s.org_id = ? ORDER BY s.name`).all(orgId)
+
+  const screensWithData = screens.map(screen => {
+    const sourceId = screen.mirror_screen_id ?? screen.id
+    const assignments = db.prepare(
+      'SELECT * FROM active_assignments WHERE screen_id = ? ORDER BY slot'
+    ).all(sourceId)
+    const first = assignments[0]
+    return {
+      id: screen.id,
+      name: screen.name,
+      token: screen.token,
+      campus_name: screen.campus_name ?? null,
+      is_active: !!screen.is_active,
+      event_name: first?.event_name ?? null,
+      event_date: first?.event_date ?? null,
+      updated_at: first?.updated_at ?? null,
+      musicians: assignments.map(a => ({
+        id: a.id,
+        name: a.person_name,
+        position: a.position,
+        photo: a.person_photo,
+        mic: a.mic_label,
+        iem: a.iem_label,
+        slot: a.slot,
+      })),
+    }
+  })
+
+  const peopleCount = db.prepare('SELECT COUNT(*) as n FROM people WHERE org_id = ?').get(orgId)?.n ?? 0
+  const pcoPeopleCount = db.prepare("SELECT COUNT(*) as n FROM people WHERE org_id = ? AND pco_person_id IS NOT NULL AND pco_person_id != ''").get(orgId)?.n ?? 0
+  const peoplePreview = db.prepare(
+    'SELECT id, name, position, photo_url, photo_override FROM people WHERE org_id = ? ORDER BY name LIMIT 6'
+  ).all(orgId)
+
+  const labelsAll = db.prepare('SELECT id, name, type, group_name FROM labels WHERE org_id = ? ORDER BY sort_order, name').all(orgId)
+  const labelsCount = labelsAll.length
+  const micLabelCount = labelsAll.filter(l => l.type === 'mic').length
+  const iemLabelCount = labelsAll.filter(l => l.type === 'iem').length
+
+  res.json({
+    screens: screensWithData,
+    people: { count: peopleCount, pcoCount: pcoPeopleCount, preview: peoplePreview },
+    labels: { count: labelsCount, micCount: micLabelCount, iemCount: iemLabelCount, items: labelsAll.slice(0, 4) }
+  })
+})
+
+router.patch('/assignments/:id', (req, res) => {
+  const orgId = req.session.orgId
+  const { mic_label, iem_label } = req.body
+  const assignment = db.prepare(`
+    SELECT aa.* FROM active_assignments aa
+    JOIN screens s ON aa.screen_id = s.id
+    WHERE aa.id = ? AND s.org_id = ?
+  `).get(req.params.id, orgId)
+  if (!assignment) return res.status(404).json({ error: 'Assignment not found' })
+  db.prepare('UPDATE active_assignments SET mic_label = ?, iem_label = ? WHERE id = ?').run(
+    mic_label !== undefined ? (mic_label || null) : assignment.mic_label,
+    iem_label !== undefined ? (iem_label || null) : assignment.iem_label,
+    req.params.id
+  )
+  res.json({ ok: true })
+})
+
 // --- Screens ---
 const SCREENS_SELECT = `
   SELECT s.*,
     c.name  AS campus_name,
     m.name  AS mirror_screen_name,
-    m.token AS mirror_screen_token
+    m.token AS mirror_screen_token,
+    CASE WHEN s.last_heartbeat > datetime('now', '-90 seconds') THEN 1 ELSE 0 END AS is_active
   FROM screens s
   LEFT JOIN campuses c ON s.campus_id = c.id
   LEFT JOIN screens  m ON s.mirror_screen_id = m.id

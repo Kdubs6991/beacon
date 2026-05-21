@@ -47,12 +47,13 @@ const HEIGHT_OPTIONS = [
 // photo = headshot only, no text
 // label = name + label text, no photo
 const SLOT_MODES = [
-  ['full',  'Full'],
-  ['photo', 'Photo only'],
+  ['full',  'Full card'],
+  ['photo', 'Image only'],
+  ['name',  'Name only'],
   ['label', 'Label only'],
 ]
 
-const MODE_LABELS = { photo: 'Photo', label: 'Label' }
+const MODE_LABELS = { photo: 'Image', name: 'Name', label: 'Label' }
 
 // ── Toggle switch ─────────────────────────────────────────────────────────────
 function Toggle({ checked, onChange }) {
@@ -132,7 +133,7 @@ function TemplateModal({ initial, onSave, onClose }) {
     setRows(prev => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r))
   }
 
-  function slotIsEmpty(a) { return !a.labelId && !a.mode }
+  function slotIsEmpty(a) { return !a.labelId && !a.mode && !a.linkedTo }
 
   function updateSlotLabel(sn, id) {
     setSlotAsgn(prev => {
@@ -146,8 +147,18 @@ function TemplateModal({ initial, onSave, onClose }) {
     setSlotAsgn(prev => {
       const cur = prev[sn] || {}
       const next = { ...cur }
-      if (mode === 'full') delete next.mode
+      if (mode === 'full') { delete next.mode; delete next.linkedTo }
       else next.mode = mode
+      if (slotIsEmpty(next)) { const n = { ...prev }; delete n[sn]; return n }
+      return { ...prev, [sn]: next }
+    })
+  }
+
+  function updateSlotLinkedTo(sn, linkedTo) {
+    setSlotAsgn(prev => {
+      const next = { ...(prev[sn] || {}) }
+      if (linkedTo) next.linkedTo = Number(linkedTo)
+      else delete next.linkedTo
       if (slotIsEmpty(next)) { const n = { ...prev }; delete n[sn]; return n }
       return { ...prev, [sn]: next }
     })
@@ -317,6 +328,9 @@ function TemplateModal({ initial, onSave, onClose }) {
                       {asgn?.mode && asgn.mode !== 'full' && (
                         <span className={styles.assignCellMode}>{MODE_LABELS[asgn.mode]}</span>
                       )}
+                      {asgn?.linkedTo && (
+                        <span className={styles.assignCellLinked}>→{asgn.linkedTo}</span>
+                      )}
                       {labelName && <span className={styles.assignCellMic}>{labelName}</span>}
                     </div>
                   )
@@ -352,7 +366,36 @@ function TemplateModal({ initial, onSave, onClose }) {
               </div>
             </div>
 
-            {panelMode !== 'photo' && (
+            {panelMode === 'name' && (
+              <div className={styles.rowField}>
+                <span className={styles.rowFieldLabel}>Link data from slot</span>
+                <select
+                  className={styles.rowSelect}
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                  value={panelAsgn.linkedTo || ''}
+                  onChange={e => updateSlotLinkedTo(selectedSlot, e.target.value || undefined)}
+                >
+                  <option value="">No link — use this slot's own person</option>
+                  {(() => {
+                    let sn = 0
+                    const opts = []
+                    rows.forEach(row => {
+                      for (let c = 0; c < row.cols; c++) {
+                        sn++
+                        if (sn !== selectedSlot) {
+                          const a = slotAsgn[sn]
+                          const ml = a?.mode ? ` · ${MODE_LABELS[a.mode] ?? a.mode}` : ''
+                          opts.push(<option key={sn} value={sn}>Slot {sn}{ml}</option>)
+                        }
+                      }
+                    })
+                    return opts
+                  })()}
+                </select>
+              </div>
+            )}
+
+            {panelMode !== 'photo' && panelMode !== 'name' && (
               <div className={styles.rowField}>
                 <span className={styles.rowFieldLabel}>Label assigned to this slot</span>
                 <select

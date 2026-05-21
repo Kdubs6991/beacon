@@ -19,13 +19,20 @@ function Avatar({ name, photo, size = 'md' }) {
 function FullCard({ name, position, photo, mic, iem }) {
   return (
     <div className={styles.card}>
-      <div className={styles.top}>
-        <Avatar name={name} photo={photo} />
-        <div className={styles.identity}>
-          <span className={styles.name}>{name}</span>
+      {photo ? (
+        <div className={styles.top}>
+          <Avatar name={name} photo={photo} />
+          <div className={styles.identity}>
+            <span className={styles.name}>{name}</span>
+            {position && <span className={styles.position}>{position}</span>}
+          </div>
+        </div>
+      ) : (
+        <div className={styles.nameOnly}>
+          <span className={styles.nameOnlyText}>{name}</span>
           {position && <span className={styles.position}>{position}</span>}
         </div>
-      </div>
+      )}
       <div className={styles.divider} />
       <div className={styles.assignments}>
         <AssignmentRow icon={<MicIcon />} label="Mic" value={mic} colorVar="--mic-color" />
@@ -61,6 +68,16 @@ function LabelCard({ name, position, mic, iem }) {
   )
 }
 
+// ── Name-only card: large name text, no photo ─────────────────────────────────
+function NameCard({ name, position }) {
+  return (
+    <div className={styles.cardName}>
+      <span className={styles.cardNameText}>{name}</span>
+      {position && <span className={styles.nameCardPos}>{position}</span>}
+    </div>
+  )
+}
+
 // ── Empty slot placeholder ────────────────────────────────────────────────────
 function EmptyCard() {
   return <div className={styles.cardEmpty} />
@@ -70,6 +87,7 @@ function EmptyCard() {
 export default function MusicianCard({ name, position, photo, mic, iem, mode = 'full', empty = false }) {
   if (empty) return <EmptyCard />
   if (mode === 'photo') return <PhotoCard name={name} photo={photo} />
+  if (mode === 'name') return <NameCard name={name} position={position} />
   if (mode === 'label') return <LabelCard name={name} position={position} mic={mic} iem={iem} />
   return <FullCard name={name} position={position} photo={photo} mic={mic} iem={iem} />
 }

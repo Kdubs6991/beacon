@@ -77,6 +77,15 @@ router.post('/setup-complete', (req, res) => {
   res.json({ ok: true })
 })
 
+// POST /api/display/:token/heartbeat — display page pings this to mark screen as active
+router.post('/:token/heartbeat', (req, res) => {
+  const result = db.prepare(
+    "UPDATE screens SET last_heartbeat = datetime('now') WHERE token = ?"
+  ).run(req.params.token)
+  if (result.changes === 0) return res.status(404).json({ error: 'Screen not found' })
+  res.json({ ok: true })
+})
+
 // ── Legacy / admin token-based route ─────────────────────────────────────────
 
 router.get('/:token', (req, res) => {

@@ -179,3 +179,55 @@
   font-weight: 600;
   transition: color 0.2s;
 }
+
+/* ── Name-only (no photo) full card ── */
+.nameOnly {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 6px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.nameOnlyText {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  line-height: 1.2;
+}
+
+/* ── Name-only template card ── */
+.cardName {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  text-align: center;
+  gap: 6px;
+}
+
+.cardNameText {
+  font-size: clamp(1rem, 3vw, 1.8rem);
+  font-weight: 700;
+  color: var(--text-pri);
+  line-height: 1.15;
+}
+
+.nameCardPos {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.12);
+  padding: 2px 8px;
+  border-radius: 20px;
+  display: inline-block;
+}

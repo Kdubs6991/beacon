@@ -31,6 +31,7 @@ function DisplayView({ screenToken }) {
       const json = await res.json()
       setData(json)
       setError(null)
+      fetch(`/api/display/${screenToken}/heartbeat`, { method: 'POST' }).catch(() => {})
     } catch (err) {
       setError(err.message)
     }

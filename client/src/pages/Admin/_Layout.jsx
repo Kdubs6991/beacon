@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import styles from './_Layout.module.css'
 
@@ -47,15 +47,20 @@ export default function AdminLayout({ title, children }) {
   const navigate = useNavigate()
   const { theme, toggle: toggleTheme } = useTheme()
   const org = getOrgFromCookie()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   async function handleLogout() {
     await logout()
     navigate('/login')
   }
 
+  function closeSidebar() { setSidebarOpen(false) }
+
   return (
     <div className={styles.shell}>
-      <nav className={styles.sidebar}>
+      {sidebarOpen && <div className={styles.overlay} onClick={closeSidebar} />}
+
+      <nav className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.brand}>Beacon</div>
 
         <ul className={styles.navList}>
@@ -68,6 +73,7 @@ export default function AdminLayout({ title, children }) {
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) => `${styles.navLink} ${isActive ? styles.active : ''}`}
+                  onClick={closeSidebar}
                 >
                   {item.label}
                 </NavLink>
@@ -77,7 +83,7 @@ export default function AdminLayout({ title, children }) {
         </ul>
 
         <div className={styles.userArea}>
-          <NavLink to="/admin/profile" className={styles.userInfo}>
+          <NavLink to="/admin/profile" className={styles.userInfo} onClick={closeSidebar}>
             <span className={styles.userName}>{user?.name}</span>
             <span className={styles.userRole}>{user?.role}</span>
           </NavLink>
@@ -93,7 +99,16 @@ export default function AdminLayout({ title, children }) {
 
       <div className={styles.content}>
         <header className={styles.pageHeader}>
-          <h1 className={styles.pageTitle}>{title}</h1>
+          <div className={styles.pageHeaderLeft}>
+            <button
+              className={styles.hamburger}
+              onClick={() => setSidebarOpen(o => !o)}
+              aria-label="Toggle menu"
+            >
+              <span /><span /><span />
+            </button>
+            <h1 className={styles.pageTitle}>{title}</h1>
+          </div>
           <div className={styles.headerRight}>
             {org?.name && (
               <span className={styles.headerOrg}>
@@ -103,6 +118,12 @@ export default function AdminLayout({ title, children }) {
                 {org.name}
               </span>
             )}
+            <Link to="/docs" className={styles.docsLink} title="Documentation">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              Docs
+            </Link>
             <button className={styles.themeToggle} onClick={toggleTheme} title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
               {theme === 'dark' ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

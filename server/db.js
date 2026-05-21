@@ -289,6 +289,7 @@ if (orgCount.n === 0) {
   // --- Add layout column to screens ---
   const screenCols2 = db.prepare('PRAGMA table_info(screens)').all().map(c => c.name)
   if (!screenCols2.includes('layout')) db.exec("ALTER TABLE screens ADD COLUMN layout TEXT DEFAULT 'grid-standard'")
+  if (!screenCols2.includes('last_heartbeat')) db.exec('ALTER TABLE screens ADD COLUMN last_heartbeat TEXT')
 
   // --- Create templates table ---
   db.exec(`

@@ -19,8 +19,9 @@ function TemplateGrid({ musicians, template }) {
           const slotNum = slotCounter
           const cfg = slotConfig[slotNum] ?? {}
           const mode = cfg.mode ?? 'full'
-          // assignments use 0-based slot index
-          const musician = musicians.find(m => m.slot === slotNum - 1) ?? null
+          // if linkedTo is set, show data from the linked slot instead
+          const sourceSn = cfg.linkedTo ?? slotNum
+          const musician = musicians.find(m => m.slot === sourceSn - 1) ?? null
 
           if (!musician && emptyBehavior === 'hide') continue
 

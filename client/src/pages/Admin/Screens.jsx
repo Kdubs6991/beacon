@@ -311,6 +311,7 @@ export default function Screens() {
   const [modal,         setModal]         = useState(null)
   const [filterCampus,  setFilterCampus]  = useState('all')
   const [filterType,    setFilterType]    = useState('all')
+  const [filterStatus,  setFilterStatus]  = useState('all')
 
   useEffect(() => {
     Promise.all([
@@ -359,9 +360,12 @@ export default function Screens() {
     .map(g => ({
       ...g,
       screens: g.screens.filter(s =>
-        filterType === 'all' ||
-        (filterType === 'independent' && !s.mirror_screen_id) ||
-        (filterType === 'mirror' && !!s.mirror_screen_id)
+        (filterType === 'all' ||
+          (filterType === 'independent' && !s.mirror_screen_id) ||
+          (filterType === 'mirror' && !!s.mirror_screen_id)) &&
+        (filterStatus === 'all' ||
+          (filterStatus === 'active' && !!s.is_active) ||
+          (filterStatus === 'inactive' && !s.is_active))
       ),
     }))
     .filter(g => g.screens.length > 0)
@@ -400,6 +404,12 @@ export default function Screens() {
             <span className={styles.filterLabel}>Type</span>
             {[['all','All'],['independent','Independent'],['mirror','Mirror']].map(([val, label]) => (
               <button key={val} className={`${styles.filterPill} ${filterType === val ? styles.filterPillActive : ''}`} onClick={() => setFilterType(val)}>{label}</button>
+            ))}
+          </div>
+          <div className={styles.filterRow}>
+            <span className={styles.filterLabel}>Status</span>
+            {[['all','All'],['active','Active'],['inactive','Inactive']].map(([val, label]) => (
+              <button key={val} className={`${styles.filterPill} ${filterStatus === val ? styles.filterPillActive : ''}`} onClick={() => setFilterStatus(val)}>{label}</button>
             ))}
           </div>
         </div>
