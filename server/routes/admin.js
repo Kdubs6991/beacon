@@ -547,7 +547,14 @@ router.delete('/templates/:id', (req, res) => {
 
 // --- Schedules ---
 router.get('/schedules', (req, res) => {
-  res.json(db.prepare('SELECT s.*, st.name as service_type_name FROM schedules s LEFT JOIN service_types st ON s.service_type_id = st.id ORDER BY s.id').all())
+  const orgId = req.session.orgId
+  res.json(db.prepare(`
+    SELECT s.*, st.name as service_type_name
+    FROM schedules s
+    JOIN service_types st ON s.service_type_id = st.id
+    WHERE st.campus_id IN (SELECT id FROM campuses WHERE org_id = ?)
+    ORDER BY s.id
+  `).all(orgId))
 })
 router.post('/schedules', (req, res) => {
   const { service_type_id, cron_expr, enabled } = req.body

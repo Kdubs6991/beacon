@@ -35,7 +35,7 @@ const NAV_ITEMS = [
   { to: '/admin/labels', label: 'Labels' },
   { to: '/admin/automation', label: 'Automation' },
   { to: '/admin/screens', label: 'Screens' },
-  { to: '/admin/schedules', label: 'Schedules' },
+  { to: '/admin/schedules', label: 'Services' },
   null,
   { to: '/admin/organization', label: 'Organization', adminOnly: true },
   { to: '/admin/users', label: 'Users', adminOnly: true },

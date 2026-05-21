@@ -589,6 +589,18 @@
   padding: 4px 3px;
   transition: border-color 0.12s, background 0.12s;
   overflow: hidden;
+  position: relative;
+}
+
+.assignCellLinked {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 0.48rem;
+  font-weight: 800;
+  color: #34d399;
+  line-height: 1;
+  pointer-events: none;
 }
 .assignCell:hover { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.14); }
 .assignCellSelected { border-color: var(--accent) !important; background: rgba(59,130,246,0.22) !important; }

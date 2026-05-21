@@ -379,13 +379,13 @@ function TemplateModal({ initial, onSave, onClose }) {
                   {(() => {
                     let sn = 0
                     const opts = []
-                    rows.forEach(row => {
+                    rows.forEach((row, ri) => {
                       for (let c = 0; c < row.cols; c++) {
                         sn++
                         if (sn !== selectedSlot) {
                           const a = slotAsgn[sn]
                           const ml = a?.mode ? ` · ${MODE_LABELS[a.mode] ?? a.mode}` : ''
-                          opts.push(<option key={sn} value={sn}>Slot {sn}{ml}</option>)
+                          opts.push(<option key={sn} value={sn}>Row {ri + 1} · Col {c + 1}{ml}</option>)
                         }
                       }
                     })
