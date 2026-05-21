@@ -1,0 +1,569 @@
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import styles from './Docs.module.css'
+
+const NAV = [
+  { id: 'overview',      label: 'Overview' },
+  { id: 'first-run',     label: 'First Run / Setup' },
+  { id: 'getting-started', label: 'Getting Started' },
+  { id: 'organization',  label: 'Organization',
+    children: [
+      { id: 'display-login',  label: 'Display Login' },
+      { id: 'qr-code',        label: 'QR Code' },
+      { id: 'backup-export',  label: 'Backup & Export' },
+    ]
+  },
+  { id: 'locations',     label: 'Locations',
+    children: [
+      { id: 'campuses',       label: 'Campuses' },
+      { id: 'service-types',  label: 'Service Types' },
+      { id: 'pco-id',         label: 'Planning Center ID' },
+      { id: 'auto-refresh',   label: 'Auto-Refresh Schedules' },
+    ]
+  },
+  { id: 'templates',     label: 'Templates',
+    children: [
+      { id: 'template-layout',  label: 'Grid Layout' },
+      { id: 'template-slots',   label: 'Slot Configuration' },
+      { id: 'template-empty',   label: 'Empty Slot Behavior' },
+      { id: 'template-options', label: 'Display Options' },
+    ]
+  },
+  { id: 'screens',       label: 'Screens',
+    children: [
+      { id: 'display-url',    label: 'Display URL' },
+      { id: 'share-code',     label: 'Share Code' },
+      { id: 'mirror',         label: 'Mirror Mode' },
+      { id: 'screen-layout',  label: 'Layout' },
+      { id: 'screen-header',  label: 'Display Header' },
+    ]
+  },
+  { id: 'people',        label: 'People',
+    children: [
+      { id: 'people-views',   label: 'Grid & List Views' },
+      { id: 'people-photos',  label: 'Photos & Crop' },
+      { id: 'people-cats',    label: 'Categories & Position' },
+      { id: 'people-filters', label: 'Filters' },
+    ]
+  },
+  { id: 'labels', label: 'Labels', children: [
+      { id: 'labels-types',  label: 'Mic vs IEM' },
+      { id: 'labels-groups', label: 'Groups' },
+      { id: 'labels-order',  label: 'Order & Reordering' },
+    ],
+  },
+  { id: 'automation',    label: 'Automation Rules' },
+  { id: 'users',          label: 'Users & Accounts',
+    children: [
+      { id: 'user-roles',     label: 'Roles' },
+      { id: 'invite-links',   label: 'Invite Links' },
+      { id: 'my-account',     label: 'My Account' },
+    ]
+  },
+  { id: 'pco-integration', label: 'Planning Center OAuth' },
+  { id: 'hosting',       label: 'Hosting on Raspberry Pi' },
+]
+
+function Section({ id, title, children }) {
+  return (
+    <section id={id} className={styles.section}>
+      <h2 className={styles.h2}>{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function SubSection({ id, title, children }) {
+  return (
+    <div id={id} className={styles.subsection}>
+      <h3 className={styles.h3}>{title}</h3>
+      {children}
+    </div>
+  )
+}
+
+function Callout({ type = 'info', children }) {
+  return <div className={`${styles.callout} ${styles[type]}`}>{children}</div>
+}
+
+export default function Docs() {
+  const { hash } = useLocation()
+
+  useEffect(() => {
+    if (hash) {
+      const id = hash.replace('#', '')
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 80)
+    }
+  }, [hash])
+
+  return (
+    <div className={styles.page}>
+      <header className={styles.topBar}>
+        <span className={styles.brand}>Beacon</span>
+        <div className={styles.topBarNav}>
+          <Link to="/login" className={styles.backLink}>Sign in</Link>
+          <Link to="/display" className={styles.backLink}>Display login</Link>
+        </div>
+      </header>
+
+      <div className={styles.layout}>
+        {/* ── Sidebar ── */}
+        <nav className={styles.sidebar}>
+          <p className={styles.sidebarTitle}>Documentation</p>
+          {NAV.map(item => (
+            <div key={item.id}>
+              <a href={`#${item.id}`} className={styles.navItem}>{item.label}</a>
+              {item.children?.map(child => (
+                <a key={child.id} href={`#${child.id}`} className={styles.navChild}>{child.label}</a>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        {/* ── Content ── */}
+        <main className={styles.content}>
+          <h1 className={styles.h1}>Beacon — Documentation</h1>
+          <p className={styles.lead}>
+            Everything you need to know to set up and run Beacon for your church.
+          </p>
+
+          {/* ── Overview ── */}
+          <Section id="overview" title="Overview">
+            <p>Beacon is a self-hosted app that shows a TV/kiosk-friendly card grid of your worship team's microphone and IEM assignments for a service. Think of it as a digital version of the laminated assignment sheet your sound engineer normally posts backstage.</p>
+            <p>It integrates with <strong>Planning Center Online</strong> to pull your team roster automatically, and can refresh itself on a schedule so displays are always showing the right team before anyone arrives.</p>
+            <p>It runs on a <strong>Raspberry Pi</strong> behind a <strong>Cloudflare Tunnel</strong>, so any TV, tablet, or phone on any network can reach it — no port forwarding needed.</p>
+          </Section>
+
+          {/* ── First Run / Setup ── */}
+          <Section id="first-run" title="First Run / Setup">
+            <p>On a fresh install, visiting any page in the app will automatically redirect you to <code>/setup</code>. This one-time setup wizard walks you through:</p>
+            <ol className={styles.ol}>
+              <li><strong>Create your organization</strong> — set your organization name and slug. The slug is used in display screen login URLs and cannot be easily changed later.</li>
+              <li><strong>Create the first admin account</strong> — this account will have full access to the admin panel. Additional accounts can be invited after setup completes.</li>
+            </ol>
+            <p>Once the wizard is complete you'll be logged in automatically and taken to the admin dashboard. The <code>/setup</code> route is disabled after this point — revisiting it redirects to the dashboard.</p>
+            <Callout type="warning">
+              Complete the setup wizard before pointing any display screens at the app. Screens that load before an organization exists will show an error.
+            </Callout>
+          </Section>
+
+          {/* ── Getting Started ── */}
+          <Section id="getting-started" title="Getting Started">
+            <p>The recommended setup order:</p>
+            <ol className={styles.ol}>
+              <li><strong>Create a Location</strong> — a campus or venue. Everything else belongs to a location.</li>
+              <li><strong>Add Service Types</strong> under that location (e.g. "Sunday Morning", "Wednesday Night").</li>
+              <li><strong>Create Screens</strong> — each screen gets a permanent URL you point a TV at.</li>
+              <li><strong>Add People</strong> — your worship team members. Can be manual or pulled from PCO.</li>
+              <li><strong>Define Labels</strong> — your mic and IEM inventory (e.g. "Vox 1", "Keys DI", "IEM 3").</li>
+              <li><strong>Set up Automation Rules</strong> — tell the app how to assign mics/IEMs based on a person's name or position.</li>
+              <li><strong>Connect Planning Center</strong> — link your PCO account so the app can pull plans automatically.</li>
+              <li><strong>Set a Schedule</strong> — tell each service type when to auto-fetch and push assignments.</li>
+            </ol>
+            <Callout type="info">
+              You can test everything in <strong>mock mode</strong> (<code>USE_MOCK_DATA=true</code> in <code>server/.env</code>) without needing a PCO connection. The display will show a set of sample musicians so you can see how it looks.
+            </Callout>
+            <Callout type="info">
+              The <strong>sun/moon icon</strong> in the top-right corner of every admin page toggles between light and dark mode. Your preference is saved in your browser and persists across sessions.
+            </Callout>
+          </Section>
+
+          {/* ── Organization ── */}
+          <Section id="organization" title="Organization">
+            <p>The <strong>Organization</strong> page (Admin → Organization) holds your top-level settings. Beacon is designed for a single organization per installation — there's no multi-tenant setup. The <strong>org slug</strong> is a short URL-safe identifier for your organization (e.g. <code>first-church</code>) and is embedded in display screen login URLs.</p>
+            <p>You can also set your organization's <strong>timezone</strong> here. This ensures that schedule next-run times and other time-sensitive information display correctly for your location rather than defaulting to the server's system clock.</p>
+
+            <SubSection id="display-login" title="Display Login">
+              <p>Display screens authenticate using two pieces of information:</p>
+              <ul className={styles.ul}>
+                <li><strong>Org code</strong> — your organization's slug (e.g. <code>first-church</code>). This is the same for every screen in your org.</li>
+                <li><strong>Access code</strong> — a short alphanumeric code shown on the Organization page. This is shared across all screens at your org.</li>
+              </ul>
+              <p>When a browser on a TV or kiosk enters these credentials, a session cookie is stored that persists for <strong>1 year</strong>. The screen will stay authenticated and continue auto-refreshing without requiring re-login, even after the browser restarts.</p>
+              <p>The <strong>access code</strong> is shown on the Organization page. You can <strong>regenerate</strong> it at any time, but note that doing so will immediately invalidate the existing cookie on every screen — all displays will be redirected to the login page and will need to re-enter the new code.</p>
+              <Callout type="warning">
+                Regenerate the access code only when necessary (e.g. if it was shared with someone who should no longer have access). You'll need to re-authenticate every display screen afterward.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="qr-code" title="Scan-to-Login QR">
+              <p>The display login page (<code>/display</code>) shows a <strong>QR code</strong> unique to that browser session. A staff member can scan this QR code with their phone and complete the login on their phone instead of typing on the TV.</p>
+              <p><strong>How the flow works:</strong></p>
+              <ol className={styles.ol}>
+                <li>Open <code>/display</code> on the TV browser — a QR code appears automatically.</li>
+                <li>Scan the QR code with your phone — it opens a mobile setup page.</li>
+                <li>Enter the org code, access code, and screen name on your phone.</li>
+                <li>The TV detects the completed setup and transitions to the display immediately — no interaction on the TV required.</li>
+              </ol>
+              <p>This is the recommended way to authenticate TVs: no keyboard needed on the TV itself. The QR code expires after 10 minutes. If it expires, refreshing the page generates a new one.</p>
+              <Callout type="info">
+                If you prefer, you can still enter the org code and access code manually using the form below the QR code on the display login page.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="backup-export" title="Backup & Export">
+              <p>The Organization page has a <strong>Download Backup</strong> button that exports your entire app configuration as a JSON file. The backup includes:</p>
+              <ul className={styles.ul}>
+                <li>Organization settings</li>
+                <li>Campuses and service types</li>
+                <li>People and photo overrides</li>
+                <li>Labels and label groups</li>
+                <li>Automation rules</li>
+                <li>Screen configurations</li>
+                <li>Schedules</li>
+              </ul>
+              <p>Keep a backup somewhere safe — especially before making large changes or migrating to a new Pi. Backup restore is not yet automated (import it manually if needed), but the JSON structure is human-readable.</p>
+              <Callout type="info">
+                The backup does <strong>not</strong> include PCO OAuth tokens or user account passwords. You'll need to reconnect Planning Center and reset passwords after a restore.
+              </Callout>
+            </SubSection>
+          </Section>
+
+          {/* ── Locations ── */}
+          <Section id="locations" title="Locations">
+            <p>The Locations page is where you define the structure of your church — campuses, what kinds of services happen there, and when those services should auto-refresh from Planning Center.</p>
+
+            <SubSection id="campuses" title="Campuses">
+              <p>A <strong>campus</strong> (or location) represents a physical venue — your main building, a satellite campus, a rented school gym, etc. Campuses group your service types and display screens together so everything stays organized when you have more than one site.</p>
+              <p>Each campus just needs a name. The description is optional but handy for your team ("North building, sanctuary A/V booth").</p>
+            </SubSection>
+
+            <SubSection id="service-types" title="Service Types">
+              <p>A <strong>service type</strong> is a recurring kind of service that happens at a campus — for example:</p>
+              <ul className={styles.ul}>
+                <li>Sunday Morning (9am)</li>
+                <li>Sunday Morning (11am)</li>
+                <li>Wednesday Night</li>
+                <li>Youth Group</li>
+              </ul>
+              <p>Service types serve two purposes:</p>
+              <ol className={styles.ol}>
+                <li>They're the bridge to Planning Center — you tell the app which PCO service type to pull upcoming plans from.</li>
+                <li>They hold the auto-refresh schedule — you tell the app when (day + time) to check PCO for the next plan and push it to your screens.</li>
+              </ol>
+            </SubSection>
+
+            <SubSection id="pco-id" title="Planning Center ID">
+              <p>Every service type in Planning Center Online has a unique numeric ID. The app needs this ID to know which calendar to look at when your schedule fires.</p>
+              <p><strong>How to find it:</strong> Log in to Planning Center, go to Services → your service type. Look at the URL in your browser:</p>
+              <div className={styles.codeBlock}>
+                https://services.planningcenteronline.com/service_types/<strong>1234567</strong>
+              </div>
+              <p>The number at the end (<code>1234567</code>) is your PCO ID. Paste it into the "Planning Center ID" field on the service type.</p>
+              <Callout type="info">
+                You only need to do this once per service type. Once Planning Center OAuth is connected, a future update will let you browse and select your service types directly from within the app.
+              </Callout>
+              <Callout type="warning">
+                Without the PCO ID, auto-refresh schedules will fail silently — the scheduler will run but won't know where to look. The display will keep showing whatever was last pushed to it.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="auto-refresh" title="Auto-Refresh Schedules">
+              <p>Each service type can have one <strong>auto-refresh schedule</strong>. This is a cron job that fires at the time(s) you choose and does the following:</p>
+              <ol className={styles.ol}>
+                <li>Calls Planning Center to find the next upcoming plan for this service type.</li>
+                <li>Pulls the team roster from that plan.</li>
+                <li>Runs your automation rules against each person on the team.</li>
+                <li>Pushes the resulting mic/IEM assignments to all screens at this campus.</li>
+              </ol>
+              <p><strong>Example setup:</strong> Saturday at 6:00 PM and Wednesday at 5:00 PM. The Saturday run loads Sunday's team. The Wednesday run loads Wednesday night's team.</p>
+              <p>You can also trigger a refresh manually at any time by clicking <strong>"Run now"</strong> next to a schedule — useful for testing or last-minute changes.</p>
+              <Callout type="warning">
+                Schedules require a Planning Center connection to work. They'll still run in mock mode but won't call PCO.
+              </Callout>
+            </SubSection>
+          </Section>
+
+          {/* ── Templates ── */}
+          <Section id="templates" title="Templates">
+            <p>Templates let you define a <strong>custom grid layout</strong> for a display screen — how many rows, how many slots per row, what each individual slot shows, and what happens when fewer people are assigned than the template has space for.</p>
+            <p>Templates are more powerful than preset layouts because you control exact grid dimensions, per-row heights, per-slot label assignments, and how each cell displays its content. Once created, select a template when setting up a screen.</p>
+            <p>The Templates page supports both <strong>list view</strong> and <strong>grid view</strong> (toggle top-right). Grid view shows a TV-ratio preview of each template so you can see the layout at a glance.</p>
+
+            <SubSection id="template-layout" title="Grid Layout">
+              <p>Each template is built from <strong>rows</strong>, and each row has its own settings:</p>
+              <ul className={styles.ul}>
+                <li><strong>Rows</strong> — 1 to 5 rows, stacked vertically on the display.</li>
+                <li><strong>Columns</strong> — 1 to 8 columns per row. Each column is one person-card slot.</li>
+                <li><strong>Height</strong> — Controls how much vertical space that row gets relative to the others. Options are <em>Tiny</em>, <em>Compact</em>, <em>Standard</em>, and <em>Tall</em>. A Tall row takes 6× the space of a Tiny row. The layout preview updates live as you change heights.</li>
+                <li><strong>Section label</strong> — Optional text identifying the row (e.g., "Vocals", "Band", "Tech"). Type a label, then click <em>Show on screen</em> to make it visible on the display. Leave the toggle off to use the label only for your reference inside the editor.</li>
+              </ul>
+              <p>Slots are numbered left-to-right, top-to-bottom starting at 1. The proportional preview in the editor reflects your exact row heights so you can see how the grid will look on a TV before saving.</p>
+            </SubSection>
+
+            <SubSection id="template-slots" title="Slot Configuration">
+              <p>Each slot in the grid can be individually configured. In the template editor, the <strong>Slot configuration</strong> section shows a clickable grid — click any cell to open its settings panel.</p>
+              <p><strong>Display mode</strong> — controls what content this slot shows on the live display:</p>
+              <ul className={styles.ul}>
+                <li><strong>Full</strong> — the complete card: person's photo, name, and their assigned label.</li>
+                <li><strong>Photo only</strong> — shows just the person's headshot, filling the cell. No text.</li>
+                <li><strong>Label only</strong> — shows the person's name and their label without the photo. Good for text-dense rows where photos would be too small to be useful.</li>
+              </ul>
+              <p><strong>Label</strong> — assign a single mic or IEM label as the default for this slot. The label picker groups options by type (Mic / IEM). This label shows on the display card when someone is assigned to the slot. The label field is hidden when <em>Photo only</em> mode is selected since there is nothing to display.</p>
+              <Callout type="info">
+                Slot label assignments set the <em>default</em> for that position. Automation rules can override them for specific people or PCO positions.
+              </Callout>
+              <p>Configured slots show their label and mode at a glance in the cell. Use <em>Clear</em> in the panel to remove all settings from a slot. Click a configured cell again to close the panel.</p>
+            </SubSection>
+
+            <SubSection id="template-empty" title="Empty Slot Behavior">
+              <p>Controls what happens when fewer people are assigned than the template has slots for. For example: your template has 4 slots but only 3 singers are scheduled this week.</p>
+              <ul className={styles.ul}>
+                <li><strong>Reserve slots</strong> — The unfilled slot stays on screen as a visible empty placeholder. The grid keeps its exact shape. Good for fixed setups where a position always means something (e.g., Slot 4 is always the pastor's lapel mic, whether or not they're on the plan this week).</li>
+                <li><strong>Collapse slots</strong> — The unfilled slot disappears and the remaining cards fill in. Good for variable team sizes where you only want to show who's actually assigned.</li>
+              </ul>
+              <Callout type="info">
+                This setting only affects how the display renders — not your underlying assignment data. You can change it at any time.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="template-options" title="Display Options">
+              <p>Each template has three toggles that control the display header when this template is active on a screen:</p>
+              <ul className={styles.ul}>
+                <li><strong>Auto-merge same person</strong> — If the same person appears in vertically adjacent slots, their cards merge into one taller card. Useful when a worship leader holds multiple adjacent slots.</li>
+                <li><strong>Show service title</strong> — Displays the event name and date in the center of the header bar.</li>
+                <li><strong>Show organization logo</strong> — Displays your org logo and name on the left side of the header bar.</li>
+              </ul>
+            </SubSection>
+          </Section>
+
+          {/* ── Screens ── */}
+          <Section id="screens" title="Screens">
+            <p>A <strong>screen</strong> represents a single display — a TV backstage, a monitor at the front of house, a tablet at the door. Each screen gets a permanent URL that you load in a browser (or kiosk-mode browser) and never have to change.</p>
+            <p>Use the <strong>filter bar</strong> at the top of the Screens page to narrow the list by location or by screen type (independent vs. mirror).</p>
+
+            <SubSection id="display-url" title="Display URL">
+              <p>Every screen gets a unique URL like:</p>
+              <div className={styles.codeBlock}>http://your-domain.com/display/abc123def456</div>
+              <p>Point any browser at this URL and it will show the card grid for that screen, auto-refreshing every 30 seconds to pick up new assignments. The URL is permanent — it doesn't change when you update assignments or rename the screen.</p>
+              <p>For a TV, use your browser's kiosk/fullscreen mode. On Chrome: <code>--kiosk</code> flag. On a Raspberry Pi you can set Chromium to auto-launch in kiosk mode at startup.</p>
+            </SubSection>
+
+            <SubSection id="share-code" title="Share Code">
+              <p>Each screen has a short <strong>share code</strong> (like <code>ABC123</code>). Team members can use this code to push assignments to a screen without needing admin login. This is useful for a worship leader who wants to update mic assignments from their phone before service.</p>
+              <p>Share codes are case-insensitive and can be regenerated if needed.</p>
+            </SubSection>
+
+            <SubSection id="mirror" title="Mirror Mode">
+              <p>A screen can be set to <strong>mirror</strong> another screen at the same location. A mirroring screen shows exactly the same assignments as its source — it has no assignments of its own.</p>
+              <p><strong>When is this useful?</strong> If you have two TVs in the same room — say a main backstage monitor and an overflow monitor — you can have both show the same content by pointing one at the other. You only push assignments once, and both update automatically.</p>
+              <Callout type="info">
+                Mirrors are one level deep. You can't mirror a screen that is itself already mirroring another screen.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="screen-layout" title="Layout">
+              <p>Each screen has a <strong>layout</strong> that controls how the musician cards are arranged on the display. Choose a layout when creating or editing a screen. Available presets:</p>
+              <ul className={styles.ul}>
+                <li><strong>Standard Grid</strong> — 5 portrait cards per row. Works for most team sizes.</li>
+                <li><strong>Compact Grid</strong> — 7 thinner cards per row. Fits larger teams on one screen.</li>
+                <li><strong>Large Cards</strong> — 3 wider cards per row. Best for smaller teams or high-visibility screens.</li>
+                <li><strong>List</strong> — Horizontal rows with a small avatar and name. Maximizes the number of people visible.</li>
+              </ul>
+              <p>If you've created <strong>custom templates</strong> on the Templates page, they appear in the layout picker below the presets. Custom templates give you full control over slot positions, per-slot label defaults, and per-slot display modes. See the <Link to="/docs#templates">Templates</Link> section for details.</p>
+            </SubSection>
+
+            <SubSection id="screen-header" title="Display Header">
+              <p>Every display screen shows a header bar at the top with three zones:</p>
+              <ul className={styles.ul}>
+                <li><strong>Left</strong> — your organization's logo (if uploaded) and name. Upload a logo on the <strong>Organization</strong> page.</li>
+                <li><strong>Center</strong> — the service/event name and date from the active assignments.</li>
+                <li><strong>Right</strong> — a live clock that updates every second.</li>
+              </ul>
+              <p>If no logo is uploaded, only the org name appears on the left. Upload a logo at <strong>Admin → Organization → Organization Logo</strong>.</p>
+            </SubSection>
+          </Section>
+
+          {/* ── People ── */}
+          <Section id="people" title="People">
+            <p>The People page is where your worship team roster lives. People can be:</p>
+            <ul className={styles.ul}>
+              <li><strong>PCO-linked</strong> — imported from Planning Center. Name and photo sync from PCO. Any edits you make in Beacon (name, photo, category, email) are <em>local overrides</em> — they don't affect PCO and won't be clobbered on the next sync.</li>
+              <li><strong>Manual</strong> — added by hand, for team members not in Planning Center (volunteers, guests, one-off musicians, etc.).</li>
+            </ul>
+            <p>PCO-linked people are marked with a <strong>PCO</strong> badge. They cannot be deleted from within Beacon — they're removed automatically the next time that person no longer appears in any PCO plan.</p>
+
+            <SubSection id="people-views" title="Grid &amp; List Views">
+              <p>Use the <strong>view toggle</strong> (top-right of the toolbar) to switch between:</p>
+              <ul className={styles.ul}>
+                <li><strong>Grid view</strong> — card-based layout with a square photo at the top. Click any card to open a detail popup with full info and quick Edit/Delete actions.</li>
+                <li><strong>List view</strong> — compact table rows with name, position, category, and PCO ID. Edit and Delete appear as inline buttons at the end of each row.</li>
+              </ul>
+              <p>Your preferred view is saved in the browser and restored on your next visit.</p>
+            </SubSection>
+
+            <SubSection id="people-photos" title="Photos &amp; Crop">
+              <p>Every person can have a custom photo. For PCO-linked people this replaces their PCO profile picture on display cards without touching their PCO account.</p>
+              <p><strong>How the upload works:</strong></p>
+              <ol className={styles.ol}>
+                <li>Click <strong>Upload Photo</strong> on the person's edit form.</li>
+                <li>Drop or select an image (up to 15 MB, any common image format).</li>
+                <li>A crop editor appears with a <strong>portrait frame (3:4)</strong> as the primary crop and a <strong>dashed square overlay (1:1)</strong> showing the secondary crop simultaneously.</li>
+                <li>Drag and zoom to frame both crops at once, then click <strong>Save Crops</strong>.</li>
+              </ol>
+              <p>Two versions are saved and used in different places:</p>
+              <ul className={styles.ul}>
+                <li><strong>Portrait (3:4)</strong> — used on the TV display card where the full card height is available.</li>
+                <li><strong>Square (1:1)</strong> — used in the admin People grid and list view.</li>
+              </ul>
+              <Callout type="info">
+                Both crops are extracted from the same upload — you only upload once and see both frames at the same time so you can position them together.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="people-cats" title="Categories &amp; Position">
+              <p>Each person can belong to <strong>one or more categories</strong> — Worship, Pastor, Tech, or Other. Categories are used as conditions in automation rules (e.g., "if category contains Worship, assign mic: next available").</p>
+              <p>The <strong>position</strong> field stores a person's primary role or instrument (e.g., "Lead Vocals", "Electric Guitar", "Drums"). This is separate from category and is also available as a condition in automation rules.</p>
+              <p>For PCO-linked people, the position shown on the display card comes from their PCO team position for that specific plan — it may differ from the position stored in Beacon.</p>
+            </SubSection>
+
+            <SubSection id="people-filters" title="Search &amp; Filters">
+              <p>Use the <strong>search bar</strong> to find people by name, position, email, or PCO ID. Results update instantly as you type.</p>
+              <p>The <strong>Filters</strong> bar below the toolbar lets you narrow the list by:</p>
+              <ul className={styles.ul}>
+                <li><strong>Source</strong> — All, PCO only, or Manual only.</li>
+                <li><strong>Category</strong> — select one or more categories to show only people in those groups (multi-select).</li>
+              </ul>
+              <p>Active filters are highlighted in blue. Click <strong>Clear filters</strong> to reset all at once.</p>
+            </SubSection>
+          </Section>
+
+          {/* ── Labels ── */}
+          <Section id="labels" title="Labels">
+            <p>Labels are your physical audio equipment inventory — every mic channel and IEM pack gets a label that you can assign to musicians. Use the <strong>+ Add Label</strong> button at the top of the page, choose the type, give it a name, and optionally assign it to a group.</p>
+
+            <SubSection id="labels-types" title="Mic vs IEM">
+              <p>Labels are split into two types:</p>
+              <ul className={styles.ul}>
+                <li><strong>Microphones</strong> — any mic, DI box, or input channel. Examples: <em>Vox 1</em>, <em>Vox 2</em>, <em>Keys DI</em>, <em>EG DI</em>, <em>Bass DI</em>.</li>
+                <li><strong>In-Ear Monitors</strong> — IEM packs or monitor sends. Examples: <em>IEM 1</em>, <em>IEM 2</em>, <em>Pack A</em>.</li>
+              </ul>
+              <p>The type determines which section a label appears in on the Labels page and which category automation rules can pull from.</p>
+            </SubSection>
+
+            <SubSection id="labels-groups" title="Groups">
+              <p>Groups let you create named pools within a type. For example, you might split your mic labels into a <em>Vocals</em> group (Vox 1, Vox 2, Vox 3) and an <em>Instruments</em> group (Keys DI, EG DI, Bass DI).</p>
+              <p>Groups are used by automation rules with the <strong>"next available"</strong> action — a rule can say "assign next available mic from group: Vocals" rather than pulling from your entire mic inventory.</p>
+              <Callout type="info">
+                Groups are optional. If you don't use them, "next available" automation pulls from all labels of that type in order.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="labels-order" title="Order & Reordering">
+              <p>The order of your labels matters for automation. When a rule uses <strong>next available</strong>, Beacon picks the first label in the list (top-to-bottom) that hasn't already been assigned to someone in that service.</p>
+              <p>To reorder, grab the <strong>grip handle</strong> (six dots) on the left side of any row and drag it to the desired position. Order is saved automatically.</p>
+              <Callout type="tip">
+                Put your most commonly used labels at the top of each section. Leads and featured vocalists often get the same channel every week — use automation's specific-label rules for those, so "next available" only runs for the rest.
+              </Callout>
+            </SubSection>
+          </Section>
+
+          {/* ── Automation ── */}
+          <Section id="automation" title="Automation Rules">
+            <p>Automation rules auto-assign mics and IEMs when a plan loads. They're evaluated <strong>top-to-bottom</strong> — each person matches only the first rule that applies to them.</p>
+            <p>Each rule has two parts:</p>
+            <ul className={styles.ul}>
+              <li><strong>Condition:</strong> match by <em>Name</em> or <em>PCO Position</em>, using <em>is</em> (exact) or <em>contains</em> (partial).</li>
+              <li><strong>Action:</strong> assign a specific mic or IEM label, or "next available" from the full pool or a named group.</li>
+            </ul>
+            <p><strong>Example rules:</strong></p>
+            <div className={styles.codeBlock}>
+              If position contains "Vocalist" → Mic: next available (Vocals group){'\n'}
+              If position is "Worship Leader" → Mic: Vox 1{'\n'}
+              If position contains "Guitar"   → Mic: next available (Instruments group){'\n'}
+              If position is "Drums"          → IEM: IEM 6
+            </div>
+            <Callout type="info">
+              You'll typically need two rules per person — one for the mic and one for the IEM. Add them as separate rules with the same condition.
+            </Callout>
+            <p><strong>Priority order:</strong> grab the grip handle on any rule row and drag it up or down to change evaluation order. Rules at the top run first.</p>
+            <Callout type="tip">
+              Rules are re-evaluated every time a plan is refreshed from Planning Center. You can also re-run automation manually from the Dashboard without pulling a new plan.
+            </Callout>
+          </Section>
+
+          {/* ── Users & Accounts ── */}
+          <Section id="users" title="Users & Accounts">
+            <p>Beacon has two user roles — <strong>Admin</strong> and <strong>Team Member</strong>. Anyone can register an account, but new accounts are always created as Team Member until an admin promotes them.</p>
+
+            <SubSection id="user-roles" title="Roles">
+              <p><strong>Admin</strong> — full access to the admin panel: campuses, screens, people, labels, automation, scheduling, users, and integrations.</p>
+              <p><strong>Team Member</strong> — can log in but only sees a "display access only" message in the admin panel. Intended for accounts that only need to push assignments to a screen via a share code, not manage the system.</p>
+              <p>Admins can change any account's role from the <strong>Users</strong> page. Guards prevent removing the last admin account or demoting yourself.</p>
+            </SubSection>
+
+            <SubSection id="invite-links" title="Invite Links">
+              <p>Instead of asking team members to register manually, you can invite them by email. Go to <strong>Organization → Invite Team Members</strong>, enter their email address, choose a role (Admin or Team Member), and click <strong>Send invite</strong>.</p>
+              <p>The recipient gets an email with a personal invite link. When they click it, their email is already pre-filled on the registration form — they only need to enter their name and a password. The link:</p>
+              <ul className={styles.ul}>
+                <li>Expires after <strong>7 days</strong>.</li>
+                <li>Pre-fills their email and locks it — they can't register under a different address.</li>
+                <li>Is <strong>single-use</strong> — the invite token is consumed when the account is created.</li>
+                <li>Automatically assigns the chosen role when the account is created.</li>
+              </ul>
+              <Callout type="info">
+                If SMTP is not configured in <code>server/.env</code>, the app won't send an email. Instead it shows the raw invite link in the admin panel so you can copy-paste it manually. Set <code>SMTP_HOST</code>, <code>SMTP_USER</code>, and <code>SMTP_PASS</code> to enable email sending.
+              </Callout>
+              <Callout type="info">
+                If an invite expires before the recipient uses it, generate a new one. Expired tokens are cleaned up automatically. You can also revoke active invites from the Organization page.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="my-account" title="My Account">
+              <p>Click your name at the bottom of the sidebar (or go to <strong>My Account</strong> in the nav) to update your profile:</p>
+              <ul className={styles.ul}>
+                <li><strong>Account info</strong> — change your display name or email address.</li>
+                <li><strong>Change password</strong> — requires your current password before setting a new one (minimum 8 characters).</li>
+              </ul>
+              <Callout type="info">
+                Profile changes take effect immediately — the sidebar name updates without requiring a re-login.
+              </Callout>
+            </SubSection>
+          </Section>
+
+          {/* ── PCO Integration ── */}
+          <Section id="pco-integration" title="Planning Center OAuth">
+            <p>The app connects to Planning Center Online using OAuth 2.0. Once connected, it can:</p>
+            <ul className={styles.ul}>
+              <li>Pull upcoming service plans</li>
+              <li>Get the team roster for each plan (names, positions, confirmation status)</li>
+              <li>Fetch profile photos</li>
+            </ul>
+            <p><strong>To connect:</strong></p>
+            <ol className={styles.ol}>
+              <li>Go to <code>api.planningcenteronline.com/oauth/applications</code> and create a new OAuth app.</li>
+              <li>Request scopes: <code>services</code> and <code>people</code>.</li>
+              <li>Set the redirect URI to <code>http://your-domain/api/auth/pco/callback</code>.</li>
+              <li>Add <code>PCO_CLIENT_ID</code> and <code>PCO_CLIENT_SECRET</code> to <code>server/.env</code>.</li>
+              <li>Go to Admin → Integrations and click "Connect to Planning Center."</li>
+            </ol>
+            <p>PCO access tokens expire every 2 hours. The app automatically refreshes them in the background using the stored refresh token — you only need to connect once.</p>
+            <Callout type="warning">
+              The <code>pco_tokens</code> table in the database stores your access and refresh tokens. Keep your database file secure and do not commit it to version control.
+            </Callout>
+          </Section>
+
+          {/* ── Hosting ── */}
+          <Section id="hosting" title="Hosting on Raspberry Pi">
+            <p>The recommended production setup runs everything on a Raspberry Pi with a Cloudflare Tunnel for public access.</p>
+            <ol className={styles.ol}>
+              <li>Install Node.js on the Pi (<code>nvm</code> recommended).</li>
+              <li>Clone the repo and run <code>npm run install:all</code>.</li>
+              <li>Create <code>server/.env</code> from <code>server/.env.example</code> and fill in your values.</li>
+              <li>Build the client: <code>cd client && npm run build</code>.</li>
+              <li>Set <code>NODE_ENV=production</code> in your <code>.env</code> — the Express server will serve the built client.</li>
+              <li>Start with PM2: <code>pm2 start server/index.js --name beacon</code>.</li>
+              <li>Install cloudflared and create a tunnel pointing to <code>localhost:3001</code>.</li>
+              <li>Update <code>PCO_REDIRECT_URI</code> in <code>.env</code> to your public tunnel URL.</li>
+            </ol>
+            <Callout type="info">
+              To auto-start on boot: <code>pm2 startup</code> then <code>pm2 save</code>.
+            </Callout>
+          </Section>
+        </main>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,424 @@
+.pageActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.campusList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Campus card ── */
+.campusCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.campusHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.campusHeader:hover { background: var(--bg-card-hover); }
+
+.campusInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.campusName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+}
+
+.campusDesc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.campusActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stCount {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.chevronBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+/* ── Campus body ── */
+.campusBody {
+  border-top: 1px solid var(--border);
+  padding: 20px;
+}
+
+.stSection {}
+
+.stSectionTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.stList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+/* ── Service type row ── */
+.stRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.stName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  flex: 1;
+  min-width: 120px;
+}
+
+.stEditForm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.pcoChip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.pcoChipEmpty {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.scheduleChip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  white-space: nowrap;
+}
+
+.scheduleChipPaused {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-muted);
+}
+
+.nextRunLabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.runNowBtn {
+  background: none;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+.runNowBtn:hover:not(:disabled) { background: rgba(59, 130, 246, 0.1); }
+.runNowBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Schedule panel meta ── */
+.scheduleMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.nextRunFull {
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.runNowBtnPanel {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+.runNowBtnPanel:hover:not(:disabled) { background: rgba(59, 130, 246, 0.2); }
+.runNowBtnPanel:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.stActions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ── Schedule panel ── */
+.schedulePanel {
+  margin: 4px 0 4px 0;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.04);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: var(--radius-sm);
+}
+
+.schedulePanelTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin-bottom: 4px;
+}
+
+.schedulePanelDesc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.enabledToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-sec);
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.lastRun {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.schedulePanelActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ── Add service type ── */
+.addStBtn {
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  margin-top: 4px;
+}
+
+.addStBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+.addStForm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+/* ── Buttons ── */
+.btnPrimary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+.btnPrimary:hover:not(:disabled) { opacity: 0.88; }
+.btnPrimary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btnPrimaryXs {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btnPrimaryXs:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btnGhost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btnGhost:hover { border-color: var(--text-sec); }
+
+.btnGhostXs {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btnDanger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btnDanger:hover { background: rgba(239, 68, 68, 0.18); }
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.actionBtn:hover { border-color: var(--accent); color: var(--accent); }
+.actionDanger:hover { border-color: #f87171 !important; color: #f87171 !important; }
+
+/* ── Form elements ── */
+.formField { margin-bottom: 16px; }
+.formLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+.optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+.formInput {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+.formInput:focus { border-color: var(--accent); }
+.formInputSm {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 9px;
+  color: var(--text-pri);
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+  flex: 1;
+  min-width: 120px;
+  transition: border-color 0.12s;
+}
+.formInputSm:focus { border-color: var(--accent); }
+.formError {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(239,68,68,0.08);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Misc ── */
+.muted { color: var(--text-muted); font-size: 0.85rem; }
+.emptyMsg { font-size: 0.8rem; color: var(--text-muted); padding: 8px 0; }
+.emptyState { padding: 40px 0; text-align: center; color: var(--text-sec); line-height: 1.8; }

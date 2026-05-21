@@ -1,0 +1,61 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 48px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-sec);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s, color 0.12s;
+  text-decoration: none;
+}
+
+.link:hover {
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text-pri);
+}
+
+.orgBtn {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-left: 4px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.orgBtn:hover {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}

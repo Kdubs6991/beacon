@@ -1,0 +1,181 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.2s, background 0.2s;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-dim);
+}
+
+/* ── Photo-only mode ── */
+.cardPhoto {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ── Label-only mode ── */
+.cardLabel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.labelTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Empty slot ── */
+.cardEmpty {
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.07);
+  border-radius: var(--radius);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+
+.avatarInitials {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--text-pri);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.avatarLg {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius);
+  object-fit: cover;
+  display: block;
+}
+
+.avatarInitialsLg {
+  width: 80%;
+  aspect-ratio: 1;
+  max-width: 160px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--text-pri);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.position {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(124, 110, 232, 0.15);
+  padding: 2px 8px;
+  border-radius: 20px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assignIcon {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.assignLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.assignValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: color 0.2s;
+}

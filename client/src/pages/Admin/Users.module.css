@@ -1,0 +1,110 @@
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0 12px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.selfRow td {
+  background: rgba(124, 110, 232, 0.04);
+}
+
+.name {
+  font-weight: 600;
+  color: var(--text-pri);
+}
+
+.youBadge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(124, 110, 232, 0.2);
+  color: var(--accent);
+}
+
+.email {
+  color: var(--text-sec);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.error {
+  color: #f87171;
+}
+
+.roleSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.roleSelect:focus {
+  border-color: var(--accent);
+}
+
+.roleSelect.admin {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+.roleSelect.team_member {
+  color: var(--text-sec);
+}
+
+.deleteBtn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.deleteBtn:hover {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}

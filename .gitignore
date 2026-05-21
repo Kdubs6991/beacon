@@ -1,0 +1,31 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Database ──────────────────────────────────────────────────────────────────
+server/*.db
+server/*.db-shm
+server/*.db-wal
+
+# ── Build output ──────────────────────────────────────────────────────────────
+client/dist/
+
+# ── Uploaded user content ─────────────────────────────────────────────────────
+server/uploads/photos/*
+server/uploads/logos/*
+!server/uploads/photos/.gitkeep
+!server/uploads/logos/.gitkeep
+
+# ── Dev tooling / OS ──────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# ── Claude dev reference (not part of the project) ────────────────────────────
+ClaudeReferencePhotos/

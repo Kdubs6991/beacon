@@ -1,0 +1,132 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 560px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.logoWrap {
+  width: 44px;
+  height: 44px;
+  background: #3d5a99;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin-bottom: 4px;
+}
+
+.cardDesc {
+  font-size: 0.8rem;
+  color: var(--text-sec);
+  line-height: 1.4;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotGreen { background: #4ade80; }
+.dotGray  { background: var(--text-muted); }
+
+.statusLabel {
+  font-size: 0.8rem;
+  color: var(--text-sec);
+}
+
+.notice {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  color: var(--text-sec);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.notice code {
+  background: rgba(255,255,255,0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btnPrimary {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.btnPrimary:hover { opacity: 0.88; }
+
+.btnDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btnDanger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.btnDanger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.muted { color: var(--text-muted); font-size: 0.85rem; }
