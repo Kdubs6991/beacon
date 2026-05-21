@@ -421,6 +421,56 @@
   line-height: 1.5;
 }
 
+/* ── Screen checkboxes ────────────────────────────────────── */
+
+.screenChecks {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.screenCheck {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  color: var(--text-sec);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.screenCheck input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Screen count badge on schedule row ──────────────────── */
+
+.schedScreens {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #93c5fd;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.schedScreensNone {
+  font-size: 0.7rem;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
 /* ── Run now feedback ─────────────────────────────────────── */
 
 .runOk {

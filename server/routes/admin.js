@@ -557,17 +557,19 @@ router.get('/schedules', (req, res) => {
   `).all(orgId))
 })
 router.post('/schedules', (req, res) => {
-  const { service_type_id, cron_expr, enabled } = req.body
+  const { service_type_id, cron_expr, enabled, screen_ids } = req.body
   if (!service_type_id || !cron_expr) return res.status(400).json({ error: 'service_type_id and cron_expr required' })
-  const r = db.prepare('INSERT INTO schedules (service_type_id, cron_expr, enabled) VALUES (?, ?, ?)').run(service_type_id, cron_expr, enabled ?? 1)
+  const screenIdsJson = Array.isArray(screen_ids) ? JSON.stringify(screen_ids) : (screen_ids ?? null)
+  const r = db.prepare('INSERT INTO schedules (service_type_id, cron_expr, enabled, screen_ids) VALUES (?, ?, ?, ?)').run(service_type_id, cron_expr, enabled ?? 1, screenIdsJson)
   const schedule = db.prepare('SELECT s.*, st.name as service_type_name FROM schedules s LEFT JOIN service_types st ON s.service_type_id = st.id WHERE s.id = ?').get(r.lastInsertRowid)
   const { registerSchedule } = require('../scheduler')
   if (schedule.enabled) registerSchedule(schedule)
   res.json(schedule)
 })
 router.put('/schedules/:id', (req, res) => {
-  const { cron_expr, enabled } = req.body
-  db.prepare('UPDATE schedules SET cron_expr = ?, enabled = ? WHERE id = ?').run(cron_expr, enabled, req.params.id)
+  const { cron_expr, enabled, screen_ids } = req.body
+  const screenIdsJson = Array.isArray(screen_ids) ? JSON.stringify(screen_ids) : (screen_ids ?? null)
+  db.prepare('UPDATE schedules SET cron_expr = ?, enabled = ?, screen_ids = ? WHERE id = ?').run(cron_expr, enabled, screenIdsJson, req.params.id)
   const schedule = db.prepare('SELECT s.*, st.name as service_type_name FROM schedules s LEFT JOIN service_types st ON s.service_type_id = st.id WHERE s.id = ?').get(req.params.id)
   const { registerSchedule, unregisterSchedule } = require('../scheduler')
   if (schedule.enabled) registerSchedule(schedule)

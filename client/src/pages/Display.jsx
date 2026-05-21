@@ -85,9 +85,14 @@ function DisplayView({ screenToken }) {
           )}
         </div>
         <div className={styles.headerRight}>
-          <span className={styles.clock}>
-            {clock.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </span>
+          <div className={styles.clockStack}>
+            <span className={styles.clock}>
+              {clock.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+            <span className={styles.clockDate}>
+              {clock.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+            </span>
+          </div>
         </div>
       </header>
       <main className={`${styles.main} ${data.template ? styles.mainTemplate : ''}`}>

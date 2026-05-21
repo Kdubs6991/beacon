@@ -65,11 +65,25 @@
   justify-content: flex-end;
 }
 
+.clockStack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
 .clock {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-sec);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.clockDate {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
   letter-spacing: 0.02em;
 }
 

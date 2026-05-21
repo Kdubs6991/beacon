@@ -303,6 +303,10 @@ if (orgCount.n === 0) {
     )
   `)
 
+  // --- Add screen_ids to schedules ---
+  const schedCols = db.prepare('PRAGMA table_info(schedules)').all().map(c => c.name)
+  if (!schedCols.includes('screen_ids')) db.exec('ALTER TABLE schedules ADD COLUMN screen_ids TEXT')
+
   // --- Convert single-value category strings to JSON arrays (idempotent) ---
   db.prepare(`UPDATE people SET category          = '["' || category          || '"]' WHERE category          IS NOT NULL AND category          NOT LIKE '[%'`).run()
   db.prepare(`UPDATE people SET category_override = '["' || category_override || '"]' WHERE category_override IS NOT NULL AND category_override NOT LIKE '[%'`).run()

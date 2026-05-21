@@ -113,7 +113,7 @@ function Toggle({ checked, onChange }) {
 
 // ── Schedule form (shared for add & edit) ─────────────────────────────────────
 
-function ScheduleForm({ initial, onSave, onCancel, formClass }) {
+function ScheduleForm({ initial, screens, onSave, onCancel, formClass }) {
   const { day: initDay, hour24, minute: initMin } = parseCron(initial?.cron_expr)
   const initAmpm = hour24 < 12 ? 'AM' : 'PM'
   const initHour = String(hour24 % 12 === 0 ? 12 : hour24 % 12)
@@ -123,12 +123,19 @@ function ScheduleForm({ initial, onSave, onCancel, formClass }) {
   const [hour, setHour] = useState(initHour)
   const [minute, setMinute] = useState(initMinute)
   const [ampm, setAmpm] = useState(initAmpm)
+  const [selectedScreenIds, setSelectedScreenIds] = useState(() => {
+    try { return initial?.screen_ids ? JSON.parse(initial.screen_ids) : [] } catch { return [] }
+  })
   const [saving, setSaving] = useState(false)
+
+  function toggleScreen(id) {
+    setSelectedScreenIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
 
   async function handleSave() {
     setSaving(true)
     const cron_expr = makeCronExpr(day, hour, minute, ampm)
-    await onSave({ cron_expr })
+    await onSave({ cron_expr, screen_ids: selectedScreenIds })
     setSaving(false)
   }
 
@@ -159,6 +166,23 @@ function ScheduleForm({ initial, onSave, onCancel, formClass }) {
           <option value="PM">PM</option>
         </select>
       </div>
+      {screens.length > 0 && (
+        <div className={styles.formGroup}>
+          <span className={styles.formLabel}>Update screens</span>
+          <div className={styles.screenChecks}>
+            {screens.map(s => (
+              <label key={s.id} className={styles.screenCheck}>
+                <input
+                  type="checkbox"
+                  checked={selectedScreenIds.includes(s.id)}
+                  onChange={() => toggleScreen(s.id)}
+                />
+                <span>{s.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={handleSave} disabled={saving}>
         {saving ? 'Saving…' : (initial ? 'Update' : 'Add schedule')}
       </button>
@@ -171,10 +195,13 @@ function ScheduleForm({ initial, onSave, onCancel, formClass }) {
 
 // ── Single schedule row ───────────────────────────────────────────────────────
 
-function ScheduleRow({ schedule, onToggle, onRun, onDelete, onUpdate }) {
+function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate }) {
   const [editing, setEditing] = useState(false)
   const [runOk, setRunOk] = useState(false)
   const [running, setRunning] = useState(false)
+
+  const screenIds = (() => { try { return schedule.screen_ids ? JSON.parse(schedule.screen_ids) : [] } catch { return [] } })()
+  const screenCount = screenIds.length
 
   async function handleRun() {
     setRunning(true)
@@ -188,6 +215,7 @@ function ScheduleRow({ schedule, onToggle, onRun, onDelete, onUpdate }) {
     return (
       <ScheduleForm
         initial={schedule}
+        screens={screens}
         formClass={styles.editSchedForm}
         onSave={async (data) => { await onUpdate(schedule.id, data); setEditing(false) }}
         onCancel={() => setEditing(false)}
@@ -201,6 +229,9 @@ function ScheduleRow({ schedule, onToggle, onRun, onDelete, onUpdate }) {
       <div className={styles.schedRowLeft}>
         <span className={styles.schedCron}>{schedule.cron_expr}</span>
         <span className={styles.schedDesc}>{describeCron(schedule.cron_expr)}</span>
+        <span className={screenCount > 0 ? styles.schedScreens : styles.schedScreensNone}>
+          {screenCount > 0 ? `${screenCount} screen${screenCount !== 1 ? 's' : ''}` : 'No screens'}
+        </span>
         {schedule.last_run && (
           <span className={styles.schedLastRun}>Last: {formatLastRun(schedule.last_run)}</span>
         )}
@@ -223,7 +254,7 @@ function ScheduleRow({ schedule, onToggle, onRun, onDelete, onUpdate }) {
 
 // ── Service type card ─────────────────────────────────────────────────────────
 
-function ServiceTypeCard({ st, schedules, campuses, pcoConnected, onDelete, onRefreshSchedules }) {
+function ServiceTypeCard({ st, schedules, campuses, screens, pcoConnected, onDelete, onRefreshSchedules }) {
   const [open, setOpen] = useState(false)
   const [adding, setAdding] = useState(false)
   const [editingSt, setEditingSt] = useState(false)
@@ -245,10 +276,10 @@ function ServiceTypeCard({ st, schedules, campuses, pcoConnected, onDelete, onRe
     onRefreshSchedules()
   }
 
-  async function addSchedule({ cron_expr }) {
+  async function addSchedule({ cron_expr, screen_ids }) {
     await api('/schedules', {
       method: 'POST',
-      body: JSON.stringify({ service_type_id: st.id, cron_expr, enabled: 1 }),
+      body: JSON.stringify({ service_type_id: st.id, cron_expr, enabled: 1, screen_ids }),
     })
     setAdding(false)
     onRefreshSchedules()
@@ -258,16 +289,16 @@ function ServiceTypeCard({ st, schedules, campuses, pcoConnected, onDelete, onRe
     const sched = mySchedules.find(s => s.id === id)
     await api(`/schedules/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ cron_expr: sched.cron_expr, enabled: enabled ? 1 : 0 }),
+      body: JSON.stringify({ cron_expr: sched.cron_expr, enabled: enabled ? 1 : 0, screen_ids: sched.screen_ids }),
     })
     onRefreshSchedules()
   }
 
-  async function updateSchedule(id, { cron_expr }) {
+  async function updateSchedule(id, { cron_expr, screen_ids }) {
     const sched = mySchedules.find(s => s.id === id)
     await api(`/schedules/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ cron_expr, enabled: sched.enabled }),
+      body: JSON.stringify({ cron_expr, enabled: sched.enabled, screen_ids }),
     })
     onRefreshSchedules()
   }
@@ -356,6 +387,7 @@ function ServiceTypeCard({ st, schedules, campuses, pcoConnected, onDelete, onRe
                 <ScheduleRow
                   key={s.id}
                   schedule={s}
+                  screens={screens}
                   onToggle={toggleSchedule}
                   onRun={runSchedule}
                   onDelete={deleteSchedule}
@@ -364,6 +396,7 @@ function ServiceTypeCard({ st, schedules, campuses, pcoConnected, onDelete, onRe
               ))}
               {adding && (
                 <ScheduleForm
+                  screens={screens}
                   onSave={addSchedule}
                   onCancel={() => setAdding(false)}
                 />
@@ -431,6 +464,7 @@ export default function Schedules() {
   const [serviceTypes, setServiceTypes] = useState([])
   const [schedules, setSchedules] = useState([])
   const [campuses, setCampuses] = useState([])
+  const [screens, setScreens] = useState([])
   const [pcoConnected, setPcoConnected] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -438,15 +472,17 @@ export default function Schedules() {
 
   const load = useCallback(async () => {
     try {
-      const [sts, scheds, camps, pcoStatus] = await Promise.all([
+      const [sts, scheds, camps, screensData, pcoStatus] = await Promise.all([
         api('/service-types'),
         api('/schedules'),
         api('/campuses'),
+        api('/screens'),
         fetch(API + '/api/pco/status', { credentials: 'include' }).then(r => r.json()).catch(() => ({ connected: false })),
       ])
       setServiceTypes(Array.isArray(sts) ? sts : [])
       setSchedules(Array.isArray(scheds) ? scheds : [])
       setCampuses(Array.isArray(camps) ? camps : [])
+      setScreens(Array.isArray(screensData) ? screensData : [])
       setPcoConnected(!!pcoStatus.connected)
       setLoading(false)
     } catch (e) {
@@ -538,6 +574,7 @@ export default function Schedules() {
               st={st}
               schedules={schedules}
               campuses={campuses}
+              screens={screens}
               pcoConnected={pcoConnected}
               onDelete={deleteServiceType}
               onRefreshSchedules={load}
