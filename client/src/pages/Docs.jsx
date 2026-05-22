@@ -69,7 +69,7 @@ const NAV = [
     children: [
       { id: 'user-roles',     label: 'Roles' },
       { id: 'invite-links',   label: 'Invite Links' },
-      { id: 'my-account',     label: 'My Account' },
+      { id: 'my-account',     label: 'Settings' },
     ]
   },
   { id: 'pco-integration', label: 'Planning Center OAuth' },
@@ -178,7 +178,7 @@ export default function Docs() {
               You can test everything in <strong>mock mode</strong> (<code>USE_MOCK_DATA=true</code> in <code>server/.env</code>) without needing a PCO connection. The display will show a set of sample musicians so you can see how it looks.
             </Callout>
             <Callout type="info">
-              The <strong>sun/moon icon</strong> in the top-right corner of every admin page toggles between light and dark mode. Your preference is saved in your browser and persists across sessions.
+              To change between <strong>light and dark mode</strong>, click your name in the bottom-left corner of the sidebar to open <strong>Settings → Appearance</strong>. Your preference is saved in the browser and persists across sessions.
             </Callout>
           </Section>
 
@@ -559,8 +559,9 @@ export default function Docs() {
             <p>Beacon has two user roles — <strong>Admin</strong> and <strong>Team Member</strong>. Anyone can register an account, but new accounts are always created as Team Member until an admin promotes them.</p>
 
             <SubSection id="user-roles" title="Roles">
-              <p><strong>Admin</strong> — full access to the admin panel: campuses, screens, people, labels, automation, scheduling, users, and integrations.</p>
-              <p><strong>Team Member</strong> — can log in but only sees a "display access only" message in the admin panel. Intended for accounts that only need to push assignments to a screen via a share code, not manage the system.</p>
+              <p><strong>Admin</strong> — full access to every page in the admin panel, including Organization settings, Users management, and Integrations.</p>
+              <p><strong>Team Member</strong> — access to the Dashboard and all content pages: Locations, Templates, People, Labels, Automation, Screens, and Services. They can view, add, and edit content for the organization. The three admin-only pages — <strong>Organization</strong>, <strong>Users</strong>, and <strong>Integrations</strong> — are hidden from the sidebar and redirect to an access-denied page if reached directly.</p>
+              <p>All data is <strong>shared across the organization</strong> — people, screens, templates, and labels added by one user are visible to every user in the same org, regardless of role.</p>
               <p>Admins can change any account's role from the <strong>Users</strong> page. Guards prevent removing the last admin account or demoting yourself.</p>
             </SubSection>
 
@@ -581,15 +582,16 @@ export default function Docs() {
               </Callout>
             </SubSection>
 
-            <SubSection id="my-account" title="My Account">
-              <p>Click your name at the bottom of the sidebar (or go to <strong>My Account</strong> in the nav) to update your profile:</p>
+            <SubSection id="my-account" title="Settings">
+              <p>Click your name at the bottom of the sidebar to open your <strong>Settings</strong> page. A sticky nav at the top lets you jump to any section:</p>
               <ul className={styles.ul}>
-                <li><strong>Account info</strong> — change your display name or email address.</li>
-                <li><strong>Change password</strong> — requires your current password before setting a new one (minimum 8 characters).</li>
+                <li><strong>Account</strong> — change your display name or email address. Your current role (Admin or Team Member) is shown as a badge. Changes take effect immediately.</li>
+                <li><strong>Security</strong> — change your password. Requires your current password first. New password must be at least 8 characters.</li>
+                <li><strong>Appearance</strong> — switch between <em>Dark</em> and <em>Light</em> theme. Preference is stored in the browser and applies across the whole admin panel.</li>
+                <li><strong>Connections</strong> — shows whether Planning Center is connected. Admins see a <em>Manage →</em> link to the Integrations page and a <em>Connect →</em> link if PCO is disconnected. Team members see the status only.</li>
+                <li><strong>Organization</strong> — a read-only summary of your organization's name, slug, timezone, and address. Admins see an <em>Edit settings →</em> link to the full Organization page.</li>
               </ul>
-              <Callout type="info">
-                Profile changes take effect immediately — the sidebar name updates without requiring a re-login.
-              </Callout>
+              <p>The <strong>Sign out</strong> button is at the bottom of the Settings page (and also available via the icon next to your name in the sidebar).</p>
             </SubSection>
           </Section>
 
