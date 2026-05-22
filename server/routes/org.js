@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const db = require('../db')
 const { generateAccessCode } = require('../db')
-const { requireAdmin } = require('../middleware/auth')
+const { requireAuth, requireAdmin } = require('../middleware/auth')
 
 const LOGOS_DIR = path.join(__dirname, '../uploads/logos')
 fs.mkdirSync(LOGOS_DIR, { recursive: true })
@@ -22,14 +22,14 @@ const logoUpload = multer({
   },
 })
 
-router.use(requireAdmin)
-
-// GET /api/org — return the org for the current session
-router.get('/', (req, res) => {
+// GET /api/org — return the org for the current session (any authenticated user)
+router.get('/', requireAuth, (req, res) => {
   const org = db.prepare('SELECT * FROM organizations WHERE id = ?').get(req.session.orgId)
   if (!org) return res.status(404).json({ error: 'Organization not found' })
   res.json(org)
 })
+
+router.use(requireAdmin)
 
 // PUT /api/org — update name, address fields, website, phone, timezone (not slug or access_code)
 router.put('/', (req, res) => {
