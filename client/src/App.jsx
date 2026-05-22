@@ -7,6 +7,7 @@ import OrgLogin from './pages/OrgLogin'
 import Register from './pages/Register'
 import Setup from './pages/Setup'
 import NoAccess from './pages/NoAccess'
+import NotFound from './pages/NotFound'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Display from './pages/Display'
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="/admin/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
         <Route path="/" element={<Navigate to="/org" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>
   )
