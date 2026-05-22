@@ -115,6 +115,22 @@ router.get('/:token', (req, res) => {
     if (tplRow?.config) {
       try { templateConfig = JSON.parse(tplRow.config) } catch {}
     }
+    // Augment slot configs: resolve labelId → labelName so CardGrid can route by label
+    if (templateConfig?.slots) {
+      const labelIds = [...new Set(
+        Object.values(templateConfig.slots).map(s => s.labelId).filter(Boolean)
+      )]
+      if (labelIds.length > 0) {
+        const rows = db.prepare(
+          `SELECT id, name FROM labels WHERE id IN (${labelIds.map(() => '?').join(',')})`
+        ).all(...labelIds)
+        const labelMap = Object.fromEntries(rows.map(l => [l.id, l.name]))
+        for (const sn of Object.keys(templateConfig.slots)) {
+          const lid = templateConfig.slots[sn].labelId
+          if (lid) templateConfig.slots[sn] = { ...templateConfig.slots[sn], labelName: labelMap[lid] ?? null }
+        }
+      }
+    }
   }
 
   if (!assignments.length) {

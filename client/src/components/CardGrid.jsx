@@ -19,11 +19,18 @@ function TemplateGrid({ musicians, template }) {
           const slotNum = slotCounter
           const cfg = slotConfig[slotNum] ?? {}
           const mode = cfg.mode ?? 'full'
-          // if linkedTo is set, show data from the linked slot instead
-          const sourceSn = cfg.linkedTo ?? slotNum
-          const musician = musicians.find(m => m.slot === sourceSn - 1) ?? null
 
-          if (!musician && emptyBehavior === 'hide') continue
+          let musician
+          if (cfg.labelName) {
+            // Label-pinned slot: find the musician assigned that mic or IEM label
+            musician = musicians.find(m => m.mic === cfg.labelName || m.iem === cfg.labelName) ?? null
+          } else {
+            // Positional slot: linkedTo overrides which slot's person to show
+            const sourceSn = cfg.linkedTo ?? slotNum
+            musician = musicians.find(m => m.slot === sourceSn - 1) ?? null
+          }
+
+          if (!musician && (emptyBehavior === 'hide' || emptyBehavior === 'collapse')) continue
 
           cells.push(
             <div key={slotNum} className={styles.templateCell}>

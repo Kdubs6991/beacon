@@ -334,7 +334,6 @@ function ScreenCard({ screen, onEdit, onDelete, onAssignments }) {
           {screen.description && <span className={styles.cardDesc}>{screen.description}</span>}
         </div>
         <div className={styles.cardMenuBtns}>
-          <button className={styles.menuBtn} onClick={() => onAssignments(screen)}>Assignments</button>
           <button className={styles.menuBtn} onClick={() => onEdit(screen)}>Edit</button>
           <button className={`${styles.menuBtn} ${styles.menuDanger}`} onClick={() => onDelete(screen.id)}>Delete</button>
         </div>
@@ -369,6 +368,10 @@ function ScreenCard({ screen, onEdit, onDelete, onAssignments }) {
           {copied === 'code' ? '✓ Copied' : screen.share_code}
         </button>
       </div>
+
+      <button className={styles.currentAssignmentsBtn} onClick={() => onAssignments(screen)}>
+        Current assignments
+      </button>
 
       <a href={displayUrl} target="_blank" rel="noreferrer" className={styles.openLink}>
         Open display →
