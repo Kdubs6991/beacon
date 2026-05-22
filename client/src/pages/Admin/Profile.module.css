@@ -46,6 +46,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 22px 24px 24px;
+  scroll-margin-top: 60px;
 }
 
 .sectionHeader {
@@ -59,6 +60,10 @@
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-pri);
+  margin: 0 0 18px;
+}
+
+.sectionHeader .sectionTitle {
   flex: 1;
   margin: 0;
 }
@@ -66,7 +71,7 @@
 .sectionDesc {
   font-size: 0.82rem;
   color: var(--text-muted);
-  margin: -12px 0 18px;
+  margin: -10px 0 18px;
   line-height: 1.5;
 }
 
@@ -235,6 +240,55 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ── Connections ─────────────────────────────────────────── */
+
+.connectionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.connDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connDotOn  { background: #22c55e; }
+.connDotOff { background: #f59e0b; }
+
+.connBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.connName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-pri);
+}
+
+.connStatus {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.connAction {
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.connAction:hover { opacity: 0.75; }
 
 /* ── Org info grid ───────────────────────────────────────── */
 

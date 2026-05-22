@@ -49,6 +49,7 @@ const SECTIONS = [
   { id: 'account',      label: 'Account' },
   { id: 'security',     label: 'Security' },
   { id: 'appearance',   label: 'Appearance' },
+  { id: 'connections',  label: 'Connections' },
   { id: 'organization', label: 'Organization' },
 ]
 
@@ -210,6 +211,40 @@ function AppearanceSection() {
   )
 }
 
+function ConnectionsSection({ isAdmin }) {
+  const [pcoConnected, setPcoConnected] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/pco/status', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setPcoConnected(!!data.connected))
+      .catch(() => setPcoConnected(false))
+  }, [])
+
+  return (
+    <div id="connections" className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <h2 className={styles.sectionTitle}>Connections</h2>
+        {isAdmin && (
+          <Link to="/admin/integrations" className={styles.editLink}>Manage →</Link>
+        )}
+      </div>
+      <div className={styles.connectionRow}>
+        <span className={`${styles.connDot} ${pcoConnected ? styles.connDotOn : styles.connDotOff}`} />
+        <div className={styles.connBody}>
+          <span className={styles.connName}>Planning Center</span>
+          <span className={styles.connStatus}>
+            {pcoConnected === null ? 'Checking…' : pcoConnected ? 'Connected' : 'Not connected'}
+          </span>
+        </div>
+        {!pcoConnected && pcoConnected !== null && isAdmin && (
+          <Link to="/admin/integrations" className={styles.connAction}>Connect →</Link>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function OrgRow({ label, value, mono }) {
   return (
     <div className={styles.orgRow}>
@@ -277,6 +312,7 @@ export default function Profile() {
         <AccountSection user={user} onUpdate={setUser} />
         <SecuritySection />
         <AppearanceSection />
+        <ConnectionsSection isAdmin={user?.role === 'admin'} />
         <OrgSection isAdmin={user?.role === 'admin'} />
 
         <div className={styles.signOutRow}>
