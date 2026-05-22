@@ -377,7 +377,9 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
 // ── Push modal ────────────────────────────────────────────────────────────────
 
 function PushModal({ st, screens, onClose }) {
-  const [selectedIds, setSelectedIds] = useState(() => screens.map(s => s.id))
+  // Mirror screens show their source's content — pushing to them has no effect
+  const pushableScreens = screens.filter(s => !s.mirror_screen_id)
+  const [selectedIds, setSelectedIds] = useState(() => pushableScreens.map(s => s.id))
   const [pushing, setPushing] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -415,7 +417,7 @@ function PushModal({ st, screens, onClose }) {
             <button
               className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`}
               onClick={handlePush}
-              disabled={pushing || selectedIds.length === 0}
+              disabled={pushing || selectedIds.length === 0 || pushableScreens.length === 0}
             >
               {pushing ? 'Pushing…' : `Push to ${selectedIds.length} screen${selectedIds.length !== 1 ? 's' : ''}`}
             </button>
@@ -424,18 +426,24 @@ function PushModal({ st, screens, onClose }) {
       }
     >
       {result ? (
-        <p className={styles.pushSuccess}>
-          Pushed {result.pushed} musician{result.pushed !== 1 ? 's' : ''} to {result.screens} screen{result.screens !== 1 ? 's' : ''}.
-        </p>
+        result.pushed === 0 ? (
+          <p className={styles.pushError}>
+            Push succeeded but no musicians were sent — this service type has no team members or no automation rules matched anyone. Add people on the Services page first.
+          </p>
+        ) : (
+          <p className={styles.pushSuccess}>
+            Pushed {result.pushed} musician{result.pushed !== 1 ? 's' : ''} to {result.screens} screen{result.screens !== 1 ? 's' : ''}.
+          </p>
+        )
       ) : (
         <>
           {error && <p className={styles.pushError}>{error}</p>}
           <p className={styles.pushHint}>Choose which screens to update right now.</p>
-          {screens.length === 0 ? (
+          {pushableScreens.length === 0 ? (
             <p className={styles.pushHint}>No screens available. Create a screen on the Screens page first.</p>
           ) : (
             <div className={styles.pushScreenList}>
-              {screens.map(s => (
+              {pushableScreens.map(s => (
                 <label key={s.id} className={styles.pushScreenRow}>
                   <input type="checkbox" checked={selectedIds.includes(s.id)} onChange={() => toggle(s.id)} />
                   <span className={styles.pushScreenName}>{s.name}</span>

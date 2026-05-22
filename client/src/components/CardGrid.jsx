@@ -14,7 +14,7 @@ function TemplateGrid({ musicians, template }) {
     <div className={styles.templateGrid}>
       {rows.map((row, ri) => {
         const cells = []
-        for (let col = 0; col < row.columns; col++) {
+        for (let col = 0; col < (row.cols ?? row.columns ?? 0); col++) {
           slotCounter++
           const slotNum = slotCounter
           const cfg = slotConfig[slotNum] ?? {}
