@@ -12,6 +12,7 @@ function api(path, opts = {}) {
     ...opts,
   }).then(async r => {
     const data = await r.json()
+    if (r.status === 401) { window.location.href = '/login'; throw new Error('Session expired') }
     if (!r.ok) throw new Error(data.error || 'Request failed')
     return data
   })
@@ -308,6 +309,7 @@ export default function Screens() {
   const [campuses,      setCampuses]      = useState([])
   const [templates,     setTemplates]     = useState([])
   const [loading,       setLoading]       = useState(true)
+  const [loadError,     setLoadError]     = useState(null)
   const [modal,         setModal]         = useState(null)
   const [filterCampus,  setFilterCampus]  = useState('all')
   const [filterType,    setFilterType]    = useState('all')
@@ -322,7 +324,9 @@ export default function Screens() {
       setScreens(screenList)
       setCampuses(campusList)
       setTemplates(templateList)
-    }).finally(() => setLoading(false))
+    })
+    .catch(err => setLoadError(err.message))
+    .finally(() => setLoading(false))
   }, [])
 
   async function deleteScreen(id) {
@@ -417,7 +421,13 @@ export default function Screens() {
 
       {loading && <p className={styles.muted}>Loading…</p>}
 
-      {!loading && screens.length === 0 && (
+      {!loading && loadError && (
+        <div className={styles.emptyState}>
+          <p className={styles.muted}>Failed to load screens: {loadError}</p>
+        </div>
+      )}
+
+      {!loading && !loadError && screens.length === 0 && (
         <div className={styles.emptyState}>
           <p>No screens yet.</p>
           <p className={styles.muted}>Create a screen to get a permanent display URL for your TV or kiosk.</p>

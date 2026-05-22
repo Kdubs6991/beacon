@@ -44,7 +44,8 @@ function api(path, opts = {}) {
     ...opts,
   }).then(async r => {
     const data = await r.json()
-    if (!r.ok) throw new Error(data.error || 'Request failed')
+    if (r.status === 401) { window.location.href = "/login"; throw new Error("Session expired") }
+    if (!r.ok) throw new Error(data.error || "Request failed")
     return data
   })
 }

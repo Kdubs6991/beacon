@@ -50,7 +50,7 @@ export default function Register() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Registration failed')
       setUser(data.user)
-      navigate(data.user.role === 'admin' ? '/admin' : '/no-access')
+      navigate('/admin')
     } catch (err) {
       setError(err.message)
     } finally {

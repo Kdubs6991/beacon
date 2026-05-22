@@ -12,6 +12,7 @@ function api(path, opts = {}) {
     ...opts,
   }).then(async r => {
     const data = await r.json()
+    if (r.status === 401) { window.location.href = '/login'; throw new Error('Session expired') }
     if (!r.ok) throw new Error(data.error || 'Request failed')
     return data
   })
@@ -561,6 +562,7 @@ export default function People() {
 
   const [people,       setPeople]       = useState([])
   const [loading,      setLoading]      = useState(true)
+  const [loadError,    setLoadError]    = useState(null)
   const [search,       setSearch]       = useState('')
   const [viewMode,     setViewMode]     = useState(() => localStorage.getItem('beacon-people-view') || 'list')
   const [filterSource, setFilterSource] = useState('')         // '' | 'pco' | 'manual'
@@ -569,7 +571,10 @@ export default function People() {
   const [pcoBanner,    setPcoBanner]    = useState(false)
 
   useEffect(() => {
-    api('/people').then(setPeople).finally(() => setLoading(false))
+    api('/people')
+      .then(setPeople)
+      .catch(err => setLoadError(err.message))
+      .finally(() => setLoading(false))
   }, [])
 
   function switchView(mode) {
@@ -711,7 +716,13 @@ export default function People() {
 
       {loading && <p className={styles.muted}>Loading…</p>}
 
-      {!loading && people.length === 0 && (
+      {!loading && loadError && (
+        <div className={styles.emptyState}>
+          <p className={styles.muted}>Failed to load people: {loadError}</p>
+        </div>
+      )}
+
+      {!loading && !loadError && people.length === 0 && (
         <div className={styles.emptyState}>
           <p>No people yet.</p>
           <p className={styles.muted}>Add people manually or sync from Planning Center.</p>
