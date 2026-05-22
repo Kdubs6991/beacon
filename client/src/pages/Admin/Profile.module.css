@@ -1,27 +1,118 @@
+/* ── Section nav ─────────────────────────────────────────── */
+
+.sectionNav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-page);
+  margin: -28px -32px 28px;
+  padding: 10px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.sectionNavBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+.sectionNavBtn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-pri);
+}
+
+/* ── Page container ──────────────────────────────────────── */
+
 .page {
-  max-width: 520px;
+  max-width: 640px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
+
+/* ── Card section ────────────────────────────────────────── */
 
 .section {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 22px 24px 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .sectionTitle {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-pri);
-  margin-bottom: 20px;
+  flex: 1;
+  margin: 0;
 }
+
+.sectionDesc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: -12px 0 18px;
+  line-height: 1.5;
+}
+
+/* ── Role badge ──────────────────────────────────────────── */
+
+.roleBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.roleBadgeAdmin {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: var(--accent);
+}
+
+/* ── Edit link ───────────────────────────────────────────── */
+
+.editLink {
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.editLink:hover { opacity: 0.75; }
+
+/* ── Form ────────────────────────────────────────────────── */
 
 .form {
   display: flex;
   flex-direction: column;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
 .formField {
@@ -76,6 +167,8 @@
   margin-top: 4px;
 }
 
+/* ── Buttons ─────────────────────────────────────────────── */
+
 .btnPrimary {
   background: var(--accent);
   color: #fff;
@@ -91,7 +184,134 @@
 .btnPrimary:hover:not(:disabled) { opacity: 0.88; }
 .btnPrimary:disabled { opacity: 0.45; cursor: not-allowed; }
 
+.btnDanger {
+  background: none;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btnDanger:hover {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: #f87171;
+}
+
 .successMsg {
   font-size: 0.82rem;
   color: #4ade80;
+}
+
+/* ── Theme picker ────────────────────────────────────────── */
+
+.themeRow {
+  display: flex;
+  gap: 10px;
+}
+
+.themeCard {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-sec);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.themeCard:hover { border-color: var(--accent); color: var(--text-pri); }
+
+.themeCardActive {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Org info grid ───────────────────────────────────────── */
+
+.orgGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.orgRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.orgRow:last-child { border-bottom: none; }
+
+.orgLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.orgValue {
+  font-size: 0.875rem;
+  color: var(--text-pri);
+  flex: 1;
+}
+
+.orgValueMono {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.82rem;
+  color: var(--text-sec);
+}
+
+/* ── Sign out row ────────────────────────────────────────── */
+
+.signOutRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 16px;
+}
+
+.signOutHint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* ── Misc ────────────────────────────────────────────────── */
+
+.muted {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .sectionNav {
+    margin: -28px -20px 24px;
+    padding: 10px 20px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .themeRow {
+    flex-wrap: wrap;
+  }
 }
