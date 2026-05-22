@@ -587,3 +587,82 @@
   margin: 0 0 10px;
   line-height: 1.5;
 }
+
+/* ── Push modal ───────────────────────────────────────────── */
+
+.pushHint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.pushError {
+  font-size: 0.85rem;
+  color: #f87171;
+  margin: 0 0 12px;
+}
+
+.pushSuccess {
+  font-size: 0.9rem;
+  color: #4ade80;
+  margin: 0;
+}
+
+.pushScreenList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pushScreenRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.pushScreenRow:hover { background: rgba(255,255,255,0.04); }
+.pushScreenRow input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pushScreenName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  flex: 1;
+}
+
+.pushScreenCampus {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.pushScreenActive {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.25);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.pushScreenInactive {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}

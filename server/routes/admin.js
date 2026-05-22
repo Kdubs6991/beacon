@@ -190,6 +190,33 @@ router.delete('/service-types/:id', (req, res) => {
   db.prepare('DELETE FROM service_types WHERE id = ?').run(req.params.id)
   res.json({ ok: true })
 })
+router.post('/service-types/:id/push', requireAuth, async (req, res) => {
+  const orgId = req.session.orgId
+  const { screen_ids } = req.body
+  if (!Array.isArray(screen_ids) || screen_ids.length === 0) {
+    return res.status(400).json({ error: 'screen_ids array required' })
+  }
+  const serviceType = db.prepare(`
+    SELECT st.id FROM service_types st
+    JOIN campuses c ON st.campus_id = c.id
+    WHERE st.id = ? AND c.org_id = ?
+  `).get(req.params.id, orgId)
+  if (!serviceType) return res.status(404).json({ error: 'Service type not found' })
+
+  const validScreens = db.prepare(
+    `SELECT id FROM screens WHERE id IN (${screen_ids.map(() => '?').join(',')}) AND org_id = ?`
+  ).all(...screen_ids, orgId)
+  const validIds = validScreens.map(s => s.id)
+  if (validIds.length === 0) return res.status(400).json({ error: 'No valid screens' })
+
+  try {
+    const { pushToScreens } = require('../scheduler')
+    const result = await pushToScreens(req.params.id, validIds)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 // --- Manual assignments ---
 const MANUAL_JOIN = `
@@ -585,6 +612,19 @@ router.put('/screens/:id', (req, res) => {
 router.delete('/screens/:id', (req, res) => {
   const orgId = req.session.orgId
   db.prepare('DELETE FROM screens WHERE id = ? AND org_id = ?').run(req.params.id, orgId)
+  res.json({ ok: true })
+})
+router.get('/screens/:id/assignments', requireAuth, (req, res) => {
+  const orgId = req.session.orgId
+  const screen = db.prepare('SELECT id FROM screens WHERE id = ? AND org_id = ?').get(req.params.id, orgId)
+  if (!screen) return res.status(404).json({ error: 'Screen not found' })
+  res.json(db.prepare('SELECT * FROM active_assignments WHERE screen_id = ? ORDER BY slot').all(req.params.id))
+})
+router.delete('/screens/:id/assignments', requireAuth, (req, res) => {
+  const orgId = req.session.orgId
+  const screen = db.prepare('SELECT id FROM screens WHERE id = ? AND org_id = ?').get(req.params.id, orgId)
+  if (!screen) return res.status(404).json({ error: 'Screen not found' })
+  db.prepare('DELETE FROM active_assignments WHERE screen_id = ?').run(req.params.id)
   res.json({ ok: true })
 })
 

@@ -497,3 +497,87 @@
 /* ── Misc ── */
 .muted { color: var(--text-muted); font-size: 0.85rem; }
 .emptyState { padding: 40px 0; text-align: center; color: var(--text-sec); line-height: 1.8; }
+
+.btnDanger {
+  background: none;
+  border: 1px solid rgba(248,113,113,0.4);
+  color: #f87171;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.btnDanger:hover { background: rgba(248,113,113,0.08); }
+.btnDanger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Assignments modal ── */
+.assignEventInfo {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  margin: 0 0 12px;
+}
+.assignEventInfo strong { color: var(--text-pri); }
+
+.assignList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assignRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+
+.assignSlot {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.assignName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  flex: 1;
+  min-width: 100px;
+}
+
+.assignPos {
+  font-size: 0.75rem;
+  color: var(--text-sec);
+}
+
+.assignMic {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--mic-color, #f59e0b);
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.assignIem {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--iem-color, #a78bfa);
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}

@@ -238,8 +238,81 @@ function ScreenModal({ initial, campuses, allScreens, templates, onSave, onClose
   )
 }
 
+// ── Assignments modal ─────────────────────────────────────────────────────────
+function AssignmentsModal({ screen, onClose }) {
+  const [assignments, setAssignments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [clearing, setClearing] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    api(`/screens/${screen.id}/assignments`)
+      .then(data => { setAssignments(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(err => { setError(err.message); setLoading(false) })
+  }, [screen.id])
+
+  async function handleClear() {
+    if (!confirm('Clear all assignments from this screen?')) return
+    setClearing(true)
+    try {
+      await api(`/screens/${screen.id}/assignments`, { method: 'DELETE' })
+      setAssignments([])
+    } catch (err) {
+      setError(err.message)
+    }
+    setClearing(false)
+  }
+
+  const eventName = assignments[0]?.event_name
+  const eventDate = assignments[0]?.event_date
+
+  return (
+    <Modal
+      title={`${screen.name} — Now Showing`}
+      onClose={onClose}
+      footer={
+        <>
+          {assignments.length > 0 && (
+            <button className={styles.btnDanger} onClick={handleClear} disabled={clearing}>
+              {clearing ? 'Clearing…' : 'Clear screen'}
+            </button>
+          )}
+          <button className={styles.btnGhost} onClick={onClose}>Close</button>
+        </>
+      }
+    >
+      {error && <p className={styles.formError}>{error}</p>}
+      {loading ? (
+        <p className={styles.muted}>Loading…</p>
+      ) : assignments.length === 0 ? (
+        <p className={styles.muted}>Nothing is currently showing on this screen.</p>
+      ) : (
+        <>
+          {eventName && (
+            <p className={styles.assignEventInfo}>
+              <strong>{eventName}</strong>
+              {eventDate && <span> · {eventDate}</span>}
+            </p>
+          )}
+          <div className={styles.assignList}>
+            {assignments.map(a => (
+              <div key={a.id} className={styles.assignRow}>
+                <span className={styles.assignSlot}>{a.slot + 1}</span>
+                <span className={styles.assignName}>{a.person_name || '—'}</span>
+                {a.position && <span className={styles.assignPos}>{a.position}</span>}
+                {a.mic_label && <span className={styles.assignMic}>Mic: {a.mic_label}</span>}
+                {a.iem_label && <span className={styles.assignIem}>IEM: {a.iem_label}</span>}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </Modal>
+  )
+}
+
 // ── Screen card ───────────────────────────────────────────────────────────────
-function ScreenCard({ screen, onEdit, onDelete }) {
+function ScreenCard({ screen, onEdit, onDelete, onAssignments }) {
   const [copied, setCopied] = useState(null)
   const displayUrl = `${window.location.origin}/display/${screen.token}`
 
@@ -261,6 +334,7 @@ function ScreenCard({ screen, onEdit, onDelete }) {
           {screen.description && <span className={styles.cardDesc}>{screen.description}</span>}
         </div>
         <div className={styles.cardMenuBtns}>
+          <button className={styles.menuBtn} onClick={() => onAssignments(screen)}>Assignments</button>
           <button className={styles.menuBtn} onClick={() => onEdit(screen)}>Edit</button>
           <button className={`${styles.menuBtn} ${styles.menuDanger}`} onClick={() => onDelete(screen.id)}>Delete</button>
         </div>
@@ -311,6 +385,7 @@ export default function Screens() {
   const [loading,       setLoading]       = useState(true)
   const [loadError,     setLoadError]     = useState(null)
   const [modal,         setModal]         = useState(null)
+  const [assignModal,   setAssignModal]   = useState(null)
   const [filterCampus,  setFilterCampus]  = useState('all')
   const [filterType,    setFilterType]    = useState('all')
   const [filterStatus,  setFilterStatus]  = useState('all')
@@ -444,6 +519,7 @@ export default function Screens() {
                 screen={screen}
                 onEdit={s => setModal({ type: 'screen', data: s })}
                 onDelete={deleteScreen}
+                onAssignments={s => setAssignModal(s)}
               />
             ))}
           </div>
@@ -458,6 +534,13 @@ export default function Screens() {
           templates={templates}
           onSave={onScreenSaved}
           onClose={() => setModal(null)}
+        />
+      )}
+
+      {assignModal && (
+        <AssignmentsModal
+          screen={assignModal}
+          onClose={() => setAssignModal(null)}
         />
       )}
     </AdminLayout>

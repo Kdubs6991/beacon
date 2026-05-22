@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from './_Layout'
 import InfoPopover from '../../components/InfoPopover'
+import Modal from '../../components/Modal'
 import styles from './Schedules.module.css'
 
 const API = import.meta.env.VITE_API_URL ?? ''
@@ -94,6 +95,15 @@ function EditIcon() {
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  )
+}
+
+function SendIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="22" y1="2" x2="11" y2="13"/>
+      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
     </svg>
   )
 }
@@ -364,6 +374,85 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
   )
 }
 
+// ── Push modal ────────────────────────────────────────────────────────────────
+
+function PushModal({ st, screens, onClose }) {
+  const [selectedIds, setSelectedIds] = useState(() => screens.map(s => s.id))
+  const [pushing, setPushing] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
+
+  function toggle(id) {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  async function handlePush() {
+    setPushing(true)
+    setError(null)
+    try {
+      const r = await api(`/service-types/${st.id}/push`, {
+        method: 'POST',
+        body: JSON.stringify({ screen_ids: selectedIds }),
+      })
+      if (r.error) throw new Error(r.error)
+      setResult(r)
+    } catch (err) {
+      setError(err.message)
+    }
+    setPushing(false)
+  }
+
+  return (
+    <Modal
+      title={`Push "${st.name}"`}
+      onClose={onClose}
+      footer={
+        result ? (
+          <button className={`${styles.btn} ${styles.btnSmall}`} onClick={onClose}>Close</button>
+        ) : (
+          <>
+            <button className={`${styles.btn} ${styles.btnSmall}`} onClick={onClose}>Cancel</button>
+            <button
+              className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`}
+              onClick={handlePush}
+              disabled={pushing || selectedIds.length === 0}
+            >
+              {pushing ? 'Pushing…' : `Push to ${selectedIds.length} screen${selectedIds.length !== 1 ? 's' : ''}`}
+            </button>
+          </>
+        )
+      }
+    >
+      {result ? (
+        <p className={styles.pushSuccess}>
+          Pushed {result.pushed} musician{result.pushed !== 1 ? 's' : ''} to {result.screens} screen{result.screens !== 1 ? 's' : ''}.
+        </p>
+      ) : (
+        <>
+          {error && <p className={styles.pushError}>{error}</p>}
+          <p className={styles.pushHint}>Choose which screens to update right now.</p>
+          {screens.length === 0 ? (
+            <p className={styles.pushHint}>No screens available. Create a screen on the Screens page first.</p>
+          ) : (
+            <div className={styles.pushScreenList}>
+              {screens.map(s => (
+                <label key={s.id} className={styles.pushScreenRow}>
+                  <input type="checkbox" checked={selectedIds.includes(s.id)} onChange={() => toggle(s.id)} />
+                  <span className={styles.pushScreenName}>{s.name}</span>
+                  {s.campus_name && <span className={styles.pushScreenCampus}>{s.campus_name}</span>}
+                  <span className={s.is_active ? styles.pushScreenActive : styles.pushScreenInactive}>
+                    {s.is_active ? 'Live' : 'Offline'}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </Modal>
+  )
+}
+
 // ── Service type card ─────────────────────────────────────────────────────────
 
 function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnected, onDelete, onRefreshSchedules }) {
@@ -374,6 +463,7 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
   const [stCampus, setStCampus] = useState(st.campus_id ?? '')
   const [stMode, setStMode] = useState(st.mode ?? 'pco')
   const [savingSt, setSavingSt] = useState(false)
+  const [pushOpen, setPushOpen] = useState(false)
 
   const mySchedules = schedules.filter(s => s.service_type_id === st.id)
   const campus = campuses.find(c => c.id === st.campus_id)
@@ -428,6 +518,7 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
   }
 
   return (
+    <>
     <div className={styles.stCard}>
       <div className={styles.stHeader}>
         <div className={styles.stHeaderLeft}>
@@ -493,9 +584,14 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
         </div>
         <div className={styles.stActions}>
           {!editingSt && (
-            <button className={styles.btnIcon} onClick={() => { setEditingSt(true); setOpen(true) }} title="Edit service type">
-              <EditIcon />
-            </button>
+            <>
+              <button className={styles.btnIcon} onClick={() => setPushOpen(true)} title="Push to screens now">
+                <SendIcon /> Push
+              </button>
+              <button className={styles.btnIcon} onClick={() => { setEditingSt(true); setOpen(true) }} title="Edit service type">
+                <EditIcon />
+              </button>
+            </>
           )}
           <button className={`${styles.btnIcon} ${styles.btnDanger}`} onClick={() => onDelete(st.id)} title="Delete service type">
             <TrashIcon />
@@ -556,6 +652,8 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
         </div>
       )}
     </div>
+    {pushOpen && <PushModal st={st} screens={screens} onClose={() => setPushOpen(false)} />}
+    </>
   )
 }
 
