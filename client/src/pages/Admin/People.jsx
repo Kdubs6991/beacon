@@ -283,6 +283,14 @@ function PersonModal({ initial, onSave, onClose }) {
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState(null)
   const [showCrop, setShowCrop] = useState(false)
+  const [positionTypes, setPositionTypes] = useState([])
+
+  useEffect(() => {
+    fetch('/api/admin/position-types', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setPositionTypes(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [])
 
   function toggleCategory(cat) {
     setCategories(prev =>
@@ -347,8 +355,14 @@ function PersonModal({ initial, onSave, onClose }) {
 
       <div className={styles.formField}>
         <label className={styles.formLabel}>Position <span className={styles.opt}>(optional)</span></label>
-        <input className={styles.formInput} value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Lead Vocalist, Keys, EG 1" />
-        <p className={styles.formHint}>Used by automation rules to auto-assign mics and IEMs.</p>
+        <select className={styles.formInput} value={position} onChange={e => setPosition(e.target.value)}>
+          <option value="">— None —</option>
+          {positionTypes.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+          {position && !positionTypes.some(p => p.name === position) && (
+            <option value={position}>{position}</option>
+          )}
+        </select>
+        <p className={styles.formHint}>Used by automation rules to auto-assign mics and IEMs. Manage positions in the Labels page.</p>
       </div>
 
       <div className={styles.formField}>

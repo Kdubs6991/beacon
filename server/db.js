@@ -307,6 +307,51 @@ if (orgCount.n === 0) {
   const schedCols = db.prepare('PRAGMA table_info(schedules)').all().map(c => c.name)
   if (!schedCols.includes('screen_ids')) db.exec('ALTER TABLE schedules ADD COLUMN screen_ids TEXT')
 
+  // --- Add mode to service_types ---
+  const stCols2 = db.prepare('PRAGMA table_info(service_types)').all().map(c => c.name)
+  if (!stCols2.includes('mode')) db.exec("ALTER TABLE service_types ADD COLUMN mode TEXT NOT NULL DEFAULT 'pco'")
+
+  // --- Manual assignments (non-PCO service type roster) ---
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS manual_assignments (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      service_type_id INTEGER NOT NULL REFERENCES service_types(id) ON DELETE CASCADE,
+      person_id       INTEGER REFERENCES people(id) ON DELETE CASCADE,
+      slot            INTEGER NOT NULL DEFAULT 0,
+      position        TEXT
+    )
+  `)
+
+  // Migrate old manual_assignments that had mic/iem label columns
+  const maCols = db.prepare('PRAGMA table_info(manual_assignments)').all().map(c => c.name)
+  if (maCols.includes('mic_label_id')) {
+    db.exec('PRAGMA foreign_keys = OFF')
+    db.exec(`
+      CREATE TABLE manual_assignments_new (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        service_type_id INTEGER NOT NULL REFERENCES service_types(id) ON DELETE CASCADE,
+        person_id       INTEGER REFERENCES people(id) ON DELETE CASCADE,
+        slot            INTEGER NOT NULL DEFAULT 0,
+        position        TEXT
+      )
+    `)
+    db.exec('INSERT INTO manual_assignments_new (id, service_type_id, person_id, slot) SELECT id, service_type_id, person_id, slot FROM manual_assignments')
+    db.exec('DROP TABLE manual_assignments')
+    db.exec('ALTER TABLE manual_assignments_new RENAME TO manual_assignments')
+    db.exec('PRAGMA foreign_keys = ON')
+  }
+
+  // --- Position types (predefined position labels for manual service teams) ---
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS position_types (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id     INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+      name       TEXT NOT NULL,
+      sort_order INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `)
+
   // --- Convert single-value category strings to JSON arrays (idempotent) ---
   db.prepare(`UPDATE people SET category          = '["' || category          || '"]' WHERE category          IS NOT NULL AND category          NOT LIKE '[%'`).run()
   db.prepare(`UPDATE people SET category_override = '["' || category_override || '"]' WHERE category_override IS NOT NULL AND category_override NOT LIKE '[%'`).run()

@@ -195,6 +195,113 @@ function LabelSection({ type, labels, onEdit, onDelete, onReorder }) {
   )
 }
 
+// ── Positions section ─────────────────────────────────────────────────────────
+
+function PositionsSection() {
+  const [positions, setPositions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [editId, setEditId] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    api('/position-types').then(data => {
+      setPositions(Array.isArray(data) ? data : [])
+      setLoading(false)
+    })
+  }, [])
+
+  async function handleAdd() {
+    if (!newName.trim()) return
+    setSaving(true)
+    const saved = await api('/position-types', { method: 'POST', body: JSON.stringify({ name: newName.trim() }) })
+    setPositions(prev => [...prev, saved])
+    setNewName('')
+    setAdding(false)
+    setSaving(false)
+  }
+
+  async function handleEdit(id) {
+    if (!editName.trim()) return
+    setSaving(true)
+    const saved = await api(`/position-types/${id}`, { method: 'PUT', body: JSON.stringify({ name: editName.trim() }) })
+    setPositions(prev => prev.map(p => p.id === id ? saved : p))
+    setEditId(null)
+    setSaving(false)
+  }
+
+  async function handleDelete(id) {
+    if (!confirm('Delete this position?')) return
+    await api(`/position-types/${id}`, { method: 'DELETE' })
+    setPositions(prev => prev.filter(p => p.id !== id))
+  }
+
+  return (
+    <div className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <div className={styles.sectionHeaderInfo}>
+          <h2 className={`${styles.sectionTitle} ${styles.typePosition}`}>Positions</h2>
+          <p className={styles.sectionSubtitle}>Roles used in Manual service types — e.g. Singer, Speaker, Announcements. Automation rules match on these.</p>
+        </div>
+        {!adding && (
+          <button className={styles.btnPrimary} onClick={() => setAdding(true)}>
+            + Add Position
+          </button>
+        )}
+      </div>
+
+      {loading && <p className={styles.emptySection}>Loading…</p>}
+
+      {!loading && positions.length === 0 && !adding && (
+        <p className={styles.emptySection}>No positions defined yet.</p>
+      )}
+
+      {!loading && positions.map(p => (
+        <div key={p.id} className={styles.positionRow}>
+          {editId === p.id ? (
+            <>
+              <input
+                className={styles.positionInput}
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleEdit(p.id); if (e.key === 'Escape') setEditId(null) }}
+                autoFocus
+              />
+              <button className={styles.menuBtn} onClick={() => handleEdit(p.id)} disabled={saving}>Save</button>
+              <button className={styles.menuBtn} onClick={() => setEditId(null)}>Cancel</button>
+            </>
+          ) : (
+            <>
+              <span className={styles.positionName}>{p.name}</span>
+              <div className={styles.labelActions}>
+                <button className={styles.menuBtn} onClick={() => { setEditId(p.id); setEditName(p.name) }}>Edit</button>
+                <button className={`${styles.menuBtn} ${styles.menuDanger}`} onClick={() => handleDelete(p.id)}>Delete</button>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+
+      {adding && (
+        <div className={styles.positionAddRow}>
+          <input
+            className={styles.positionInput}
+            placeholder="e.g. Singer, Speaker, Keys"
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setAdding(false); setNewName('') } }}
+            autoFocus
+          />
+          <button className={styles.menuBtn} onClick={handleAdd} disabled={saving || !newName.trim()}>Add</button>
+          <button className={styles.menuBtn} onClick={() => { setAdding(false); setNewName('') }}>Cancel</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Labels() {
@@ -243,6 +350,7 @@ export default function Labels() {
           <p>Labels are your physical mic and IEM channels — give each one a name like <strong>Vox 1</strong>, <strong>Keys DI</strong>, or <strong>IEM 3</strong>.</p>
           <p>Order matters: automation's "next available" picks the first unassigned label top-to-bottom. Drag rows to reorder.</p>
           <p>Use <strong>groups</strong> to create pools (e.g. "Vocals", "Packs") so automation can pull from a specific subset.</p>
+          <p><strong>Positions</strong> (at the bottom of this page) are role names like Singer, Speaker, or Worship Leader — used when building Manual service teams and matched by automation rules.</p>
         </InfoPopover>
         <button className={styles.btnPrimary} onClick={() => setModal({ label: null, defaultType: 'mic' })}>
           + Add Label
@@ -263,6 +371,7 @@ export default function Labels() {
               onReorder={handleReorder}
             />
           ))}
+          <PositionsSection />
         </div>
       )}
 

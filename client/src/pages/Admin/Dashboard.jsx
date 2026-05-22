@@ -278,31 +278,32 @@ function MiniAvatar({ name, photo }) {
 // ── Labels card ───────────────────────────────────────────────────────────────
 
 function LabelsCard({ labels }) {
-  const { count = 0, micCount = 0, iemCount = 0, items = [] } = labels ?? {}
-  const preview = items.slice(0, 4)
+  const { count = 0, micCount = 0, iemCount = 0, positionCount = 0, items = [], total = 0 } = labels ?? {}
 
   return (
     <DashCard icon={<LabelIcon />} title="Labels" to="/admin/labels">
-      {count === 0 ? (
+      {total === 0 ? (
         <p className={styles.emptyMsg}>No labels yet. Add your mic and IEM inventory in the Labels page.</p>
       ) : (
         <>
           <div className={styles.cardSummary}>
-            <span className={styles.summaryChip}>{count} total</span>
-            <span className={styles.summaryMeta}>{micCount} mic · {iemCount} IEM</span>
+            <span className={styles.summaryChip}>{count} labels</span>
+            <span className={styles.summaryMeta}>
+              {micCount} mic · {iemCount} IEM{positionCount > 0 ? ` · ${positionCount} positions` : ''}
+            </span>
           </div>
           <ul className={styles.itemList}>
-            {preview.map(l => (
-              <li key={l.id} className={styles.labelItem}>
-                <span className={`${styles.labelDot} ${l.type === 'mic' ? styles.labelDotMic : styles.labelDotIem}`} />
+            {items.map(l => (
+              <li key={`${l.type}-${l.id}`} className={styles.labelItem}>
+                <span className={`${styles.labelDot} ${l.type === 'mic' ? styles.labelDotMic : l.type === 'iem' ? styles.labelDotIem : styles.labelDotPosition}`} />
                 <div className={styles.itemBody}>
                   <span className={styles.itemName}>{l.name}</span>
                   {l.group_name && <span className={styles.itemSub}>{l.group_name}</span>}
                 </div>
-                <span className={styles.labelTypeTag}>{l.type === 'mic' ? 'Mic' : l.type === 'iem' ? 'IEM' : l.type}</span>
+                <span className={styles.labelTypeTag}>{l.type === 'mic' ? 'Mic' : l.type === 'iem' ? 'IEM' : 'Position'}</span>
               </li>
             ))}
-            {count > 4 && <li className={styles.moreRow}>+{count - 4} more</li>}
+            {total > items.length && <li className={styles.moreRow}>+{total - items.length} more</li>}
           </ul>
         </>
       )}

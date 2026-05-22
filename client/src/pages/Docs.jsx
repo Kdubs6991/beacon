@@ -22,9 +22,14 @@ const NAV = [
   { id: 'locations',     label: 'Locations',
     children: [
       { id: 'campuses',       label: 'Campuses' },
-      { id: 'service-types',  label: 'Service Types' },
-      { id: 'pco-id',         label: 'Planning Center ID' },
-      { id: 'auto-refresh',   label: 'Auto-Refresh Schedules' },
+    ]
+  },
+  { id: 'services',      label: 'Services',
+    children: [
+      { id: 'service-types',      label: 'Service Types' },
+      { id: 'service-pco-mode',   label: 'PCO Mode' },
+      { id: 'service-manual-mode', label: 'Manual Mode' },
+      { id: 'service-schedules',  label: 'Auto-Refresh Schedules' },
     ]
   },
   { id: 'templates',     label: 'Templates',
@@ -53,9 +58,10 @@ const NAV = [
     ]
   },
   { id: 'labels', label: 'Labels', children: [
-      { id: 'labels-types',  label: 'Mic vs IEM' },
-      { id: 'labels-groups', label: 'Groups' },
-      { id: 'labels-order',  label: 'Order & Reordering' },
+      { id: 'labels-types',     label: 'Mic vs IEM' },
+      { id: 'labels-groups',    label: 'Groups' },
+      { id: 'labels-order',     label: 'Order & Reordering' },
+      { id: 'labels-positions', label: 'Positions' },
     ],
   },
   { id: 'automation',    label: 'Automation Rules' },
@@ -67,7 +73,7 @@ const NAV = [
     ]
   },
   { id: 'pco-integration', label: 'Planning Center OAuth' },
-  { id: 'hosting',       label: 'Hosting on Raspberry Pi' },
+  { id: 'hosting',       label: 'Self-Hosting' },
 ]
 
 function Section({ id, title, children }) {
@@ -138,8 +144,8 @@ export default function Docs() {
           {/* ── Overview ── */}
           <Section id="overview" title="Overview">
             <p>Beacon is a self-hosted app that shows a TV/kiosk-friendly card grid of your worship team's microphone and IEM assignments for a service. Think of it as a digital version of the laminated assignment sheet your sound engineer normally posts backstage.</p>
-            <p>It integrates with <strong>Planning Center Online</strong> to pull your team roster automatically, and can refresh itself on a schedule so displays are always showing the right team before anyone arrives.</p>
-            <p>It runs on a <strong>Raspberry Pi</strong> behind a <strong>Cloudflare Tunnel</strong>, so any TV, tablet, or phone on any network can reach it — no port forwarding needed.</p>
+            <p>It integrates with <strong>Planning Center Online</strong> to pull your team roster automatically, and also works fully <strong>without PCO</strong> using a manual workflow where you predefine your team. Either way, it can refresh itself on a schedule so displays are always showing the right team before anyone arrives.</p>
+            <p>The server runs anywhere Node.js runs — a laptop, a Raspberry Pi, a VPS. Any browser on any device can reach the display screens. For public access without port forwarding, run it behind a <strong>Cloudflare Tunnel</strong>.</p>
           </Section>
 
           {/* ── First Run / Setup ── */}
@@ -160,13 +166,13 @@ export default function Docs() {
             <p>The recommended setup order:</p>
             <ol className={styles.ol}>
               <li><strong>Create a Location</strong> — a campus or venue. Everything else belongs to a location.</li>
-              <li><strong>Add Service Types</strong> under that location (e.g. "Sunday Morning", "Wednesday Night").</li>
+              <li><strong>Add Service Types</strong> under that location — choose PCO mode (pulls from Planning Center) or Manual mode (you define the team).</li>
               <li><strong>Create Screens</strong> — each screen gets a permanent URL you point a TV at.</li>
-              <li><strong>Add People</strong> — your worship team members. Can be manual or pulled from PCO.</li>
-              <li><strong>Define Labels</strong> — your mic and IEM inventory (e.g. "Vox 1", "Keys DI", "IEM 3").</li>
-              <li><strong>Set up Automation Rules</strong> — tell the app how to assign mics/IEMs based on a person's name or position.</li>
-              <li><strong>Connect Planning Center</strong> — link your PCO account so the app can pull plans automatically.</li>
-              <li><strong>Set a Schedule</strong> — tell each service type when to auto-fetch and push assignments.</li>
+              <li><strong>Add People</strong> — your worship team members. Manual or pulled from PCO.</li>
+              <li><strong>Define Labels</strong> — your mic and IEM inventory (e.g. "Vox 1", "Keys DI", "IEM 3"). For Manual mode, also define <strong>Positions</strong> (e.g. Singer, Speaker) on the Labels page.</li>
+              <li><strong>Set up Automation Rules</strong> — tell the app how to assign mics/IEMs based on a person's name or position. Rules work for both PCO and Manual service types.</li>
+              <li><strong>Connect Planning Center</strong> (PCO mode only) — link your PCO account so the app can pull plans automatically.</li>
+              <li><strong>Set a Schedule</strong> — tell each service type when to auto-push assignments to screens.</li>
             </ol>
             <Callout type="info">
               You can test everything in <strong>mock mode</strong> (<code>USE_MOCK_DATA=true</code> in <code>server/.env</code>) without needing a PCO connection. The display will show a set of sample musicians so you can see how it looks.
@@ -257,55 +263,66 @@ export default function Docs() {
 
           {/* ── Locations ── */}
           <Section id="locations" title="Locations">
-            <p>The Locations page is where you define the structure of your church — campuses, what kinds of services happen there, and when those services should auto-refresh from Planning Center.</p>
+            <p>The Locations page is where you define your campuses — the physical venues your church operates at. Everything else (service types, screens) is organized under a campus.</p>
 
             <SubSection id="campuses" title="Campuses">
-              <p>A <strong>campus</strong> (or location) represents a physical venue — your main building, a satellite campus, a rented school gym, etc. Campuses group your service types and display screens together so everything stays organized when you have more than one site.</p>
+              <p>A <strong>campus</strong> represents a physical venue — your main building, a satellite campus, a rented school gym, etc. Campuses group your service types and display screens so everything stays organized when you have more than one site.</p>
               <p>Each campus just needs a name. The description is optional but handy for your team ("North building, sanctuary A/V booth").</p>
             </SubSection>
+          </Section>
+
+          {/* ── Services ── */}
+          <Section id="services" title="Services">
+            <p>The <strong>Services</strong> page is where you set up recurring service types (Sunday Morning, Wednesday Night, etc.) and the schedules that automatically push team assignments to your screens.</p>
 
             <SubSection id="service-types" title="Service Types">
-              <p>A <strong>service type</strong> is a recurring kind of service that happens at a campus — for example:</p>
+              <p>A <strong>service type</strong> is a recurring kind of service at a campus. Each service type has a <strong>mode</strong> that determines where its team roster comes from:</p>
               <ul className={styles.ul}>
-                <li>Sunday Morning (9am)</li>
-                <li>Sunday Morning (11am)</li>
-                <li>Wednesday Night</li>
-                <li>Youth Group</li>
+                <li><strong>PCO</strong> — the team is pulled automatically from a Planning Center plan that matches today's date. Requires a PCO connection and a PCO service type ID.</li>
+                <li><strong>Manual</strong> — you define a fixed team roster in the app. No PCO connection needed. Good for services that aren't in Planning Center, or as a simpler alternative when you don't need PCO sync.</li>
               </ul>
-              <p>Service types serve two purposes:</p>
-              <ol className={styles.ol}>
-                <li>They're the bridge to Planning Center — you tell the app which PCO service type to pull upcoming plans from.</li>
-                <li>They hold the auto-refresh schedule — you tell the app when (day + time) to check PCO for the next plan and push it to your screens.</li>
-              </ol>
+              <p>The mode badge on each service type card (blue for PCO, green for Manual) shows which mode is active.</p>
             </SubSection>
 
-            <SubSection id="pco-id" title="Planning Center ID">
-              <p>Every service type in Planning Center Online has a unique numeric ID. The app needs this ID to know which calendar to look at when your schedule fires.</p>
-              <p><strong>How to find it:</strong> Log in to Planning Center, go to Services → your service type. Look at the URL in your browser:</p>
+            <SubSection id="service-pco-mode" title="PCO Mode">
+              <p>In PCO mode, Beacon connects to Planning Center to fetch the team for a matching plan. You need to provide the <strong>Planning Center service type ID</strong> so Beacon knows which calendar to look at.</p>
+              <p><strong>How to find it:</strong> Log in to Planning Center, go to Services → your service type. Look at the URL:</p>
               <div className={styles.codeBlock}>
                 https://services.planningcenteronline.com/service_types/<strong>1234567</strong>
               </div>
-              <p>The number at the end (<code>1234567</code>) is your PCO ID. Paste it into the "Planning Center ID" field on the service type.</p>
-              <Callout type="info">
-                You only need to do this once per service type. Once Planning Center OAuth is connected, a future update will let you browse and select your service types directly from within the app.
-              </Callout>
+              <p>The number at the end is your PCO ID. Paste it into the "Planning Center ID" field when editing the service type.</p>
               <Callout type="warning">
-                Without the PCO ID, auto-refresh schedules will fail silently — the scheduler will run but won't know where to look. The display will keep showing whatever was last pushed to it.
+                Without the PCO ID, PCO-mode schedules will fail silently — the scheduler runs but won't know where to look. The display keeps showing whatever was last pushed.
               </Callout>
             </SubSection>
 
-            <SubSection id="auto-refresh" title="Auto-Refresh Schedules">
-              <p>Each service type can have one <strong>auto-refresh schedule</strong>. This is a cron job that fires at the time(s) you choose and does the following:</p>
+            <SubSection id="service-manual-mode" title="Manual Mode">
+              <p>In Manual mode, you define a fixed team for this service type directly in the app. The team is set on the service type's detail card on the Services page.</p>
+              <p><strong>How it works:</strong></p>
               <ol className={styles.ol}>
-                <li>Calls Planning Center to find the next upcoming plan for this service type.</li>
-                <li>Pulls the team roster from that plan.</li>
-                <li>Runs your automation rules against each person on the team.</li>
-                <li>Pushes the resulting mic/IEM assignments to all screens at this campus.</li>
+                <li>Add people from your roster to the team. Pick the person, then choose their <strong>position</strong> for this service (e.g. Singer, Speaker, Worship Leader).</li>
+                <li>When a schedule fires, Beacon runs your <strong>automation rules</strong> against each person's position to assign their mic and IEM — the same rule system that PCO mode uses.</li>
+                <li>Assignments are pushed to your target screens.</li>
               </ol>
-              <p><strong>Example setup:</strong> Saturday at 6:00 PM and Wednesday at 5:00 PM. The Saturday run loads Sunday's team. The Wednesday run loads Wednesday night's team.</p>
-              <p>You can also trigger a refresh manually at any time by clicking <strong>"Run now"</strong> next to a schedule — useful for testing or last-minute changes.</p>
-              <Callout type="warning">
-                Schedules require a Planning Center connection to work. They'll still run in mock mode but won't call PCO.
+              <p>Positions are defined on the <Link to="/docs#labels-positions">Labels → Positions</Link> page. Add all the roles your team uses there first, then they'll appear as options when building a manual team.</p>
+              <Callout type="info">
+                Manual mode is a great choice if you have a consistent core team each week and don't need Planning Center to drive your display. Set it up once and let the schedule handle the rest.
+              </Callout>
+            </SubSection>
+
+            <SubSection id="service-schedules" title="Auto-Refresh Schedules">
+              <p>Each service type can have one <strong>schedule</strong>. The schedule fires a cron job at a day and time you choose and pushes the team assignments to your selected screens automatically.</p>
+              <p><strong>How to set one up:</strong> Click <em>Add Schedule</em> on a service type card, pick a day of the week and time, and choose which screens should receive the update.</p>
+              <p>When the schedule fires:</p>
+              <ol className={styles.ol}>
+                <li>Beacon loads the team (from PCO or from your manual roster).</li>
+                <li>Runs automation rules to assign mic and IEM labels.</li>
+                <li>Pushes assignments to all selected screens that are currently active (heartbeat within 90 seconds).</li>
+              </ol>
+              <p><strong>Example:</strong> Saturday at 6:00 PM — loads Sunday's team so displays are ready before anyone arrives.</p>
+              <p>You can trigger a schedule manually any time by clicking <strong>Run now</strong> — useful for testing or mid-week changes.</p>
+              <Callout type="info">
+                Schedules only push to <strong>active screens</strong> — screens that are currently open in a browser. If a screen isn't active when the schedule fires, it will pick up the new assignments next time it polls (every 30 seconds).
               </Callout>
             </SubSection>
           </Section>
@@ -492,29 +509,48 @@ export default function Docs() {
                 Put your most commonly used labels at the top of each section. Leads and featured vocalists often get the same channel every week — use automation's specific-label rules for those, so "next available" only runs for the rest.
               </Callout>
             </SubSection>
+
+            <SubSection id="labels-positions" title="Positions">
+              <p><strong>Positions</strong> are role names for your team — things like Singer, Speaker, Worship Leader, Announcements, Electric Guitar, etc. They live at the bottom of the Labels page under their own section.</p>
+              <p>Positions are used in two places:</p>
+              <ul className={styles.ul}>
+                <li><strong>People</strong> — each person can have a position set on their profile (used as a default when adding them to a Manual service team).</li>
+                <li><strong>Manual service teams</strong> — when you add someone to a Manual service type, you pick their position for that service. This is what automation rules match against to assign their mic and IEM.</li>
+              </ul>
+              <p>Define all your positions here first, then they'll appear as a dropdown when building manual teams or editing people profiles.</p>
+              <Callout type="info">
+                Positions are also matched by automation rules in PCO mode — the same rules work for both. A rule like "position contains Singer → Mic: next available (Vocals group)" will fire whether the person came from PCO or a manual team.
+              </Callout>
+            </SubSection>
           </Section>
 
           {/* ── Automation ── */}
           <Section id="automation" title="Automation Rules">
-            <p>Automation rules auto-assign mics and IEMs when a plan loads. They're evaluated <strong>top-to-bottom</strong> — each person matches only the first rule that applies to them.</p>
+            <p>Automation rules auto-assign mics and IEMs when a schedule fires. They're evaluated <strong>top-to-bottom</strong> — each person matches only the first rule that applies to them.</p>
             <p>Each rule has two parts:</p>
             <ul className={styles.ul}>
-              <li><strong>Condition:</strong> match by <em>Name</em> or <em>PCO Position</em>, using <em>is</em> (exact) or <em>contains</em> (partial).</li>
+              <li><strong>Condition:</strong> match by <em>Name</em> or <em>Position</em>, using <em>is</em> (exact) or <em>contains</em> (partial).</li>
               <li><strong>Action:</strong> assign a specific mic or IEM label, or "next available" from the full pool or a named group.</li>
             </ul>
+            <p>The <strong>Position</strong> field matches two things:</p>
+            <ul className={styles.ul}>
+              <li>In <strong>PCO mode</strong> — the team position name from the Planning Center plan (e.g. "Vocalist", "Worship Leader").</li>
+              <li>In <strong>Manual mode</strong> — the position you assigned to the person when building the manual team (from your <Link to="/docs#labels-positions">Positions</Link> list).</li>
+            </ul>
+            <p>The same rule set works for both modes, so you only need to write your rules once.</p>
             <p><strong>Example rules:</strong></p>
             <div className={styles.codeBlock}>
-              If position contains "Vocalist" → Mic: next available (Vocals group){'\n'}
-              If position is "Worship Leader" → Mic: Vox 1{'\n'}
-              If position contains "Guitar"   → Mic: next available (Instruments group){'\n'}
-              If position is "Drums"          → IEM: IEM 6
+              If position contains "Singer"        → Mic: next available (Vocals group){'\n'}
+              If position is "Worship Leader"      → Mic: Vox 1{'\n'}
+              If position contains "Guitar"        → Mic: next available (Instruments group){'\n'}
+              If position is "Drums"               → IEM: IEM 6
             </div>
             <Callout type="info">
               You'll typically need two rules per person — one for the mic and one for the IEM. Add them as separate rules with the same condition.
             </Callout>
             <p><strong>Priority order:</strong> grab the grip handle on any rule row and drag it up or down to change evaluation order. Rules at the top run first.</p>
             <Callout type="tip">
-              Rules are re-evaluated every time a plan is refreshed from Planning Center. You can also re-run automation manually from the Dashboard without pulling a new plan.
+              You can re-run automation manually from the Automation page using the <strong>Run automation</strong> button — useful for testing without firing a full schedule.
             </Callout>
           </Section>
 
@@ -580,20 +616,22 @@ export default function Docs() {
           </Section>
 
           {/* ── Hosting ── */}
-          <Section id="hosting" title="Hosting on Raspberry Pi">
-            <p>The recommended production setup runs everything on a Raspberry Pi with a Cloudflare Tunnel for public access.</p>
+          <Section id="hosting" title="Self-Hosting">
+            <p>Beacon runs anywhere Node.js 18+ is available — a laptop, a Raspberry Pi, a VPS, a home server. Display screens are just browser tabs, so any device on the same network (or any network if you use a tunnel) can show them.</p>
             <ol className={styles.ol}>
-              <li>Install Node.js on the Pi (<code>nvm</code> recommended).</li>
+              <li>Install Node.js (<code>nvm</code> recommended).</li>
               <li>Clone the repo and run <code>npm run install:all</code>.</li>
               <li>Create <code>server/.env</code> from <code>server/.env.example</code> and fill in your values.</li>
               <li>Build the client: <code>cd client && npm run build</code>.</li>
-              <li>Set <code>NODE_ENV=production</code> in your <code>.env</code> — the Express server will serve the built client.</li>
+              <li>Set <code>NODE_ENV=production</code> in your <code>.env</code> — the Express server serves the built client automatically.</li>
               <li>Start with PM2: <code>pm2 start server/index.js --name beacon</code>.</li>
-              <li>Install cloudflared and create a tunnel pointing to <code>localhost:3001</code>.</li>
-              <li>Update <code>PCO_REDIRECT_URI</code> in <code>.env</code> to your public tunnel URL.</li>
             </ol>
             <Callout type="info">
               To auto-start on boot: <code>pm2 startup</code> then <code>pm2 save</code>.
+            </Callout>
+            <p><strong>For HTTPS / remote access</strong> without port forwarding: install <code>cloudflared</code> and create a tunnel pointing to <code>localhost:3001</code>. Update <code>PCO_REDIRECT_URI</code> in <code>.env</code> to your public tunnel URL if you're using PCO OAuth.</p>
+            <Callout type="info">
+              On a local network with a fixed IP, you can point TVs directly at <code>http://192.168.x.x:3001/display/...</code> — no tunnel needed if all screens are on the same network as the server.
             </Callout>
           </Section>
         </main>

@@ -396,6 +396,7 @@
 }
 .labelDotMic { background: var(--mic-color); }
 .labelDotIem { background: var(--iem-color); }
+.labelDotPosition { background: #a78bfa; }
 
 .labelTypeTag {
   font-size: 0.68rem;

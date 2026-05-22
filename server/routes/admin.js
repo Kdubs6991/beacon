@@ -166,29 +166,83 @@ router.get('/service-types', (req, res) => {
 })
 router.post('/service-types', (req, res) => {
   const orgId = req.session.orgId
-  const { name, campus_id, pco_service_type_id } = req.body
+  const { name, campus_id, pco_service_type_id, mode } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
-  // Validate campus belongs to org
   if (campus_id) {
     const campus = db.prepare('SELECT id FROM campuses WHERE id = ? AND org_id = ?').get(campus_id, orgId)
     if (!campus) return res.status(400).json({ error: 'Invalid campus' })
   }
-  const r = db.prepare('INSERT INTO service_types (name, campus_id, pco_service_type_id) VALUES (?, ?, ?)').run(name, campus_id ?? null, pco_service_type_id ?? null)
+  const r = db.prepare('INSERT INTO service_types (name, campus_id, pco_service_type_id, mode) VALUES (?, ?, ?, ?)').run(name, campus_id ?? null, pco_service_type_id ?? null, mode ?? 'pco')
   res.json(db.prepare('SELECT * FROM service_types WHERE id = ?').get(r.lastInsertRowid))
 })
 router.put('/service-types/:id', (req, res) => {
   const orgId = req.session.orgId
-  const { name, campus_id, pco_service_type_id } = req.body
+  const { name, campus_id, pco_service_type_id, mode } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
   if (campus_id) {
     const campus = db.prepare('SELECT id FROM campuses WHERE id = ? AND org_id = ?').get(campus_id, orgId)
     if (!campus) return res.status(400).json({ error: 'Invalid campus' })
   }
-  db.prepare('UPDATE service_types SET name = ?, campus_id = ?, pco_service_type_id = ? WHERE id = ?').run(name, campus_id ?? null, pco_service_type_id ?? null, req.params.id)
+  db.prepare('UPDATE service_types SET name = ?, campus_id = ?, pco_service_type_id = ?, mode = ? WHERE id = ?').run(name, campus_id ?? null, pco_service_type_id ?? null, mode ?? 'pco', req.params.id)
   res.json(db.prepare('SELECT * FROM service_types WHERE id = ?').get(req.params.id))
 })
 router.delete('/service-types/:id', (req, res) => {
   db.prepare('DELETE FROM service_types WHERE id = ?').run(req.params.id)
+  res.json({ ok: true })
+})
+
+// --- Manual assignments ---
+const MANUAL_JOIN = `
+  SELECT ma.*,
+         COALESCE(p.name_override, p.name) AS person_name,
+         COALESCE(p.photo_override, p.photo_url) AS person_photo
+  FROM manual_assignments ma
+  LEFT JOIN people p ON ma.person_id = p.id
+`
+router.get('/service-types/:id/manual-assignments', requireAuth, (req, res) => {
+  res.json(db.prepare(MANUAL_JOIN + 'WHERE ma.service_type_id = ? ORDER BY ma.slot').all(req.params.id))
+})
+router.post('/service-types/:id/manual-assignments', requireAuth, (req, res) => {
+  const { person_id, position } = req.body
+  const maxRow = db.prepare('SELECT MAX(slot) AS m FROM manual_assignments WHERE service_type_id = ?').get(req.params.id)
+  const slot = (maxRow?.m ?? -1) + 1
+  const r = db.prepare(
+    'INSERT INTO manual_assignments (service_type_id, person_id, slot, position) VALUES (?, ?, ?, ?)'
+  ).run(req.params.id, person_id ?? null, slot, position ?? null)
+  res.json(db.prepare(MANUAL_JOIN + 'WHERE ma.id = ?').get(r.lastInsertRowid))
+})
+router.put('/service-types/:id/manual-assignments/:aid', requireAuth, (req, res) => {
+  const { position, slot } = req.body
+  db.prepare(
+    'UPDATE manual_assignments SET position = ?, slot = ? WHERE id = ? AND service_type_id = ?'
+  ).run(position ?? null, slot, req.params.aid, req.params.id)
+  res.json({ ok: true })
+})
+router.delete('/service-types/:id/manual-assignments/:aid', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM manual_assignments WHERE id = ? AND service_type_id = ?').run(req.params.aid, req.params.id)
+  res.json({ ok: true })
+})
+
+// --- Position types ---
+router.get('/position-types', requireAuth, (req, res) => {
+  res.json(db.prepare('SELECT * FROM position_types WHERE org_id = ? ORDER BY sort_order, name').all(req.session.orgId))
+})
+router.post('/position-types', requireAuth, (req, res) => {
+  const { name } = req.body
+  if (!name?.trim()) return res.status(400).json({ error: 'name required' })
+  const maxRow = db.prepare('SELECT MAX(sort_order) AS m FROM position_types WHERE org_id = ?').get(req.session.orgId)
+  const sort_order = (maxRow?.m ?? -1) + 1
+  const r = db.prepare('INSERT INTO position_types (org_id, name, sort_order) VALUES (?, ?, ?)').run(req.session.orgId, name.trim(), sort_order)
+  res.json(db.prepare('SELECT * FROM position_types WHERE id = ?').get(r.lastInsertRowid))
+})
+router.put('/position-types/:id', requireAuth, (req, res) => {
+  const { name } = req.body
+  if (!name?.trim()) return res.status(400).json({ error: 'name required' })
+  db.prepare('UPDATE position_types SET name = ? WHERE id = ? AND org_id = ?').run(name.trim(), req.params.id, req.session.orgId)
+  res.json(db.prepare('SELECT * FROM position_types WHERE id = ?').get(req.params.id))
+})
+router.delete('/position-types/:id', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM position_types WHERE id = ? AND org_id = ?').run(req.params.id, req.session.orgId)
   res.json({ ok: true })
 })
 
@@ -450,15 +504,29 @@ router.get('/dashboard', (req, res) => {
     'SELECT id, name, position, photo_url, photo_override FROM people WHERE org_id = ? ORDER BY name LIMIT 6'
   ).all(orgId)
 
-  const labelsAll = db.prepare('SELECT id, name, type, group_name FROM labels WHERE org_id = ? ORDER BY sort_order, name').all(orgId)
-  const labelsCount = labelsAll.length
+  const labelsAll = db.prepare('SELECT id, name, type, group_name FROM labels WHERE org_id = ? ORDER BY type, sort_order, name').all(orgId)
   const micLabelCount = labelsAll.filter(l => l.type === 'mic').length
   const iemLabelCount = labelsAll.filter(l => l.type === 'iem').length
+  const positionTypes = db.prepare('SELECT id, name FROM position_types WHERE org_id = ? ORDER BY sort_order, name').all(orgId)
+
+  // Preview: up to 2 mic, 2 IEM, 2 positions
+  const previewItems = [
+    ...labelsAll.filter(l => l.type === 'mic').slice(0, 2),
+    ...labelsAll.filter(l => l.type === 'iem').slice(0, 2),
+    ...positionTypes.slice(0, 2).map(p => ({ ...p, type: 'position' })),
+  ]
 
   res.json({
     screens: screensWithData,
     people: { count: peopleCount, pcoCount: pcoPeopleCount, preview: peoplePreview },
-    labels: { count: labelsCount, micCount: micLabelCount, iemCount: iemLabelCount, items: labelsAll.slice(0, 4) }
+    labels: {
+      count: labelsAll.length,
+      micCount: micLabelCount,
+      iemCount: iemLabelCount,
+      positionCount: positionTypes.length,
+      items: previewItems,
+      total: labelsAll.length + positionTypes.length,
+    },
   })
 })
 

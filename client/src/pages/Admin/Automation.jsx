@@ -107,7 +107,7 @@ function RuleModal({ initial, labels, rulesCount, onSave, onClose }) {
         <div className={styles.formField}>
           <label className={styles.formLabel}>Field</label>
           <div className={styles.segmented}>
-            {[['name', 'Name'], ['position', 'PCO Position']].map(([v, l]) => (
+            {[['name', 'Name'], ['position', 'Position']].map(([v, l]) => (
               <button
                 key={v}
                 type="button"
@@ -116,6 +116,9 @@ function RuleModal({ initial, labels, rulesCount, onSave, onClose }) {
               >{l}</button>
             ))}
           </div>
+          {condField === 'position' && (
+            <p className={styles.formHint}>Matches the PCO team position name <em>or</em> the position set on a Manual service team member.</p>
+          )}
         </div>
         <div className={styles.formField}>
           <label className={styles.formLabel}>Match</label>
@@ -307,8 +310,8 @@ export default function Automation() {
     <AdminLayout title="Automation">
       <div className={styles.topBar}>
         <InfoPopover title="Automation Rules" docsHref="/docs#automation">
-          <p>Rules auto-assign mics and IEMs when a plan loads. They run <strong>top-to-bottom</strong> — each person matches the first rule that fits.</p>
-          <p>Set a condition (match by name or PCO position) and an action (assign a specific label, or "next available" from the queue).</p>
+          <p>Rules auto-assign mics and IEMs when a schedule fires. They run <strong>top-to-bottom</strong> — each person matches the first rule that fits.</p>
+          <p>Set a condition (match by name or position) and an action (assign a specific label, or "next available" from the queue). The <strong>Position</strong> field matches both PCO team positions and Manual service positions.</p>
           <p>Drag rows to change priority order. Rules higher up run first.</p>
         </InfoPopover>
         <div className={styles.topBarRight}>

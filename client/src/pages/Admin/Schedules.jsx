@@ -111,6 +111,112 @@ function Toggle({ checked, onChange }) {
   )
 }
 
+// ── Manual team builder ───────────────────────────────────────────────────────
+
+function ManualTeamBuilder({ serviceTypeId, people }) {
+  const [assignments, setAssignments] = useState([])
+  const [positions, setPositions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [addPersonId, setAddPersonId] = useState('')
+
+  const loadAssignments = useCallback(async () => {
+    setLoading(true)
+    const [data, pos] = await Promise.all([
+      api(`/service-types/${serviceTypeId}/manual-assignments`),
+      api('/position-types'),
+    ])
+    setAssignments(Array.isArray(data) ? data : [])
+    setPositions(Array.isArray(pos) ? pos : [])
+    setLoading(false)
+  }, [serviceTypeId])
+
+  useEffect(() => { loadAssignments() }, [loadAssignments])
+
+  const assignedIds = new Set(assignments.map(a => a.person_id).filter(Boolean))
+  const available = people.filter(p => !assignedIds.has(p.id))
+
+  async function handleAdd() {
+    if (!addPersonId) return
+    const person = people.find(p => p.id === Number(addPersonId))
+    const defaultPosition = person?.position_override ?? person?.position ?? null
+    await api(`/service-types/${serviceTypeId}/manual-assignments`, {
+      method: 'POST',
+      body: JSON.stringify({ person_id: Number(addPersonId), position: defaultPosition }),
+    })
+    setAddPersonId('')
+    loadAssignments()
+  }
+
+  async function handleUpdatePosition(a, position) {
+    await api(`/service-types/${serviceTypeId}/manual-assignments/${a.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ slot: a.slot, position: position || null }),
+    })
+    loadAssignments()
+  }
+
+  async function handleRemove(id) {
+    await api(`/service-types/${serviceTypeId}/manual-assignments/${id}`, { method: 'DELETE' })
+    loadAssignments()
+  }
+
+  if (loading) return <p className={styles.emptyHint}>Loading…</p>
+
+  return (
+    <div>
+      <p className={styles.schedSectionLabel}>Team</p>
+      <p className={styles.manualHint}>
+        Assign a position to each person — automation rules will use it to assign mic and IEM labels when the schedule runs.
+      </p>
+      {assignments.length === 0 && (
+        <p className={styles.emptyHint}>No team members yet. Add people below.</p>
+      )}
+      <div className={styles.manualList}>
+        {assignments.map((a, i) => (
+          <div key={a.id} className={styles.manualRow}>
+            <span className={styles.manualSlotNum}>{i + 1}</span>
+            <span className={styles.manualName}>{a.person_name ?? '—'}</span>
+            <select
+              className={styles.formSelect}
+              style={{ minWidth: 140 }}
+              value={a.position ?? ''}
+              onChange={e => handleUpdatePosition(a, e.target.value)}
+            >
+              <option value="">No position</option>
+              {positions.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              {a.position && !positions.some(p => p.name === a.position) && (
+                <option value={a.position}>{a.position}</option>
+              )}
+            </select>
+            <button className={`${styles.btnIcon} ${styles.btnDanger}`} onClick={() => handleRemove(a.id)}>
+              <TrashIcon />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className={styles.addPersonRow}>
+        <select
+          className={styles.formSelect}
+          value={addPersonId}
+          onChange={e => setAddPersonId(e.target.value)}
+        >
+          <option value="">Add person…</option>
+          {available.map(p => (
+            <option key={p.id} value={p.id}>{p.name_override ?? p.name}</option>
+          ))}
+        </select>
+        <button
+          className={`${styles.btn} ${styles.btnSmall} ${styles.btnPrimary}`}
+          onClick={handleAdd}
+          disabled={!addPersonId}
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Schedule form (shared for add & edit) ─────────────────────────────────────
 
 function ScheduleForm({ initial, screens, onSave, onCancel, formClass }) {
@@ -168,19 +274,26 @@ function ScheduleForm({ initial, screens, onSave, onCancel, formClass }) {
       </div>
       {screens.length > 0 && (
         <div className={styles.formGroup}>
-          <span className={styles.formLabel}>Update screens</span>
-          <div className={styles.screenChecks}>
-            {screens.map(s => (
-              <label key={s.id} className={styles.screenCheck}>
-                <input
-                  type="checkbox"
-                  checked={selectedScreenIds.includes(s.id)}
-                  onChange={() => toggleScreen(s.id)}
-                />
-                <span>{s.name}</span>
-              </label>
-            ))}
-          </div>
+          <span className={styles.formLabel}>Screens</span>
+          <details className={styles.screenDropdown}>
+            <summary className={styles.screenDropdownSummary}>
+              {selectedScreenIds.length === 0
+                ? 'No screens selected'
+                : `${selectedScreenIds.length} screen${selectedScreenIds.length !== 1 ? 's' : ''} selected`}
+            </summary>
+            <div className={styles.screenDropdownList}>
+              {screens.map(s => (
+                <label key={s.id} className={styles.screenCheck}>
+                  <input
+                    type="checkbox"
+                    checked={selectedScreenIds.includes(s.id)}
+                    onChange={() => toggleScreen(s.id)}
+                  />
+                  <span>{s.name}</span>
+                </label>
+              ))}
+            </div>
+          </details>
         </div>
       )}
       <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={handleSave} disabled={saving}>
@@ -227,7 +340,6 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
     <div className={styles.schedRow}>
       <Toggle checked={!!schedule.enabled} onChange={v => onToggle(schedule.id, v)} />
       <div className={styles.schedRowLeft}>
-        <span className={styles.schedCron}>{schedule.cron_expr}</span>
         <span className={styles.schedDesc}>{describeCron(schedule.cron_expr)}</span>
         <span className={screenCount > 0 ? styles.schedScreens : styles.schedScreensNone}>
           {screenCount > 0 ? `${screenCount} screen${screenCount !== 1 ? 's' : ''}` : 'No screens'}
@@ -254,22 +366,24 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
 
 // ── Service type card ─────────────────────────────────────────────────────────
 
-function ServiceTypeCard({ st, schedules, campuses, screens, pcoConnected, onDelete, onRefreshSchedules }) {
+function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnected, onDelete, onRefreshSchedules }) {
   const [open, setOpen] = useState(false)
   const [adding, setAdding] = useState(false)
   const [editingSt, setEditingSt] = useState(false)
   const [stName, setStName] = useState(st.name)
   const [stCampus, setStCampus] = useState(st.campus_id ?? '')
+  const [stMode, setStMode] = useState(st.mode ?? 'pco')
   const [savingSt, setSavingSt] = useState(false)
 
   const mySchedules = schedules.filter(s => s.service_type_id === st.id)
   const campus = campuses.find(c => c.id === st.campus_id)
+  const isManual = (st.mode ?? 'pco') === 'manual'
 
   async function saveStEdit() {
     setSavingSt(true)
     await api(`/service-types/${st.id}`, {
       method: 'PUT',
-      body: JSON.stringify({ name: stName, campus_id: stCampus || null, pco_service_type_id: st.pco_service_type_id }),
+      body: JSON.stringify({ name: stName, campus_id: stCampus || null, pco_service_type_id: st.pco_service_type_id, mode: stMode }),
     })
     setSavingSt(false)
     setEditingSt(false)
@@ -325,26 +439,49 @@ function ServiceTypeCard({ st, schedules, campuses, screens, pcoConnected, onDel
           </span>
           {editingSt ? (
             <>
-              <input
-                className={styles.addStInput}
-                value={stName}
-                onChange={e => setStName(e.target.value)}
-                style={{ maxWidth: 200 }}
-              />
-              <select className={styles.formSelect} value={stCampus} onChange={e => setStCampus(e.target.value)}>
-                <option value="">No campus</option>
-                {campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={saveStEdit} disabled={savingSt}>
-                {savingSt ? 'Saving…' : 'Save'}
-              </button>
-              <button className={`${styles.btn} ${styles.btnSmall}`} onClick={() => { setEditingSt(false); setStName(st.name); setStCampus(st.campus_id ?? '') }}>
-                Cancel
-              </button>
+              <div className={styles.formGroup}>
+                <span className={styles.formLabel}>Name</span>
+                <input
+                  className={styles.addStInput}
+                  value={stName}
+                  onChange={e => setStName(e.target.value)}
+                  style={{ maxWidth: 200 }}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <span className={styles.formLabel}>Mode</span>
+                <select className={styles.formSelect} value={stMode} onChange={e => setStMode(e.target.value)}>
+                  <option value="pco">PCO Sync</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </div>
+              {campuses.length > 0 && (
+                <div className={styles.formGroup}>
+                  <span className={styles.formLabel}>Campus</span>
+                  <select className={styles.formSelect} value={stCampus} onChange={e => setStCampus(e.target.value)}>
+                    <option value="">No campus</option>
+                    {campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+              )}
+              <div className={styles.formGroup}>
+                <span className={styles.formLabel}>&nbsp;</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={saveStEdit} disabled={savingSt}>
+                    {savingSt ? 'Saving…' : 'Save'}
+                  </button>
+                  <button className={`${styles.btn} ${styles.btnSmall}`} onClick={() => { setEditingSt(false); setStName(st.name); setStCampus(st.campus_id ?? ''); setStMode(st.mode ?? 'pco') }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </>
           ) : (
             <>
               <span className={styles.stName}>{st.name}</span>
+              <span className={isManual ? styles.modeBadgeManual : styles.modeBadgePco}>
+                {isManual ? 'Manual' : 'PCO'}
+              </span>
               {campus && <span className={styles.stMeta}>{campus.name}</span>}
               {mySchedules.length > 0 && (
                 <span className={styles.stMeta}>
@@ -368,7 +505,7 @@ function ServiceTypeCard({ st, schedules, campuses, screens, pcoConnected, onDel
 
       {open && (
         <div className={styles.schedBody}>
-          {!pcoConnected && st.pco_service_type_id && (
+          {!isManual && !pcoConnected && st.pco_service_type_id && (
             <div className={styles.pcoNotice}>
               <div className={styles.pcoNoticeDot} />
               <div>
@@ -377,10 +514,18 @@ function ServiceTypeCard({ st, schedules, campuses, screens, pcoConnected, onDel
               </div>
             </div>
           )}
+
+          {isManual && (
+            <ManualTeamBuilder
+              serviceTypeId={st.id}
+              people={people}
+            />
+          )}
+
           <div>
             <p className={styles.schedSectionLabel}>Schedules</p>
             {mySchedules.length === 0 && !adding && (
-              <p className={styles.emptyHint}>No schedules yet. Add one to automatically fetch data on a recurring basis.</p>
+              <p className={styles.emptyHint}>No schedules yet. Add one to automatically push this team to screens on a recurring basis.</p>
             )}
             <div className={styles.schedList}>
               {mySchedules.map(s => (
@@ -419,12 +564,13 @@ function ServiceTypeCard({ st, schedules, campuses, screens, pcoConnected, onDel
 function AddServiceTypeForm({ campuses, onAdd, onCancel }) {
   const [name, setName] = useState('')
   const [campusId, setCampusId] = useState(campuses[0]?.id ?? '')
+  const [mode, setMode] = useState('pco')
   const [saving, setSaving] = useState(false)
 
   async function handleAdd() {
     if (!name.trim()) return
     setSaving(true)
-    await onAdd({ name: name.trim(), campus_id: campusId || null })
+    await onAdd({ name: name.trim(), campus_id: campusId || null, mode })
     setSaving(false)
   }
 
@@ -440,6 +586,13 @@ function AddServiceTypeForm({ campuses, onAdd, onCancel }) {
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
           autoFocus
         />
+      </div>
+      <div className={styles.formGroup}>
+        <span className={styles.formLabel}>Mode</span>
+        <select className={styles.formSelect} value={mode} onChange={e => setMode(e.target.value)}>
+          <option value="pco">PCO Sync</option>
+          <option value="manual">Manual</option>
+        </select>
       </div>
       {campuses.length > 0 && (
         <div className={styles.formGroup}>
@@ -465,6 +618,7 @@ export default function Schedules() {
   const [schedules, setSchedules] = useState([])
   const [campuses, setCampuses] = useState([])
   const [screens, setScreens] = useState([])
+  const [people, setPeople] = useState([])
   const [pcoConnected, setPcoConnected] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -472,17 +626,19 @@ export default function Schedules() {
 
   const load = useCallback(async () => {
     try {
-      const [sts, scheds, camps, screensData, pcoStatus] = await Promise.all([
+      const [sts, scheds, camps, screensData, peopleData, pcoStatus] = await Promise.all([
         api('/service-types'),
         api('/schedules'),
         api('/campuses'),
         api('/screens'),
+        api('/people'),
         fetch(API + '/api/pco/status', { credentials: 'include' }).then(r => r.json()).catch(() => ({ connected: false })),
       ])
       setServiceTypes(Array.isArray(sts) ? sts : [])
       setSchedules(Array.isArray(scheds) ? scheds : [])
       setCampuses(Array.isArray(camps) ? camps : [])
       setScreens(Array.isArray(screensData) ? screensData : [])
+      setPeople(Array.isArray(peopleData) ? peopleData : [])
       setPcoConnected(!!pcoStatus.connected)
       setLoading(false)
     } catch (e) {
@@ -493,10 +649,10 @@ export default function Schedules() {
 
   useEffect(() => { load() }, [load])
 
-  async function addServiceType({ name, campus_id }) {
+  async function addServiceType({ name, campus_id, mode }) {
     await api('/service-types', {
       method: 'POST',
-      body: JSON.stringify({ name, campus_id }),
+      body: JSON.stringify({ name, campus_id, mode }),
     })
     setAddingType(false)
     load()
@@ -512,14 +668,16 @@ export default function Schedules() {
     load()
   }
 
+  const hasPcoTypes = serviceTypes.some(st => !st.mode || st.mode === 'pco')
+
   return (
     <AdminLayout title="Services">
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <h2 className={styles.pageTitle}>Services</h2>
           <InfoPopover docsHref="/docs#services">
-            Manage service types and automated fetch schedules. Each service type can have multiple
-            schedules that automatically pull data from Planning Center on a recurring basis.
+            Manage service types and automated push schedules. PCO types sync from Planning Center;
+            Manual types let you predefine a team roster and push it to screens on a schedule.
           </InfoPopover>
         </div>
         {!addingType && (
@@ -529,14 +687,13 @@ export default function Schedules() {
         )}
       </div>
 
-      {!pcoConnected && (
+      {!pcoConnected && hasPcoTypes && (
         <div className={styles.pcoNotice}>
           <div className={styles.pcoNoticeDot} />
           <div>
             <p className={styles.pcoNoticeTitle}>Planning Center not connected</p>
             <p className={styles.pcoNoticeHint}>
-              Connect your PCO account in the Integrations page to enable automatic data sync.
-              You can still create service types and schedules now — they'll activate once connected.
+              Connect your PCO account in the Integrations page to enable automatic data sync for PCO service types.
             </p>
           </div>
         </div>
@@ -575,6 +732,7 @@ export default function Schedules() {
               schedules={schedules}
               campuses={campuses}
               screens={screens}
+              people={people}
               pcoConnected={pcoConnected}
               onDelete={deleteServiceType}
               onRefreshSchedules={load}

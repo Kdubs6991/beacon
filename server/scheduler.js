@@ -81,8 +81,9 @@ async function runSchedule(scheduleId) {
   // Load schedule with all related data needed for the pipeline
   const schedule = db.prepare(`
     SELECT s.*,
-           st.name          AS service_type_name,
+           st.name               AS service_type_name,
            st.pco_service_type_id,
+           st.mode               AS service_type_mode,
            c.org_id,
            o.timezone
     FROM schedules s
@@ -94,24 +95,26 @@ async function runSchedule(scheduleId) {
 
   if (!schedule) return
 
-  const { org_id: orgId, timezone, service_type_name, pco_service_type_id } = schedule
+  const { org_id: orgId, timezone, service_type_name, pco_service_type_id, service_type_mode } = schedule
+  const mode = service_type_mode ?? 'pco'
 
   const stamp = `[schedule ${scheduleId} · ${service_type_name}]`
   console.log(`${stamp} triggered`)
 
-  // ── Validate prerequisites ────────────────────────────────────────────────
+  // ── Validate PCO prerequisites (skipped in manual mode) ──────────────────
 
-  if (!pco_service_type_id) {
-    console.log(`${stamp} no PCO service type ID — nothing to sync`)
-    db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
-    return
-  }
-
-  const pcoToken = db.prepare('SELECT id FROM pco_tokens LIMIT 1').get()
-  if (!pcoToken) {
-    console.log(`${stamp} PCO not connected — skipping`)
-    db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
-    return
+  if (mode !== 'manual') {
+    if (!pco_service_type_id) {
+      console.log(`${stamp} no PCO service type ID — nothing to sync`)
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+      return
+    }
+    const pcoToken = db.prepare('SELECT id FROM pco_tokens LIMIT 1').get()
+    if (!pcoToken) {
+      console.log(`${stamp} PCO not connected — skipping`)
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+      return
+    }
   }
 
   // ── Determine target screens ──────────────────────────────────────────────
@@ -136,6 +139,88 @@ async function runSchedule(scheduleId) {
   if (!activeScreenIds.length) {
     console.log(`${stamp} none of the ${targetScreenIds.length} target screen(s) are active — skipping`)
     db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+    return
+  }
+
+  // ── Manual mode: push stored roster directly ─────────────────────────────
+
+  if (mode === 'manual') {
+    try {
+      const tz = timezone || 'America/Chicago'
+      const today = todayInTz(tz)
+
+      const manualRows = db.prepare(`
+        SELECT ma.*,
+               COALESCE(p.name_override, p.name) AS person_name,
+               COALESCE(p.photo_override, p.photo_url) AS person_photo
+        FROM manual_assignments ma
+        LEFT JOIN people p ON ma.person_id = p.id
+        WHERE ma.service_type_id = ?
+        ORDER BY ma.slot
+      `).all(schedule.service_type_id)
+
+      const rules      = db.prepare('SELECT * FROM automation_rules WHERE org_id = ? ORDER BY priority').all(orgId)
+      const labels     = db.prepare('SELECT * FROM labels WHERE org_id = ? ORDER BY type, sort_order').all(orgId)
+      const usedMicIds = new Set()
+      const usedIemIds = new Set()
+
+      const assignments = []
+      for (const row of manualRows) {
+        const name         = row.person_name ?? ''
+        const teamPosition = row.position    ?? ''
+
+        let mic = null
+        let iem = null
+
+        for (const rule of rules) {
+          const fieldValue = rule.condition_field === 'name' ? name : teamPosition
+          const condVal    = rule.condition_value ?? ''
+          let ruleMatches = false
+          if (rule.condition_op === 'is')       ruleMatches = fieldValue.toLowerCase() === condVal.toLowerCase()
+          else if (rule.condition_op === 'contains') ruleMatches = fieldValue.toLowerCase().includes(condVal.toLowerCase())
+          if (!ruleMatches) continue
+          if (rule.action_type === 'mic' && !mic) mic = resolveLabel(rule.action_value, 'mic', labels, usedMicIds)
+          else if (rule.action_type === 'iem' && !iem) iem = resolveLabel(rule.action_value, 'iem', labels, usedIemIds)
+        }
+
+        console.log(`${stamp}   include "${name}" (${teamPosition || 'no position'}) → mic: ${mic?.name ?? 'none'}, iem: ${iem?.name ?? 'none'}`)
+        assignments.push({
+          slot:        assignments.length,
+          personId:    row.person_id,
+          personName:  row.person_name,
+          personPhoto: row.person_photo,
+          position:    teamPosition,
+          micLabel:    mic?.name ?? null,
+          iemLabel:    iem?.name ?? null,
+        })
+      }
+
+      const insertAssignment = db.prepare(`
+        INSERT INTO active_assignments
+          (screen_id, person_id, person_name, person_photo, slot, position, mic_label, iem_label, event_name, event_date, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `)
+
+      for (const screenId of activeScreenIds) {
+        db.transaction(() => {
+          db.prepare('DELETE FROM active_assignments WHERE screen_id = ?').run(screenId)
+          for (const a of assignments) {
+            insertAssignment.run(
+              screenId, a.personId, a.personName, a.personPhoto,
+              a.slot, a.position, a.micLabel, a.iemLabel,
+              service_type_name, today
+            )
+          }
+        })()
+        console.log(`${stamp}   pushed ${assignments.length} manual musicians to screen ${screenId}`)
+      }
+
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+      console.log(`${stamp} done (manual) — ${assignments.length} musicians on ${activeScreenIds.length} screen(s)`)
+    } catch (err) {
+      console.error(`[schedule ${scheduleId}] manual mode failed:`, err.message)
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+    }
     return
   }
 
