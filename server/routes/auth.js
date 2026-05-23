@@ -103,6 +103,21 @@ router.put('/password', requireAuth, (req, res) => {
   res.json({ ok: true })
 })
 
+// ── Dashboard config (per-user) ───────────────────────────────────────────────
+
+router.get('/dashboard-config', requireAuth, (req, res) => {
+  const row = db.prepare('SELECT dashboard_config FROM users WHERE id = ?').get(req.session.userId)
+  const config = row?.dashboard_config ? JSON.parse(row.dashboard_config) : null
+  res.json({ config })
+})
+
+router.put('/dashboard-config', requireAuth, (req, res) => {
+  const { config } = req.body
+  if (!Array.isArray(config)) return res.status(400).json({ error: 'config must be an array' })
+  db.prepare('UPDATE users SET dashboard_config = ? WHERE id = ?').run(JSON.stringify(config), req.session.userId)
+  res.json({ ok: true })
+})
+
 // ── Password reset ────────────────────────────────────────────────────────────
 
 router.post('/forgot-password', async (req, res) => {

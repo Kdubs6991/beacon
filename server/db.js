@@ -355,6 +355,12 @@ if (orgCount.n === 0) {
   // --- Convert single-value category strings to JSON arrays (idempotent) ---
   db.prepare(`UPDATE people SET category          = '["' || category          || '"]' WHERE category          IS NOT NULL AND category          NOT LIKE '[%'`).run()
   db.prepare(`UPDATE people SET category_override = '["' || category_override || '"]' WHERE category_override IS NOT NULL AND category_override NOT LIKE '[%'`).run()
+
+  // --- Add dashboard_config to users ---
+  const userCols2 = db.prepare('PRAGMA table_info(users)').all().map(c => c.name)
+  if (!userCols2.includes('dashboard_config')) {
+    db.exec('ALTER TABLE users ADD COLUMN dashboard_config TEXT')
+  }
 })()
 
 // Mark setup complete for existing installs that already have an admin

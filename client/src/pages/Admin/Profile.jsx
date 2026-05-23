@@ -49,8 +49,31 @@ const SECTIONS = [
   { id: 'account',      label: 'Account' },
   { id: 'security',     label: 'Security' },
   { id: 'appearance',   label: 'Appearance' },
+  { id: 'dashboard',    label: 'Dashboard' },
   { id: 'connections',  label: 'Connections' },
   { id: 'organization', label: 'Organization' },
+]
+
+const DASH_CARD_META = {
+  screens:      { label: 'Screens',          desc: 'Active displays and live status' },
+  services:     { label: 'Services',         desc: 'Recent assignments and services' },
+  people:       { label: 'People',           desc: 'Worship team roster overview' },
+  labels:       { label: 'Labels',           desc: 'Mic and IEM label inventory' },
+  schedules:    { label: 'Schedules',        desc: 'Upcoming auto-sync schedule status' },
+  templates:    { label: 'Templates',        desc: 'Display layout templates in use' },
+  quickactions: { label: 'Quick Push',       desc: 'Push a service to screens instantly' },
+  activity:     { label: 'Recent Activity',  desc: 'Latest screen assignment updates' },
+}
+
+const DEFAULT_DASH_CARDS = [
+  { id: 'screens',      visible: true },
+  { id: 'services',     visible: true },
+  { id: 'people',       visible: true },
+  { id: 'labels',       visible: true },
+  { id: 'schedules',    visible: true },
+  { id: 'templates',    visible: true },
+  { id: 'quickactions', visible: true },
+  { id: 'activity',     visible: true },
 ]
 
 function scrollTo(id) {
@@ -289,9 +312,146 @@ function OrgSection({ isAdmin }) {
   )
 }
 
+function GripIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="5" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="9" cy="19" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="5" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="19" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  )
+}
+
+function EyeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  )
+}
+
+function DashboardSection() {
+  const [cards, setCards] = useState(DEFAULT_DASH_CARDS)
+  const [dragIndex, setDragIndex] = useState(null)
+  const [overIndex, setOverIndex] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+
+  useEffect(() => {
+    authApi('/dashboard-config')
+      .then(({ config }) => {
+        if (config?.length) {
+          const merged = config.filter(c => DEFAULT_DASH_CARDS.some(d => d.id === c.id))
+          const missing = DEFAULT_DASH_CARDS.filter(d => !merged.some(m => m.id === d.id))
+          setCards([...merged, ...missing])
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  function toggleVisible(id) {
+    setCards(prev => prev.map(c => c.id === id ? { ...c, visible: !c.visible } : c))
+  }
+
+  function handleDragStart(i) { setDragIndex(i) }
+  function handleDragOver(e, i) { e.preventDefault(); setOverIndex(i) }
+  function handleDrop(i) {
+    if (dragIndex === null || dragIndex === i) { setDragIndex(null); setOverIndex(null); return }
+    const next = [...cards]
+    const [moved] = next.splice(dragIndex, 1)
+    next.splice(i, 0, moved)
+    setCards(next)
+    setDragIndex(null)
+    setOverIndex(null)
+  }
+  function handleDragEnd() { setDragIndex(null); setOverIndex(null) }
+
+  async function save() {
+    setSaving(true); setSaveError(null); setSuccess(false)
+    try {
+      await authApi('/dashboard-config', { method: 'PUT', body: JSON.stringify({ config: cards }) })
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (err) { setSaveError(err.message) }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div id="dashboard" className={styles.section}>
+      <h2 className={styles.sectionTitle}>Dashboard Layout</h2>
+      <p className={styles.sectionDesc}>Drag to reorder cards and toggle visibility. Settings are saved to your account.</p>
+      <div className={styles.dashList}>
+        {cards.map((card, i) => {
+          const meta = DASH_CARD_META[card.id]
+          const isDragging = dragIndex === i
+          const isOver = overIndex === i && dragIndex !== i
+          return (
+            <div
+              key={card.id}
+              className={`${styles.dashRow}${isDragging ? ` ${styles.dashRowDragging}` : ''}${isOver ? ` ${styles.dashRowOver}` : ''}`}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={e => handleDragOver(e, i)}
+              onDrop={() => handleDrop(i)}
+              onDragEnd={handleDragEnd}
+            >
+              <span className={styles.dragHandle}><GripIcon /></span>
+              <div className={styles.dashRowInfo}>
+                <span className={styles.dashRowLabel}>{meta.label}</span>
+                <span className={styles.dashRowDesc}>{meta.desc}</span>
+              </div>
+              <button
+                type="button"
+                className={`${styles.dashToggle}${card.visible ? ` ${styles.dashToggleOn}` : ''}`}
+                onClick={() => toggleVisible(card.id)}
+                title={card.visible ? 'Hide card' : 'Show card'}
+              >
+                {card.visible ? <EyeIcon /> : <EyeOffIcon />}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+      <div className={styles.formActions}>
+        <button
+          className={`${styles.btnPrimary}${success ? ` ${styles.btnSuccess}` : ''}`}
+          type="button"
+          onClick={save}
+          disabled={saving || success}
+        >
+          {saving ? 'Saving…' : success ? '✓ Saved' : 'Save layout'}
+        </button>
+        {saveError && <span className={styles.errMsg}>{saveError}</span>}
+      </div>
+    </div>
+  )
+}
+
 export default function Profile() {
   const { user, setUser, logout } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (hash) {
+      setTimeout(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+    }
+  }, [])
 
   async function handleSignOut() {
     await logout()
@@ -312,6 +472,7 @@ export default function Profile() {
         <AccountSection user={user} onUpdate={setUser} />
         <SecuritySection />
         <AppearanceSection />
+        <DashboardSection />
         <ConnectionsSection isAdmin={user?.role === 'admin'} />
         <OrgSection isAdmin={user?.role === 'admin'} />
 

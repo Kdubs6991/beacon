@@ -1,17 +1,53 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import AdminLayout from './_Layout'
 import InfoPopover from '../../components/InfoPopover'
 import styles from './Dashboard.module.css'
 
 const API = import.meta.env.VITE_API_URL ?? ''
-const api = (path) =>
-  fetch(API + '/api/admin' + path, { credentials: 'include', headers: { 'Content-Type': 'application/json' } }).then(r => r.json())
+const api = (path, opts = {}) =>
+  fetch(API + '/api/admin' + path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts }).then(r => r.json())
+
+const DEFAULT_CARDS = [
+  { id: 'screens',      visible: true },
+  { id: 'services',     visible: true },
+  { id: 'people',       visible: true },
+  { id: 'labels',       visible: true },
+  { id: 'schedules',    visible: true },
+  { id: 'templates',    visible: true },
+  { id: 'quickactions', visible: true },
+  { id: 'activity',     visible: true },
+]
 
 function formatDate(str) {
   if (!str) return null
   const d = new Date(str + 'T12:00:00')
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+function describeCron(expr) {
+  const parts = expr?.trim().split(/\s+/)
+  if (!parts || parts.length !== 5) return expr ?? ''
+  const [min, hour, , , dow] = parts
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+  const dayName = days[parseInt(dow, 10)] ?? '?'
+  const h = parseInt(hour, 10)
+  const m = parseInt(min, 10)
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  const minStr = m === 0 ? '' : `:${String(m).padStart(2, '0')}`
+  return `${dayName} at ${h12}${minStr} ${ampm}`
+}
+
+function timeAgo(ts) {
+  if (!ts) return null
+  const diff = Date.now() - new Date(ts).getTime()
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return 'just now'
+  if (min < 60) return `${min}m ago`
+  const hrs = Math.floor(min / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
 }
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -51,6 +87,41 @@ function LabelIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
       <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+  )
+}
+
+function ClockIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+  )
+}
+
+function LayersIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+      <polyline points="2 17 12 22 22 17"/>
+      <polyline points="2 12 12 17 22 12"/>
+    </svg>
+  )
+}
+
+function ZapIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  )
+}
+
+function ActivityIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
     </svg>
   )
 }
@@ -311,13 +382,185 @@ function LabelsCard({ labels }) {
   )
 }
 
+// ── Schedules card ────────────────────────────────────────────────────────────
+
+function SchedulesCard({ schedules }) {
+  const enabledCount = schedules.filter(s => s.enabled).length
+  return (
+    <DashCard icon={<ClockIcon />} title="Schedules" to="/admin/schedules">
+      {schedules.length === 0 ? (
+        <p className={styles.emptyMsg}>No schedules configured yet. Go to Services to set up auto-sync.</p>
+      ) : (
+        <>
+          <div className={styles.cardSummary}>
+            <span className={`${styles.summaryChip} ${enabledCount > 0 ? styles.summaryChipActive : ''}`}>
+              {enabledCount} active
+            </span>
+            <span className={styles.summaryMeta}>of {schedules.length} total</span>
+          </div>
+          <ul className={styles.itemList}>
+            {schedules.slice(0, 4).map(s => (
+              <li key={s.id} className={styles.scheduleItem}>
+                <div className={styles.itemBody}>
+                  <span className={styles.itemName}>{s.service_type_name}</span>
+                  <div className={styles.itemRow}>
+                    <span className={styles.itemSub}>{describeCron(s.cron_expr)}</span>
+                    {s.last_run && <span className={styles.itemSub}>· {timeAgo(s.last_run)}</span>}
+                  </div>
+                </div>
+                <span className={`${styles.scheduleStatus} ${s.enabled ? styles.scheduleStatusOn : styles.scheduleStatusOff}`}>
+                  {s.enabled ? 'On' : 'Off'}
+                </span>
+              </li>
+            ))}
+            {schedules.length > 4 && <li className={styles.moreRow}>+{schedules.length - 4} more</li>}
+          </ul>
+        </>
+      )}
+    </DashCard>
+  )
+}
+
+// ── Templates card ────────────────────────────────────────────────────────────
+
+function TemplatesCard({ templates }) {
+  const totalScreens = templates.reduce((n, t) => n + (t.screen_count ?? 0), 0)
+  return (
+    <DashCard icon={<LayersIcon />} title="Templates" to="/admin/templates">
+      {templates.length === 0 ? (
+        <p className={styles.emptyMsg}>No templates yet. Create one to customize your display layout.</p>
+      ) : (
+        <>
+          <div className={styles.cardSummary}>
+            <span className={styles.summaryChip}>{templates.length} template{templates.length !== 1 ? 's' : ''}</span>
+            <span className={styles.summaryMeta}>{totalScreens} screen{totalScreens !== 1 ? 's' : ''} using</span>
+          </div>
+          <ul className={styles.itemList}>
+            {templates.slice(0, 4).map(t => (
+              <li key={t.id} className={styles.templateItem}>
+                <div className={styles.itemBody}>
+                  <span className={styles.itemName}>{t.name}</span>
+                </div>
+                {t.screen_count > 0 && (
+                  <span className={styles.screenCountTag}>{t.screen_count} screen{t.screen_count !== 1 ? 's' : ''}</span>
+                )}
+              </li>
+            ))}
+            {templates.length > 4 && <li className={styles.moreRow}>+{templates.length - 4} more</li>}
+          </ul>
+        </>
+      )}
+    </DashCard>
+  )
+}
+
+// ── Quick push card ───────────────────────────────────────────────────────────
+
+function QuickActionsCard({ serviceTypes, screens }) {
+  const [pushingId, setPushingId] = useState(null)
+  const [resultId, setResultId] = useState(null)
+  const [pushMsg, setPushMsg] = useState(null)
+
+  async function push(st) {
+    if (pushingId) return
+    setPushingId(st.id); setResultId(null); setPushMsg(null)
+    let screenIds
+    if (st.schedule_screen_ids) {
+      try { screenIds = JSON.parse(st.schedule_screen_ids) } catch { screenIds = null }
+    }
+    if (!screenIds?.length) screenIds = screens.map(s => s.id)
+    try {
+      const result = await api(`/service-types/${st.id}/push`, { method: 'POST', body: JSON.stringify({ screen_ids: screenIds }) })
+      if (result.error) throw new Error(result.error)
+      const msg = result.pushed > 0
+        ? `✓ ${result.pushed} musician${result.pushed !== 1 ? 's' : ''} pushed`
+        : '⚠ Pushed but no musicians found'
+      setResultId(st.id)
+      setPushMsg(msg)
+      setTimeout(() => { setResultId(null); setPushMsg(null) }, 4000)
+    } catch (err) {
+      setResultId(st.id)
+      setPushMsg(`✕ ${err.message}`)
+      setTimeout(() => { setResultId(null); setPushMsg(null) }, 6000)
+    }
+    finally { setPushingId(null) }
+  }
+
+  return (
+    <DashCard icon={<ZapIcon />} title="Quick Push" to="/admin/schedules">
+      {serviceTypes.length === 0 ? (
+        <p className={styles.emptyMsg}>No service types configured. Add one in Services.</p>
+      ) : (
+        <>
+          {resultId && pushMsg && (
+            <p className={`${styles.pushResult} ${pushMsg.startsWith('✕') ? styles.pushResultErr : pushMsg.startsWith('⚠') ? styles.pushResultWarn : styles.pushResultOk}`}>
+              {pushMsg}
+            </p>
+          )}
+          <ul className={styles.itemList}>
+            {serviceTypes.slice(0, 5).map(st => (
+              <li key={st.id} className={styles.qaItem}>
+                <div className={styles.itemBody}>
+                  <span className={styles.itemName}>{st.name}</span>
+                  <span className={styles.itemSub}>{st.mode === 'pco' ? 'PCO sync' : 'Manual'}</span>
+                </div>
+                <button
+                  type="button"
+                  className={styles.btnPush}
+                  onClick={() => push(st)}
+                  disabled={pushingId !== null}
+                >
+                  {pushingId === st.id ? '…' : 'Push'}
+                </button>
+              </li>
+            ))}
+            {serviceTypes.length > 5 && <li className={styles.moreRow}>+{serviceTypes.length - 5} more</li>}
+          </ul>
+        </>
+      )}
+    </DashCard>
+  )
+}
+
+// ── Recent activity card ──────────────────────────────────────────────────────
+
+function ActivityCard({ screens }) {
+  const withActivity = screens
+    .filter(s => s.updated_at)
+    .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+
+  return (
+    <DashCard icon={<ActivityIcon />} title="Recent Activity" to="/admin/screens">
+      {withActivity.length === 0 ? (
+        <p className={styles.emptyMsg}>No recent activity. Push a service to a screen to see updates here.</p>
+      ) : (
+        <ul className={styles.itemList}>
+          {withActivity.slice(0, 5).map(s => (
+            <li key={s.id} className={styles.activityItem}>
+              <div className={styles.itemBody}>
+                <span className={styles.itemName}>{s.name}</span>
+                {s.event_name && <span className={styles.itemSub}>{s.event_name}</span>}
+              </div>
+              <span className={styles.activityTime}>{timeAgo(s.updated_at)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </DashCard>
+  )
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const [screens, setScreens] = useState([])
   const [people, setPeople] = useState(null)
   const [labels, setLabels] = useState(null)
+  const [schedules, setSchedules] = useState([])
+  const [templates, setTemplates] = useState([])
+  const [serviceTypes, setServiceTypes] = useState([])
   const [pcoConnected, setPcoConnected] = useState(null)
+  const [cardConfig, setCardConfig] = useState(DEFAULT_CARDS)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -325,16 +568,38 @@ export default function Dashboard() {
     Promise.all([
       api('/dashboard'),
       fetch(API + '/api/pco/status', { credentials: 'include' }).then(r => r.json()).catch(() => ({ connected: false })),
+      fetch(API + '/api/auth/dashboard-config', { credentials: 'include' }).then(r => r.json()).catch(() => ({ config: null })),
     ])
-      .then(([dash, pcoStatus]) => {
+      .then(([dash, pcoStatus, configRes]) => {
         setScreens(dash.screens ?? [])
         setPeople(dash.people ?? null)
         setLabels(dash.labels ?? null)
+        setSchedules(dash.schedules ?? [])
+        setTemplates(dash.templates ?? [])
+        setServiceTypes(dash.serviceTypes ?? [])
         setPcoConnected(!!pcoStatus.connected)
+        const saved = configRes.config
+        if (saved?.length) {
+          const merged = saved.filter(c => DEFAULT_CARDS.some(d => d.id === c.id))
+          const missing = DEFAULT_CARDS.filter(d => !merged.some(m => m.id === d.id))
+          setCardConfig([...merged, ...missing])
+        }
         setLoading(false)
       })
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
+
+  function renderCard(card) {
+    if (card.id === 'screens')      return <ScreensCard      key="screens"      screens={screens} />
+    if (card.id === 'services')     return <ServicesCard     key="services"     screens={screens} pcoConnected={pcoConnected} />
+    if (card.id === 'people')       return <PeopleCard       key="people"       people={people} pcoConnected={pcoConnected} />
+    if (card.id === 'labels')       return <LabelsCard       key="labels"       labels={labels} />
+    if (card.id === 'schedules')    return <SchedulesCard    key="schedules"    schedules={schedules} />
+    if (card.id === 'templates')    return <TemplatesCard    key="templates"    templates={templates} />
+    if (card.id === 'quickactions') return <QuickActionsCard key="quickactions" serviceTypes={serviceTypes} screens={screens} />
+    if (card.id === 'activity')     return <ActivityCard     key="activity"     screens={screens} />
+    return null
+  }
 
   return (
     <AdminLayout title="Dashboard">
@@ -346,6 +611,7 @@ export default function Dashboard() {
             Click any card header to go to its full management page.
           </InfoPopover>
         </div>
+        <Link to="/admin/profile#dashboard" className={styles.customizeLink}>Customize dashboard →</Link>
       </div>
 
       {loading ? (
@@ -354,10 +620,7 @@ export default function Dashboard() {
         <p className={styles.stateMsg} style={{ color: '#f87171' }}>{error}</p>
       ) : (
         <div className={styles.cardGrid}>
-          <ScreensCard screens={screens} />
-          <ServicesCard screens={screens} pcoConnected={pcoConnected} />
-          <PeopleCard people={people} pcoConnected={pcoConnected} />
-          <LabelsCard labels={labels} />
+          {cardConfig.filter(c => c.visible).map(renderCard)}
         </div>
       )}
     </AdminLayout>

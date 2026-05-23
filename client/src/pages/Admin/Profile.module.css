@@ -211,6 +211,15 @@
   color: #4ade80;
 }
 
+.btnSuccess {
+  background: #16a34a;
+}
+
+.errMsg {
+  font-size: 0.82rem;
+  color: #f87171;
+}
+
 /* ── Theme picker ────────────────────────────────────────── */
 
 .themeRow {
@@ -351,6 +360,83 @@
 .muted {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+/* ── Dashboard layout section ────────────────────────────── */
+
+.dashList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0;
+}
+
+.dashRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  user-select: none;
+  transition: opacity 0.12s, border-color 0.12s, background 0.12s;
+}
+.dashRow:active { cursor: grabbing; }
+
+.dashRowDragging {
+  opacity: 0.4;
+}
+
+.dashRowOver {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-page));
+}
+
+.dragHandle {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dashRowInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashRowLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-pri);
+}
+
+.dashRowDesc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dashToggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 7px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.dashToggle:hover { color: var(--text-sec); border-color: var(--text-muted); }
+.dashToggleOn {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 /* ── Responsive ──────────────────────────────────────────── */

@@ -543,6 +543,33 @@ router.get('/dashboard', (req, res) => {
     ...positionTypes.slice(0, 2).map(p => ({ ...p, type: 'position' })),
   ]
 
+  const schedulesData = db.prepare(`
+    SELECT sc.id, sc.cron_expr, sc.enabled, sc.last_run,
+      st.name AS service_type_name, st.mode AS service_type_mode
+    FROM schedules sc
+    JOIN service_types st ON sc.service_type_id = st.id
+    JOIN campuses c ON st.campus_id = c.id
+    WHERE c.org_id = ?
+    ORDER BY sc.enabled DESC, st.name
+  `).all(orgId)
+
+  const templatesData = db.prepare(`
+    SELECT t.id, t.name,
+      (SELECT COUNT(*) FROM screens s2 WHERE s2.org_id = t.org_id AND s2.layout = 'template:' || CAST(t.id AS TEXT)) AS screen_count
+    FROM templates t
+    WHERE t.org_id = ?
+    ORDER BY t.name
+  `).all(orgId)
+
+  const serviceTypesData = db.prepare(`
+    SELECT st.id, st.name, st.mode,
+      (SELECT screen_ids FROM schedules WHERE service_type_id = st.id AND enabled = 1 ORDER BY id DESC LIMIT 1) AS schedule_screen_ids
+    FROM service_types st
+    JOIN campuses c ON st.campus_id = c.id
+    WHERE c.org_id = ?
+    ORDER BY st.name
+  `).all(orgId)
+
   res.json({
     screens: screensWithData,
     people: { count: peopleCount, pcoCount: pcoPeopleCount, preview: peoplePreview },
@@ -554,6 +581,9 @@ router.get('/dashboard', (req, res) => {
       items: previewItems,
       total: labelsAll.length + positionTypes.length,
     },
+    schedules: schedulesData,
+    templates: templatesData,
+    serviceTypes: serviceTypesData,
   })
 })
 
