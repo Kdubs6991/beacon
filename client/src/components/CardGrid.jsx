@@ -6,48 +6,48 @@ import styles from './CardGrid.module.css'
 function TemplateGrid({ musicians, template }) {
   const rows = template.rows ?? []
   const slotConfig = template.slots ?? {}
-  const emptyBehavior = template.emptySlots ?? 'show'
+  const emptyBehavior = template.emptySlots ?? 'reserve'
 
-  let slotCounter = 0
+  // Pass 1: build a 2D grid — rowGrid[ri][ci] = { slotNum, mode, musician }
+  let globalSlot = 0
+  const rowGrid = rows.map(row => {
+    const colCount = row.cols ?? row.columns ?? 0
+    return Array.from({ length: colCount }, () => {
+      globalSlot++
+      const slotNum = globalSlot
+      const cfg = slotConfig[slotNum] ?? {}
+      const mode = cfg.mode ?? 'full'
+      let musician
+      if (cfg.labelName) {
+        musician = musicians.find(m => m.mic === cfg.labelName || m.iem === cfg.labelName) ?? null
+      } else {
+        const sourceSn = cfg.linkedTo ?? slotNum
+        musician = musicians.find(m => m.slot === sourceSn - 1) ?? null
+      }
+      return { slotNum, mode, musician }
+    })
+  })
+
+  // Pass 2 (collapse only): find which column indices have at least one musician
+  // A column index is "visible" if ANY row has a musician at that position.
+  // Columns with nothing but empty slots are removed entirely.
+  let visibleCols = null
+  if (emptyBehavior === 'collapse') {
+    const maxCols = Math.max(...rowGrid.map(r => r.length), 0)
+    visibleCols = new Set()
+    for (let ci = 0; ci < maxCols; ci++) {
+      if (rowGrid.some(row => row[ci]?.musician != null)) visibleCols.add(ci)
+    }
+  }
 
   return (
     <div className={styles.templateGrid}>
-      {rows.map((row, ri) => {
-        const cells = []
-        for (let col = 0; col < (row.cols ?? row.columns ?? 0); col++) {
-          slotCounter++
-          const slotNum = slotCounter
-          const cfg = slotConfig[slotNum] ?? {}
-          const mode = cfg.mode ?? 'full'
-
-          let musician
-          if (cfg.labelName) {
-            // Label-pinned slot: find the musician assigned that mic or IEM label
-            musician = musicians.find(m => m.mic === cfg.labelName || m.iem === cfg.labelName) ?? null
-          } else {
-            // Positional slot: linkedTo overrides which slot's person to show
-            const sourceSn = cfg.linkedTo ?? slotNum
-            musician = musicians.find(m => m.slot === sourceSn - 1) ?? null
-          }
-
-          if (!musician && (emptyBehavior === 'hide' || emptyBehavior === 'collapse')) continue
-
-          cells.push(
-            <div key={slotNum} className={styles.templateCell}>
-              {musician
-                ? <MusicianCard
-                    name={musician.name}
-                    position={musician.position}
-                    photo={musician.photo}
-                    mic={musician.mic}
-                    iem={musician.iem}
-                    mode={mode}
-                  />
-                : <MusicianCard empty />
-              }
-            </div>
-          )
-        }
+      {rowGrid.map((rowCells, ri) => {
+        const row = rows[ri]
+        // Reserve: show every cell. Collapse: keep only columns that have a musician somewhere.
+        const cells = visibleCols
+          ? rowCells.filter((_, ci) => visibleCols.has(ci))
+          : rowCells
 
         if (cells.length === 0) return null
 
@@ -57,7 +57,21 @@ function TemplateGrid({ musicians, template }) {
               <div className={styles.rowLabel}>{row.label}</div>
             )}
             <div className={styles.templateRowCells}>
-              {cells}
+              {cells.map(cell => (
+                <div key={cell.slotNum} className={styles.templateCell}>
+                  {cell.musician
+                    ? <MusicianCard
+                        name={cell.musician.name}
+                        position={cell.musician.position}
+                        photo={cell.musician.photo}
+                        mic={cell.musician.mic}
+                        iem={cell.musician.iem}
+                        mode={cell.mode}
+                      />
+                    : <MusicianCard empty />
+                  }
+                </div>
+              ))}
             </div>
           </div>
         )
