@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import styles from './Docs.module.css'
 
 const NAV = [
@@ -100,6 +101,7 @@ function Callout({ type = 'info', children }) {
 
 export default function Docs() {
   const { hash } = useLocation()
+  const { user } = useAuth()
 
   useEffect(() => {
     if (hash) {
@@ -115,7 +117,10 @@ export default function Docs() {
       <header className={styles.topBar}>
         <span className={styles.brand}>Beacon</span>
         <div className={styles.topBarNav}>
-          <Link to="/login" className={styles.backLink}>Sign in</Link>
+          {user
+            ? <Link to="/admin" className={styles.backLink}>Dashboard</Link>
+            : <Link to="/login" className={styles.backLink}>Sign in</Link>
+          }
           <Link to="/display" className={styles.backLink}>Display login</Link>
         </div>
       </header>
@@ -348,14 +353,16 @@ export default function Docs() {
               <p>Each slot in the grid can be individually configured. In the template editor, the <strong>Slot configuration</strong> section shows a clickable grid — click any cell to open its settings panel.</p>
               <p><strong>Display mode</strong> — controls what content this slot shows on the live display:</p>
               <ul className={styles.ul}>
-                <li><strong>Full</strong> — the complete card: person's photo, name, and their assigned label.</li>
-                <li><strong>Photo only</strong> — shows just the person's headshot, filling the cell. No text.</li>
-                <li><strong>Label only</strong> — shows the person's name and their label without the photo. Good for text-dense rows where photos would be too small to be useful.</li>
+                <li><strong>Full card</strong> — photo (if uploaded), name, position, and both mic and IEM labels.</li>
+                <li><strong>Image only</strong> — shows just the person's headshot, filling the cell. No text at all.</li>
+                <li><strong>Name only</strong> — shows name and position. No photo, no labels. Can optionally link to another slot (see below).</li>
+                <li><strong>Label only</strong> — shows name, position, and mic/IEM labels. No photo. Good for compact rows where photos would be too small.</li>
               </ul>
-              <p><strong>Label</strong> — assign a single mic or IEM label as the default for this slot. The label picker groups options by type (Mic / IEM). This label shows on the display card when someone is assigned to the slot. The label field is hidden when <em>Photo only</em> mode is selected since there is nothing to display.</p>
-              <Callout type="info">
-                Slot label assignments set the <em>default</em> for that position. Automation rules can override them for specific people or PCO positions.
+              <p><strong>Label pin</strong> (available on Full card and Label only modes) — pin this slot to a specific mic or IEM label. When set, the slot searches for whichever team member has been assigned that label by an automation rule, and displays them here. If nobody has been assigned that label this week, the slot is empty.</p>
+              <Callout type="warning">
+                The label pin is a <em>search filter</em>, not a display override. It finds the person who <em>already has</em> that label assigned via automation. It does not add a label to someone's card. If your automation rules haven't assigned that label to anyone, the slot stays blank.
               </Callout>
+              <p><strong>Link to slot</strong> (available on Name only mode) — pull a different slot's person into this cell instead of the slot's own position in the roster. For example: Row 1 shows photos, Row 2 has Name only cells each linked back to the matching Row 1 cell — same people, different display style stacked on top of each other.</p>
               <p>Configured slots show their label and mode at a glance in the cell. Use <em>Clear</em> in the panel to remove all settings from a slot. Click a configured cell again to close the panel.</p>
             </SubSection>
 
@@ -526,10 +533,13 @@ export default function Docs() {
 
           {/* ── Automation ── */}
           <Section id="automation" title="Automation Rules">
-            <p>Automation rules auto-assign mics and IEMs when a schedule fires. They're evaluated <strong>top-to-bottom</strong> — each person matches only the first rule that applies to them.</p>
+            <p>Automation rules auto-assign mics and IEMs when a schedule fires or a Push is triggered. They're evaluated <strong>top-to-bottom</strong> — each person is checked against every rule, but only the first matching mic rule and first matching IEM rule are applied.</p>
+            <Callout type="info">
+              Automation is what puts label text on cards. If a person has no matching automation rule, their card shows no mic or IEM — even if their template slot is pinned to a label. The rule must run and assign the label first.
+            </Callout>
             <p>Each rule has two parts:</p>
             <ul className={styles.ul}>
-              <li><strong>Condition:</strong> match by <em>Name</em> or <em>Position</em>, using <em>is</em> (exact) or <em>contains</em> (partial).</li>
+              <li><strong>Condition:</strong> match by <em>Name</em> or <em>Position</em>, using <em>is</em> (exact) or <em>contains</em> (partial). <strong>Name</strong> checks the person's actual name. <strong>Position</strong> checks their role for that service (PCO team position or Manual assignment position).</li>
               <li><strong>Action:</strong> assign a specific mic or IEM label, or "next available" from the full pool or a named group.</li>
             </ul>
             <p>The <strong>Position</strong> field matches two things:</p>

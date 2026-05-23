@@ -148,8 +148,12 @@ function TemplateModal({ initial, onSave, onClose }) {
     setSlotAsgn(prev => {
       const cur = prev[sn] || {}
       const next = { ...cur }
-      if (mode === 'full') { delete next.mode; delete next.linkedTo }
+      if (mode === 'full') delete next.mode
       else next.mode = mode
+      // linkedTo only applies to name mode
+      if (mode !== 'name') delete next.linkedTo
+      // labelId only applies to full and label modes
+      if (mode === 'photo' || mode === 'name') delete next.labelId
       if (slotIsEmpty(next)) { const n = { ...prev }; delete n[sn]; return n }
       return { ...prev, [sn]: next }
     })
@@ -537,7 +541,8 @@ export default function Templates() {
         <InfoPopover title="Templates" docsHref="/docs#templates">
           <p>Templates define a custom display grid for a screen — how many rows, how many slots per row, and what each slot shows.</p>
           <p><strong>Rows</strong> can be different heights (Tiny → Tall) and widths (1–8 slots). Add an optional section label to identify rows like "Vocals" or "Band" on screen.</p>
-          <p><strong>Slot configuration</strong> — click any cell in the editor to set its display mode (Full card, Photo only, or Label only) and which label is assigned to that slot by default.</p>
+          <p><strong>Slot configuration</strong> — click any cell to set its display mode and optional settings. <strong>Full card</strong> and <strong>Label only</strong> can be pinned to a specific mic/IEM label — the slot will show whoever has that label assigned by automation. <strong>Name only</strong> can link to another slot to repeat the same person in a different style. <strong>Image only</strong> shows just the headshot.</p>
+          <p><strong>Labels only show on screen when automation rules have assigned that mic or IEM to someone.</strong> If nobody has the label, the slot is empty.</p>
           <p><strong>Empty slot behavior</strong> controls whether unused slots stay as placeholders or collapse when nobody is assigned.</p>
           <p>Once created, select a template when setting up a screen instead of a preset layout.</p>
         </InfoPopover>

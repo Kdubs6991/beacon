@@ -18,11 +18,12 @@ function TemplateGrid({ musicians, template }) {
       const cfg = slotConfig[slotNum] ?? {}
       const mode = cfg.mode ?? 'full'
       let musician
-      if (cfg.labelName) {
+      if (cfg.linkedTo) {
+        musician = musicians.find(m => m.slot === cfg.linkedTo - 1) ?? null
+      } else if (cfg.labelName) {
         musician = musicians.find(m => m.mic === cfg.labelName || m.iem === cfg.labelName) ?? null
       } else {
-        const sourceSn = cfg.linkedTo ?? slotNum
-        musician = musicians.find(m => m.slot === sourceSn - 1) ?? null
+        musician = musicians.find(m => m.slot === slotNum - 1) ?? null
       }
       return { slotNum, mode, musician }
     })
@@ -50,6 +51,7 @@ function TemplateGrid({ musicians, template }) {
           : rowCells
 
         if (cells.length === 0) return null
+        if (visibleCols && cells.every(c => c.musician == null)) return null
 
         return (
           <div key={ri} className={styles.templateRow} style={{ flex: row.height ?? 1 }}>

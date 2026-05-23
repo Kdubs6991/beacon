@@ -29,3 +29,7 @@ Thumbs.db
 
 # ── Claude dev reference (not part of the project) ────────────────────────────
 ClaudeReferencePhotos/
+CLAUDE.md
+
+# ── Local dev / test scripts ──────────────────────────────────────────────────
+server/seed-test.js
