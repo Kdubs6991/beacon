@@ -17,15 +17,17 @@ function TemplateGrid({ musicians, template }) {
       const slotNum = globalSlot
       const cfg = slotConfig[slotNum] ?? {}
       const mode = cfg.mode ?? 'full'
+      // Routing: use first resolvedLabel name if no linkedTo
+      const routingLabel = cfg.resolvedLabels?.[0]?.name ?? cfg.labelName ?? null
       let musician
       if (cfg.linkedTo) {
         musician = musicians.find(m => m.slot === cfg.linkedTo - 1) ?? null
-      } else if (cfg.labelName) {
-        musician = musicians.find(m => m.mic === cfg.labelName || m.iem === cfg.labelName) ?? null
+      } else if (routingLabel) {
+        musician = musicians.find(m => m.mic === routingLabel || m.iem === routingLabel) ?? null
       } else {
         musician = musicians.find(m => m.slot === slotNum - 1) ?? null
       }
-      return { slotNum, mode, musician }
+      return { slotNum, mode, musician, resolvedLabels: cfg.resolvedLabels ?? [], showName: cfg.showName ?? false }
     })
   })
 
@@ -69,6 +71,8 @@ function TemplateGrid({ musicians, template }) {
                         mic={cell.musician.mic}
                         iem={cell.musician.iem}
                         mode={cell.mode}
+                        resolvedLabels={cell.resolvedLabels}
+                        showName={cell.showName}
                       />
                     : <MusicianCard empty />
                   }

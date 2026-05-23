@@ -30,8 +30,19 @@ function defaultConfig() {
     autoMerge: false,
     showTitle: true,
     showLogo: true,
+    theme: 'blue',
   }
 }
+
+const TEMPLATE_THEMES = [
+  { id: 'blue',   label: 'Blue',   color: '#3b82f6' },
+  { id: 'green',  label: 'Green',  color: '#22c55e' },
+  { id: 'purple', label: 'Purple', color: '#a855f7' },
+  { id: 'red',    label: 'Red',    color: '#dc2626' },
+  { id: 'yellow', label: 'Yellow', color: '#fbbf24' },
+  { id: 'black',  label: 'Black',  color: '#1e293b' },
+  { id: 'white',  label: 'White',  color: '#f0f4f8' },
+]
 
 function totalSlots(rows) {
   return (rows || []).reduce((s, r) => s + (r.cols || 0), 0)
@@ -107,7 +118,17 @@ function TemplateModal({ initial, onSave, onClose }) {
   const [autoMerge,    setMerge]      = useState(initConfig.autoMerge ?? false)
   const [showTitle,    setTitle]      = useState(initConfig.showTitle ?? true)
   const [showLogo,     setLogo]       = useState(initConfig.showLogo ?? true)
-  const [slotAsgn,     setSlotAsgn]   = useState(initConfig.slots || {})
+  const [theme,        setTheme]      = useState(initConfig.theme ?? 'blue')
+  const [slotAsgn,     setSlotAsgn]   = useState(() => {
+    const raw = initConfig.slots || {}
+    const normalized = {}
+    for (const [sn, slot] of Object.entries(raw)) {
+      const s = { ...slot }
+      if (s.labelId && !s.labelIds) { s.labelIds = [s.labelId]; delete s.labelId }
+      normalized[sn] = s
+    }
+    return normalized
+  })
   const [selectedSlot, setSelected]   = useState(null)
   const [labels,       setLabels]     = useState([])
   const [saving,       setSaving]     = useState(false)
@@ -134,11 +155,28 @@ function TemplateModal({ initial, onSave, onClose }) {
     setRows(prev => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r))
   }
 
-  function slotIsEmpty(a) { return !a.labelId && !a.mode && !a.linkedTo }
+  function slotIsEmpty(a) { return !a.labelIds?.length && !a.mode && !a.linkedTo && !a.showName }
 
-  function updateSlotLabel(sn, id) {
+  function updateSlotLabels(sn, labelId, checked) {
     setSlotAsgn(prev => {
-      const next = { ...(prev[sn] || {}), labelId: id || undefined }
+      const next = { ...(prev[sn] || {}) }
+      const existing = next.labelIds ?? []
+      if (checked) {
+        next.labelIds = [...new Set([...existing, labelId])]
+      } else {
+        next.labelIds = existing.filter(id => id !== labelId)
+        if (!next.labelIds.length) delete next.labelIds
+      }
+      if (slotIsEmpty(next)) { const n = { ...prev }; delete n[sn]; return n }
+      return { ...prev, [sn]: next }
+    })
+  }
+
+  function updateSlotShowName(sn, val) {
+    setSlotAsgn(prev => {
+      const next = { ...(prev[sn] || {}) }
+      if (val) next.showName = true
+      else delete next.showName
       if (slotIsEmpty(next)) { const n = { ...prev }; delete n[sn]; return n }
       return { ...prev, [sn]: next }
     })
@@ -152,8 +190,8 @@ function TemplateModal({ initial, onSave, onClose }) {
       else next.mode = mode
       // linkedTo only applies to name mode
       if (mode !== 'name') delete next.linkedTo
-      // labelId only applies to full and label modes
-      if (mode === 'photo' || mode === 'name') delete next.labelId
+      // labelIds/showName only apply to full and label modes
+      if (mode === 'photo' || mode === 'name') { delete next.labelIds; delete next.showName }
       if (slotIsEmpty(next)) { const n = { ...prev }; delete n[sn]; return n }
       return { ...prev, [sn]: next }
     })
@@ -179,7 +217,7 @@ function TemplateModal({ initial, onSave, onClose }) {
     setSaving(true)
     setError(null)
     try {
-      const config = { rows, emptySlots, autoMerge, showTitle, showLogo, slots: slotAsgn }
+      const config = { rows, emptySlots, autoMerge, showTitle, showLogo, theme, slots: slotAsgn }
       const body = { name: name.trim(), description: desc.trim() || null, config }
       const method = initial ? 'PUT' : 'POST'
       const path   = initial ? `/templates/${initial.id}` : '/templates'
@@ -320,9 +358,12 @@ function TemplateModal({ initial, onSave, onClose }) {
                 {Array.from({ length: row.cols }).map((_, ci) => {
                   const sn = rowStart + ci + 1
                   const asgn = slotAsgn[sn]
-                  const labelName = asgn?.labelId ? labels.find(l => l.id === asgn.labelId)?.name : null
+                  const labelCount = asgn?.labelIds?.length ?? 0
+                  const labelDisplay = labelCount === 1
+                    ? labels.find(l => l.id === asgn.labelIds[0])?.name ?? null
+                    : labelCount > 1 ? `${labelCount} labels` : null
                   const isSel = selectedSlot === sn
-                  const hasConfig = !!(labelName || asgn?.mode)
+                  const hasConfig = !!(labelDisplay || asgn?.mode)
                   return (
                     <div
                       key={ci}
@@ -336,7 +377,7 @@ function TemplateModal({ initial, onSave, onClose }) {
                       {asgn?.linkedTo && (
                         <span className={styles.assignCellLinked}>→{asgn.linkedTo}</span>
                       )}
-                      {labelName && <span className={styles.assignCellMic}>{labelName}</span>}
+                      {labelDisplay && <span className={styles.assignCellMic}>{labelDisplay}</span>}
                     </div>
                   )
                 })}
@@ -402,28 +443,57 @@ function TemplateModal({ initial, onSave, onClose }) {
 
             {panelMode !== 'photo' && panelMode !== 'name' && (
               <div className={styles.rowField}>
-                <span className={styles.rowFieldLabel}>Label assigned to this slot</span>
-                <select
-                  className={styles.rowSelect}
-                  style={{ width: '100%', boxSizing: 'border-box' }}
-                  value={panelAsgn.labelId || ''}
-                  onChange={e => updateSlotLabel(selectedSlot, e.target.value ? Number(e.target.value) : undefined)}
-                >
-                  <option value="">None</option>
-                  {micLabels.length > 0 && (
-                    <optgroup label="Mic">
-                      {micLabels.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                    </optgroup>
-                  )}
-                  {iemLabels.length > 0 && (
-                    <optgroup label="IEM">
-                      {iemLabels.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                    </optgroup>
-                  )}
-                  {labels.length === 0 && (
-                    <option disabled>No labels yet — add some in the Labels tab</option>
-                  )}
-                </select>
+                <span className={styles.rowFieldLabel}>Labels to show in this slot</span>
+                {labels.length === 0 ? (
+                  <span className={styles.muted}>No labels yet — add some in the Labels tab</span>
+                ) : (
+                  <div className={styles.labelCheckList}>
+                    {micLabels.length > 0 && (
+                      <>
+                        <span className={styles.labelCheckGroup}>Mic</span>
+                        {micLabels.map(l => (
+                          <label key={l.id} className={styles.labelCheckRow}>
+                            <input
+                              type="checkbox"
+                              checked={panelAsgn.labelIds?.includes(l.id) ?? false}
+                              onChange={e => updateSlotLabels(selectedSlot, l.id, e.target.checked)}
+                            />
+                            {l.name}
+                          </label>
+                        ))}
+                      </>
+                    )}
+                    {iemLabels.length > 0 && (
+                      <>
+                        <span className={styles.labelCheckGroup}>IEM</span>
+                        {iemLabels.map(l => (
+                          <label key={l.id} className={styles.labelCheckRow}>
+                            <input
+                              type="checkbox"
+                              checked={panelAsgn.labelIds?.includes(l.id) ?? false}
+                              onChange={e => updateSlotLabels(selectedSlot, l.id, e.target.checked)}
+                            />
+                            {l.name}
+                          </label>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {panelMode === 'label' && (
+              <div className={styles.rowField}>
+                <div className={styles.optionRow}>
+                  <div>
+                    <span className={styles.rowFieldLabel}>Show person's name</span>
+                  </div>
+                  <Toggle
+                    checked={panelAsgn.showName ?? false}
+                    onChange={val => updateSlotShowName(selectedSlot, val)}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -497,6 +567,24 @@ function TemplateModal({ initial, onSave, onClose }) {
               <span className={styles.optionDesc}>Display your org logo and name in the header bar.</span>
             </div>
             <Toggle checked={showLogo} onChange={setLogo} />
+          </div>
+          <div className={styles.optionRow}>
+            <div>
+              <span className={styles.optionTitle}>Color theme</span>
+              <span className={styles.optionDesc}>Accent color applied to the display screen.</span>
+            </div>
+            <div className={styles.themeSwatches}>
+              {TEMPLATE_THEMES.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`${styles.themeSwatch}${theme === t.id ? ` ${styles.themeSwatchActive}` : ''}`}
+                  style={{ background: t.color }}
+                  title={t.label}
+                  onClick={() => setTheme(t.id)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

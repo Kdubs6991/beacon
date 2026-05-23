@@ -115,19 +115,31 @@ router.get('/:token', (req, res) => {
     if (tplRow?.config) {
       try { templateConfig = JSON.parse(tplRow.config) } catch {}
     }
-    // Augment slot configs: resolve labelId → labelName so CardGrid can route by label
+    // Resolve labelIds (array) and legacy labelId (single) → resolvedLabels [{name,type}]
     if (templateConfig?.slots) {
-      const labelIds = [...new Set(
-        Object.values(templateConfig.slots).map(s => s.labelId).filter(Boolean)
+      const allIds = [...new Set(
+        Object.values(templateConfig.slots).flatMap(s => {
+          if (s.labelIds?.length) return s.labelIds
+          if (s.labelId) return [s.labelId]
+          return []
+        }).filter(Boolean)
       )]
-      if (labelIds.length > 0) {
+      if (allIds.length > 0) {
         const rows = db.prepare(
-          `SELECT id, name FROM labels WHERE id IN (${labelIds.map(() => '?').join(',')})`
-        ).all(...labelIds)
-        const labelMap = Object.fromEntries(rows.map(l => [l.id, l.name]))
+          `SELECT id, name, type FROM labels WHERE id IN (${allIds.map(() => '?').join(',')})`
+        ).all(...allIds)
+        const labelMap = Object.fromEntries(rows.map(l => [l.id, { name: l.name, type: l.type }]))
         for (const sn of Object.keys(templateConfig.slots)) {
-          const lid = templateConfig.slots[sn].labelId
-          if (lid) templateConfig.slots[sn] = { ...templateConfig.slots[sn], labelName: labelMap[lid] ?? null }
+          const slot = templateConfig.slots[sn]
+          const ids = slot.labelIds?.length ? slot.labelIds : (slot.labelId ? [slot.labelId] : [])
+          if (ids.length > 0) {
+            const resolvedLabels = ids.map(id => labelMap[id]).filter(Boolean)
+            templateConfig.slots[sn] = {
+              ...slot,
+              resolvedLabels,
+              labelName: resolvedLabels[0]?.name ?? null,
+            }
+          }
         }
       }
     }

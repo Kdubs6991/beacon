@@ -376,10 +376,17 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
 
 // ── Push modal ────────────────────────────────────────────────────────────────
 
-function PushModal({ st, screens, onClose }) {
+function PushModal({ st, screens, scheduleScreenIds, onClose }) {
   // Mirror screens show their source's content — pushing to them has no effect
   const pushableScreens = screens.filter(s => !s.mirror_screen_id)
-  const [selectedIds, setSelectedIds] = useState(() => pushableScreens.map(s => s.id))
+  const [selectedIds, setSelectedIds] = useState(() => {
+    if (scheduleScreenIds.length > 0) {
+      // Pre-select screens from the schedule that are actually pushable
+      const valid = scheduleScreenIds.filter(id => pushableScreens.some(s => s.id === id))
+      if (valid.length > 0) return valid
+    }
+    return []
+  })
   const [pushing, setPushing] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -438,7 +445,11 @@ function PushModal({ st, screens, onClose }) {
       ) : (
         <>
           {error && <p className={styles.pushError}>{error}</p>}
-          <p className={styles.pushHint}>Choose which screens to update right now.</p>
+          <p className={styles.pushHint}>
+            {scheduleScreenIds.length > 0
+              ? 'Screens from your schedule are pre-selected. Add or remove as needed.'
+              : 'Choose which screens to push to.'}
+          </p>
           {pushableScreens.length === 0 ? (
             <p className={styles.pushHint}>No screens available. Create a screen on the Screens page first.</p>
           ) : (
@@ -660,7 +671,16 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
         </div>
       )}
     </div>
-    {pushOpen && <PushModal st={st} screens={screens} onClose={() => setPushOpen(false)} />}
+    {pushOpen && (
+      <PushModal
+        st={st}
+        screens={screens}
+        scheduleScreenIds={[...new Set(mySchedules.flatMap(s => {
+          try { return JSON.parse(s.screen_ids || '[]') } catch { return [] }
+        }))]}
+        onClose={() => setPushOpen(false)}
+      />
+    )}
     </>
   )
 }

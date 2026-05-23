@@ -378,11 +378,12 @@ export default function Docs() {
             </SubSection>
 
             <SubSection id="template-options" title="Display Options">
-              <p>Each template has three toggles that control the display header when this template is active on a screen:</p>
+              <p>Each template has options that control how the display screen looks when this template is active:</p>
               <ul className={styles.ul}>
                 <li><strong>Auto-merge same person</strong> — If the same person appears in vertically adjacent slots, their cards merge into one taller card. Useful when a worship leader holds multiple adjacent slots.</li>
-                <li><strong>Show service title</strong> — Displays the event name and date in the center of the header bar.</li>
+                <li><strong>Show service title</strong> — Displays the event name in the center of the header bar.</li>
                 <li><strong>Show organization logo</strong> — Displays your org logo and name on the left side of the header bar.</li>
+                <li><strong>Color theme</strong> — Choose an accent color applied across the entire display screen: Blue (default), Green, Purple, Red, Yellow, Black, or White. The background, cards, header, mic labels, and IEM labels all shift to match the chosen theme. White switches the screen to a light mode layout.</li>
               </ul>
             </SubSection>
           </Section>
@@ -427,7 +428,7 @@ export default function Docs() {
               <p>Every display screen shows a header bar at the top with three zones:</p>
               <ul className={styles.ul}>
                 <li><strong>Left</strong> — your organization's logo (if uploaded) and name. Upload a logo on the <strong>Organization</strong> page.</li>
-                <li><strong>Center</strong> — the service/event name and date from the active assignments.</li>
+                <li><strong>Center</strong> — the service/event name and the screen's name from the active assignments.</li>
                 <li><strong>Right</strong> — a live clock that updates every second.</li>
               </ul>
               <p>If no logo is uploaded, only the org name appears on the left. Upload a logo at <strong>Admin → Organization → Organization Logo</strong>.</p>

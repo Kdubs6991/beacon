@@ -2,19 +2,17 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   transition: border-color 0.2s, background 0.2s;
   height: 100%;
   box-sizing: border-box;
+  container-type: size;
+  overflow: hidden;
 }
 
-.card:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--accent-dim);
-}
 
 /* ── Photo-only mode ── */
 .cardPhoto {
@@ -27,9 +25,43 @@
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  position: relative;
+  container-type: inline-size;
 }
 
-/* ── Label-only mode ── */
+.avatarInitialsFull {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2rem, 18cqw, 9rem);
+  font-weight: 700;
+  color: var(--text-pri);
+  background: var(--accent-dim);
+  letter-spacing: 0.02em;
+}
+
+.photoCardOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 28px 8px 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.88));
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* Always white text on the dark gradient — theme accent color is unreadable here */
+.photoCardOverlay .position {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Label-only mode (legacy fallback) ── */
 .cardLabel {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -48,6 +80,88 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* ── Label-only mode (new: centered, scales with count) ── */
+.cardLabelCentered {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  text-align: center;
+  container-type: size;
+  overflow: hidden;
+  gap: 6px;
+}
+
+.labelScaleName {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.labelScaleNameText {
+  font-size: clamp(0.7rem, 5cqw, 1.9rem);
+  font-weight: 700;
+  color: var(--text-pri);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.labelScaleList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+  gap: 0.25em;
+  width: 100%;
+}
+
+.labelScaleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.labelScaleIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0.65;
+}
+.labelScaleIcon > svg { width: 1em; height: 1em; }
+
+.labelScaleValue {
+  font-weight: 700;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Font size scales with number of labels */
+.cardLabelCentered[data-count="1"] .labelScaleRow { font-size: clamp(1.4rem, 10cqw, 5rem); }
+.cardLabelCentered[data-count="2"] .labelScaleRow { font-size: clamp(1.2rem, 7cqw, 3.5rem); }
+.cardLabelCentered[data-count="3"] .labelScaleRow { font-size: clamp(1rem, 5.5cqw, 2.8rem); }
 
 /* ── Empty slot ── */
 .cardEmpty {
@@ -131,7 +245,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--accent);
-  background: rgba(124, 110, 232, 0.15);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   padding: 2px 8px;
   border-radius: 20px;
   display: inline-block;
@@ -210,24 +324,82 @@
   justify-content: center;
   height: 100%;
   box-sizing: border-box;
-  padding: 12px 16px;
+  padding: 8px 10px;
   text-align: center;
   gap: 6px;
+  container-type: size;
+  overflow: hidden;
 }
 
 .cardNameText {
-  font-size: clamp(1rem, 3vw, 1.8rem);
+  font-size: clamp(0.65rem, 6cqw, 2.8rem);
   font-weight: 700;
   color: var(--text-pri);
   line-height: 1.15;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .nameCardPos {
-  font-size: 0.72rem;
+  font-size: clamp(0.5rem, 2.8cqw, 0.85rem);
   font-weight: 500;
   color: var(--accent);
   background: rgba(59, 130, 246, 0.12);
   padding: 2px 8px;
   border-radius: 20px;
   display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── Full card: compact layout for small cells ── */
+@container (max-width: 190px) {
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .avatarInitials {
+    width: 40px;
+    height: 40px;
+    font-size: 0.85rem;
+  }
+  .name {
+    font-size: 0.85rem;
+  }
+  .position {
+    font-size: 0.6rem;
+    padding: 1px 5px;
+  }
+  .assignValue {
+    font-size: 0.75rem;
+  }
+  .assignLabel {
+    font-size: 0.55rem;
+    width: 22px;
+  }
+}
+
+@container (max-height: 140px) {
+  .divider {
+    display: none;
+  }
+  .assignments {
+    flex-direction: row;
+    gap: 6px;
+    margin-top: auto;
+  }
+  .assignRow {
+    flex: 1;
+    min-width: 0;
+    gap: 4px;
+  }
+  .assignLabel {
+    display: none;
+  }
+  .assignValue {
+    font-size: 0.78rem;
+  }
 }

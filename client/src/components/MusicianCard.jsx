@@ -42,17 +42,56 @@ function FullCard({ name, position, photo, mic, iem }) {
   )
 }
 
-// ── Photo-only card: large headshot, no text ──────────────────────────────────
-function PhotoCard({ name, photo }) {
+// ── Photo-only card: large headshot, position badge overlay at bottom ─────────
+function PhotoCard({ name, photo, position }) {
+  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   return (
     <div className={styles.cardPhoto}>
-      <Avatar name={name} photo={photo} size="lg" />
+      {photo
+        ? <img className={styles.avatarLg} src={photo} alt={name} />
+        : <div className={styles.avatarInitialsFull}>{initials}</div>
+      }
+      {position && (
+        <div className={styles.photoCardOverlay}>
+          <span className={styles.position}>{position}</span>
+        </div>
+      )}
     </div>
   )
 }
 
-// ── Label-only card: name + assignments, no photo ─────────────────────────────
-function LabelCard({ name, position, mic, iem }) {
+// ── Label-only card: centered, scales with label count (max 3) ───────────────
+function LabelCard({ name, position, mic, iem, resolvedLabels, showName }) {
+  if (resolvedLabels && resolvedLabels.length > 0) {
+    const labels = resolvedLabels.slice(0, 3)
+    return (
+      <div className={styles.cardLabelCentered} data-count={labels.length}>
+        {showName && name && (
+          <div className={styles.labelScaleName}>
+            <span className={styles.labelScaleNameText}>
+              {name}{position ? ` · ${position}` : ''}
+            </span>
+          </div>
+        )}
+        <div className={styles.labelScaleList}>
+          {labels.map((label, i) => (
+            <div key={i} className={styles.labelScaleRow}>
+              <span className={styles.labelScaleIcon}>
+                {label.type === 'mic' ? <MicIcon /> : <IemIcon />}
+              </span>
+              <span
+                className={styles.labelScaleValue}
+                style={{ color: `var(--${label.type}-color)` }}
+              >
+                {label.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  // Legacy fallback when no slot labels configured
   return (
     <div className={styles.cardLabel}>
       <div className={styles.labelTop}>
@@ -68,12 +107,11 @@ function LabelCard({ name, position, mic, iem }) {
   )
 }
 
-// ── Name-only card: large name text, no photo ─────────────────────────────────
-function NameCard({ name, position }) {
+// ── Name-only card: large name text, no position ─────────────────────────────
+function NameCard({ name }) {
   return (
     <div className={styles.cardName}>
       <span className={styles.cardNameText}>{name}</span>
-      {position && <span className={styles.nameCardPos}>{position}</span>}
     </div>
   )
 }
@@ -84,11 +122,11 @@ function EmptyCard() {
 }
 
 // ── Public export ─────────────────────────────────────────────────────────────
-export default function MusicianCard({ name, position, photo, mic, iem, mode = 'full', empty = false }) {
+export default function MusicianCard({ name, position, photo, mic, iem, mode = 'full', empty = false, resolvedLabels, showName }) {
   if (empty) return <EmptyCard />
-  if (mode === 'photo') return <PhotoCard name={name} photo={photo} />
+  if (mode === 'photo') return <PhotoCard name={name} photo={photo} position={position} />
   if (mode === 'name') return <NameCard name={name} position={position} />
-  if (mode === 'label') return <LabelCard name={name} position={position} mic={mic} iem={iem} />
+  if (mode === 'label') return <LabelCard name={name} position={position} mic={mic} iem={iem} resolvedLabels={resolvedLabels} showName={showName} />
   return <FullCard name={name} position={position} photo={photo} mic={mic} iem={iem} />
 }
 

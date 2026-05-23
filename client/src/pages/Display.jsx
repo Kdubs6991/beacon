@@ -7,6 +7,53 @@ import styles from './Display.module.css'
 
 const POLL_INTERVAL_MS = 30_000
 
+const DISPLAY_THEMES = {
+  // blue uses :root defaults — no overrides needed
+  green: {
+    '--bg-page': '#020c04', '--bg-card': '#071209', '--bg-card-hover': '#0d1f10',
+    '--bg-header': 'rgba(3, 14, 6, 0.96)',
+    '--border': '#0c2810',
+    '--accent': '#22c55e', '--accent-dim': '#052e16',
+    '--mic-color': '#4ade80', '--iem-color': '#22d3ee',
+  },
+  purple: {
+    '--bg-page': '#060209', '--bg-card': '#0d0617', '--bg-card-hover': '#160a26',
+    '--bg-header': 'rgba(9, 3, 20, 0.96)',
+    '--border': '#1a083a',
+    '--accent': '#a855f7', '--accent-dim': '#2e1065',
+    '--mic-color': '#f472b6', '--iem-color': '#a78bfa',
+  },
+  red: {
+    '--bg-page': '#0c0202', '--bg-card': '#170505', '--bg-card-hover': '#220808',
+    '--bg-header': 'rgba(16, 3, 3, 0.96)',
+    '--border': '#2d0808',
+    '--accent': '#ef4444', '--accent-dim': '#3b0909',
+    '--mic-color': '#fb923c', '--iem-color': '#f472b6',
+  },
+  yellow: {
+    '--bg-page': '#0c0a01', '--bg-card': '#171302', '--bg-card-hover': '#221c03',
+    '--bg-header': 'rgba(15, 12, 1, 0.96)',
+    '--border': '#2e2403',
+    '--accent': '#fbbf24', '--accent-dim': '#3b2d00',
+    '--mic-color': '#fbbf24', '--iem-color': '#fb923c',
+  },
+  black: {
+    '--bg-page': '#0a0a0a', '--bg-card': '#141414', '--bg-card-hover': '#1e1e1e',
+    '--bg-header': 'rgba(6, 6, 6, 0.97)',
+    '--border': 'rgba(255,255,255,0.08)',
+    '--accent': '#94a3b8', '--accent-dim': '#334155',
+    '--mic-color': '#f1f5f9', '--iem-color': '#94a3b8',
+  },
+  white: {
+    '--bg-page': '#f0f4f8', '--bg-card': '#ffffff', '--bg-card-hover': '#f1f5f9',
+    '--bg-header': 'rgba(240, 244, 248, 0.95)',
+    '--border': '#d1dae6',
+    '--accent': '#2563eb', '--accent-dim': '#dbeafe',
+    '--text-pri': '#0f172a', '--text-sec': '#475569', '--text-muted': '#94a3b8',
+    '--mic-color': '#16a34a', '--iem-color': '#0369a1',
+  },
+}
+
 const getCookie = (name) => {
   const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
   return m ? decodeURIComponent(m[2]) : null
@@ -65,22 +112,26 @@ function DisplayView({ screenToken }) {
     )
   }
 
+  const showLogo  = !data.template || data.template.showLogo  !== false
+  const showTitle = !data.template || data.template.showTitle !== false
+  const themeVars = DISPLAY_THEMES[data.template?.theme] ?? {}
+
   return (
-    <div className={styles.page}>
+    <div className={styles.page} style={themeVars}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          {data.org?.logo_url && (
+          {showLogo && data.org?.logo_url && (
             <img src={data.org.logo_url} alt="" className={styles.orgLogo} />
           )}
-          {data.org?.name && (
+          {showLogo && data.org?.name && (
             <span className={styles.orgName}>{data.org.name}</span>
           )}
         </div>
         <div className={styles.headerCenter}>
-          {data.event_name && (
+          {showTitle && data.event_name && (
             <>
               <h1 className={styles.eventName}>{data.event_name}</h1>
-              {data.event_date && <p className={styles.eventDate}>{data.event_date}</p>}
+              {data.screen?.name && <p className={styles.eventDate}>{data.screen.name}</p>}
             </>
           )}
         </div>
