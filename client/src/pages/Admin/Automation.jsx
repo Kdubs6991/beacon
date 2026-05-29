@@ -311,9 +311,9 @@ export default function Automation() {
     <AdminLayout title="Automation">
       <div className={styles.topBar}>
         <InfoPopover title="Automation Rules" docsHref="/docs#automation">
-          <p>Rules auto-assign mics and IEMs when a schedule fires. They run <strong>top-to-bottom</strong> — each person matches the first rule that fits.</p>
-          <p>Set a condition (match by name or position) and an action (assign a specific label, or "next available" from the queue). The <strong>Position</strong> field matches both PCO team positions and Manual service positions.</p>
-          <p>Drag rows to change priority order. Rules higher up run first.</p>
+          <p>Rules are what automatically assign mics and IEMs to musicians each week — so you don't have to do it by hand every service. When a schedule fires or you hit Push, every person on the team gets checked against these rules.</p>
+          <p>Rules run <strong>top-to-bottom</strong>. Each person picks up the first matching mic rule and the first matching IEM rule. Set a <strong>condition</strong> (match by name or position, exact or partial) and an <strong>action</strong> (assign a specific label, or "next available" starting from the top of your unassigned list).</p>
+          <p><strong>Position</strong> matches both PCO team positions and Manual service positions, so the same rules work for both. You'll typically need two rules per role — one for mic, one for IEM. Drag rows to change priority.</p>
         </InfoPopover>
         <div className={styles.topBarRight}>
           <button

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import Cropper from 'react-easy-crop'
 import AdminLayout from './_Layout'
 import Modal from '../../components/Modal'
+import InfoPopover from '../../components/InfoPopover'
 import { useAuth } from '../../context/AuthContext'
 import styles from './People.module.css'
 
@@ -644,6 +645,18 @@ export default function People() {
         </div>
       )}
 
+      <div className={styles.topBar}>
+        <InfoPopover title="People" docsHref="/docs#people">
+          <p>People are the members of your worship team — musicians, singers, speakers, and anyone else who appears on your display screens. Each person gets a card showing their name, photo, and assigned mic/IEM labels.</p>
+          <p>People can come from two sources: <strong>Planning Center</strong> (synced automatically when PCO is connected) or added <strong>manually</strong> for team members not in PCO. Any edits you make in Beacon — name, photo, category — are local overrides that won't be overwritten by future PCO syncs.</p>
+          <p>A person's <strong>position</strong> (e.g. Singer, Electric Guitar) is what your automation rules match against to assign them the right mic and IEM each week. Make sure it's set and matches your rule conditions.</p>
+        </InfoPopover>
+        <div className={styles.toolbarBtns}>
+          <button className={styles.btnGhost} onClick={handlePcoSync}>Sync from PCO</button>
+          <button className={styles.btnPrimary} onClick={() => setModal({ type: 'edit', person: null })}>+ Add Person</button>
+        </div>
+      </div>
+
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -671,11 +684,6 @@ export default function People() {
               <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
             </svg>
           </button>
-        </div>
-
-        <div className={styles.toolbarBtns}>
-          <button className={styles.btnGhost} onClick={handlePcoSync}>Sync from PCO</button>
-          <button className={styles.btnPrimary} onClick={() => setModal({ type: 'edit', person: null })}>+ Add Person</button>
         </div>
       </div>
 

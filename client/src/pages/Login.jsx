@@ -53,7 +53,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className={styles.form}>
             <label className={styles.label}>
               Email
-              <input className={styles.input} type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required />
+              <input className={styles.input} type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" autoFocus required />
             </label>
             <label className={styles.label}>
               Password

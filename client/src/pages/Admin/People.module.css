@@ -1,3 +1,11 @@
+/* ── Top bar ── */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
 /* ── Toolbar ── */
 .toolbar {
   display: flex;

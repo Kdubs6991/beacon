@@ -104,7 +104,7 @@ export default function Register() {
           <form onSubmit={handleSubmit} className={styles.form}>
             <label className={styles.label}>
               Name
-              <input className={styles.input} type="text" value={name} onChange={e => setName(e.target.value)} autoComplete="name" required />
+              <input className={styles.input} type="text" value={name} onChange={e => setName(e.target.value)} autoComplete="name" autoFocus required />
             </label>
             <label className={styles.label}>
               Email

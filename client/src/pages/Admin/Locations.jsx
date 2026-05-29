@@ -409,21 +409,12 @@ export default function Locations() {
     <AdminLayout title="Locations">
       <div className={styles.pageActions}>
         <InfoPopover
-          title="What's going on here?"
+          title="Locations"
           docsHref="/docs#locations"
         >
-          <p>
-            <strong>Locations</strong> (also called campuses) are the top-level way to organize your setup — one per physical venue.
-          </p>
-          <p>
-            Under each location you add <strong>service types</strong> — the kinds of services that happen there (Sunday Morning, Wednesday Night, etc.).
-          </p>
-          <p>
-            Each service type links to a <strong>Planning Center service type</strong> via its PCO ID, and can have an <strong>auto-refresh schedule</strong> that pulls the next upcoming plan from PCO and pushes mic/IEM assignments to all your screens automatically.
-          </p>
-          <p>
-            <strong>Display screens</strong> live under a location too — create them in the Screens page.
-          </p>
+          <p><strong>Locations</strong> are your physical venues — one per campus or building. Think of them as the top-level bucket everything else lives under.</p>
+          <p>Once you have a location, head to <strong>Services</strong> to add service types (Sunday Morning, Wednesday Night, etc.) and set up the schedule that automatically pushes team assignments to your TVs. Head to <strong>Screens</strong> to add the actual display URLs you'll open on those TVs.</p>
+          <p>Start here, create at least one location, then build out from there.</p>
         </InfoPopover>
 
         <button className={styles.btnPrimary} onClick={() => setModal({ type: 'campus', data: null })}>

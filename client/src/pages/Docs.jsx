@@ -8,9 +8,14 @@ const NAV = [
   { id: 'first-run',     label: 'First Run / Setup' },
   { id: 'getting-started', label: 'Getting Started' },
   { id: 'dashboard',     label: 'Dashboard', children: [
-      { id: 'dashboard-screens',  label: 'Screens Card' },
-      { id: 'dashboard-services', label: 'Services Card' },
-      { id: 'dashboard-people',   label: 'People Card' },
+      { id: 'dashboard-screens',    label: 'Screens Card' },
+      { id: 'dashboard-services',   label: 'Services Card' },
+      { id: 'dashboard-people',     label: 'People Card' },
+      { id: 'dashboard-labels',     label: 'Labels Card' },
+      { id: 'dashboard-schedules',  label: 'Schedules Card' },
+      { id: 'dashboard-templates',  label: 'Templates Card' },
+      { id: 'dashboard-quickpush',  label: 'Quick Push Card' },
+      { id: 'dashboard-activity',   label: 'Recent Activity Card' },
     ]
   },
   { id: 'organization',  label: 'Organization',
@@ -171,13 +176,13 @@ export default function Docs() {
             <p>The recommended setup order:</p>
             <ol className={styles.ol}>
               <li><strong>Create a Location</strong> — a campus or venue. Everything else belongs to a location.</li>
-              <li><strong>Add Service Types</strong> under that location — choose PCO mode (pulls from Planning Center) or Manual mode (you define the team).</li>
-              <li><strong>Create Screens</strong> — each screen gets a permanent URL you point a TV at.</li>
-              <li><strong>Add People</strong> — your worship team members. Manual or pulled from PCO.</li>
-              <li><strong>Define Labels</strong> — your mic and IEM inventory (e.g. "Vox 1", "Keys DI", "IEM 3"). For Manual mode, also define <strong>Positions</strong> (e.g. Singer, Speaker) on the Labels page.</li>
-              <li><strong>Set up Automation Rules</strong> — tell the app how to assign mics/IEMs based on a person's name or position. Rules work for both PCO and Manual service types.</li>
-              <li><strong>Connect Planning Center</strong> (PCO mode only) — link your PCO account so the app can pull plans automatically.</li>
-              <li><strong>Set a Schedule</strong> — tell each service type when to auto-push assignments to screens.</li>
+              <li><strong>Add Service Types</strong> on the Services page — choose PCO mode (pulls your team from Planning Center automatically) or Manual mode (you define a fixed team roster in Beacon).</li>
+              <li><strong>Create Screens</strong> — each screen gets a permanent URL you point a TV or kiosk browser at.</li>
+              <li><strong>Add People</strong> — your worship team members. Can be added manually or synced from PCO.</li>
+              <li><strong>Define Labels</strong> — your mic and IEM inventory (e.g. "Vox 1", "Keys DI", "IEM 3"). Also define <strong>Positions</strong> (e.g. Singer, Worship Leader) on the Labels page — these are the role names your automation rules and Manual teams use.</li>
+              <li><strong>Set up Automation Rules</strong> — write rules that tell Beacon how to assign mic and IEM labels based on a person's name or position. The same rules work for both PCO and Manual service types, so you only write them once.</li>
+              <li><strong>Connect Planning Center</strong> (PCO mode only) — go to Admin → Integrations to link your PCO account so the app can pull team rosters automatically.</li>
+              <li><strong>Set a Schedule</strong> — on the Services page, add a schedule to each service type. Pick a day and time and Beacon will auto-push assignments to your screens before you even arrive.</li>
             </ol>
             <Callout type="info">
               You can test everything in <strong>mock mode</strong> (<code>USE_MOCK_DATA=true</code> in <code>server/.env</code>) without needing a PCO connection. The display will show a set of sample musicians so you can see how it looks.
@@ -190,7 +195,7 @@ export default function Docs() {
           {/* ── Dashboard ── */}
           <Section id="dashboard" title="Dashboard">
             <p>The <strong>Dashboard</strong> is the first page you see after logging in. It gives you a quick at-a-glance view of your system without requiring you to navigate to individual pages.</p>
-            <p>It is organized into <strong>cards</strong> — each card represents one area of the app. Clicking the card's title bar takes you directly to that page's full management view. On wide screens, cards sit 2–3 across; on smaller screens they stack vertically.</p>
+            <p>It is organized into <strong>eight cards</strong> — each card represents one area of the app. Clicking a card's title bar takes you directly to that page's full management view. You can hide cards or rearrange their order per-user from <strong>Settings → Profile → Dashboard Layout</strong>, or by clicking <strong>Customize dashboard →</strong> in the top right of the Dashboard page.</p>
 
             <SubSection id="dashboard-screens" title="Screens Card">
               <p>Shows all screens in your organization, with a <strong>Live</strong> badge and a pulsing green dot for any screen that is currently open in a browser. The <strong>live detection</strong> works via a heartbeat: whenever a display screen is open, it silently pings the server every 30 seconds. If a screen hasn't pinged in the last 90 seconds it is considered inactive.</p>
@@ -199,19 +204,51 @@ export default function Docs() {
             </SubSection>
 
             <SubSection id="dashboard-services" title="Services Card">
-              <p>Shows upcoming or active services, with a toggle between two sources:</p>
+              <p>Shows what's currently pushed to your display screens, with a toggle between two views:</p>
               <ul className={styles.ul}>
-                <li><strong>Manual</strong> — services that were pushed to a screen manually (by pushing a musician list from the admin panel or via share code). These always work, with or without a PCO connection.</li>
-                <li><strong>PCO</strong> — upcoming plans pulled from Planning Center Online. If your PCO account isn't connected yet, this tab shows a "not connected" notice. See <Link to="/docs#pco-integration">Planning Center OAuth</Link> for connection instructions.</li>
+                <li><strong>Manual</strong> — lists every screen that currently has musicians assigned to it. Shows the service name, date, screen name, and musician count. This is the live state of your displays right now.</li>
+                <li><strong>PCO</strong> — upcoming PCO-connected service functionality. If your PCO account isn't connected yet, this tab shows a "not connected" notice. See <Link to="/docs#pco-integration">Planning Center OAuth</Link> for connection instructions.</li>
               </ul>
             </SubSection>
 
             <SubSection id="dashboard-people" title="People Card">
-              <p>Shows a preview of your worship team roster, also with a Manual/PCO toggle:</p>
+              <p>Shows a preview of your worship team roster, with a Manual/PCO toggle:</p>
               <ul className={styles.ul}>
-                <li><strong>Manual</strong> — people added directly through the People page, including anyone imported from PCO.</li>
-                <li><strong>PCO</strong> — shows how many roster members came from PCO sync vs. were added manually. Useful for spotting sync drift.</li>
+                <li><strong>Manual</strong> — shows the first few people in your roster with their name, photo initials, and position. The summary chip shows total count and how many came from PCO.</li>
+                <li><strong>PCO</strong> — when PCO is connected, shows the breakdown of PCO-synced vs. manually added people.</li>
               </ul>
+            </SubSection>
+
+            <SubSection id="dashboard-labels" title="Labels Card">
+              <p>Shows a summary of your audio equipment inventory — the total count of mic labels and IEM labels you've defined, plus how many position types you have. The list previews the first few labels with their type badge (Mic, IEM, or Position) and group name if they belong to one.</p>
+              <p>If you haven't added any labels yet, this card prompts you to head to the Labels page to build out your inventory. See <Link to="/docs#labels">Labels</Link> for full details on how mic/IEM labels work with automation.</p>
+            </SubSection>
+
+            <SubSection id="dashboard-schedules" title="Schedules Card">
+              <p>Lists your auto-push schedules and their current status. Each row shows the service type name, when it's scheduled to fire (e.g. "Sunday at 8:00 AM"), and how long ago it last ran. A green <strong>On</strong> badge marks active schedules; gray <strong>Off</strong> marks disabled ones.</p>
+              <p>The summary chip at the top shows how many schedules are currently enabled out of your total. If no schedules are configured, the card prompts you to go to the Services page to set one up.</p>
+            </SubSection>
+
+            <SubSection id="dashboard-templates" title="Templates Card">
+              <p>Lists your custom display templates and how many screens are currently using each one. If a template shows 0 screens, it's been created but hasn't been assigned to any screen yet.</p>
+              <p>The summary chip shows the total template count and how many screens across your org are using a custom template (vs. a preset layout). Click the card header to go to the Templates management page.</p>
+            </SubSection>
+
+            <SubSection id="dashboard-quickpush" title="Quick Push Card">
+              <p>Lets you immediately push a service's team to its screens without waiting for the auto-push schedule to fire. Every service type in your org gets its own <strong>Push</strong> button.</p>
+              <p>When you hit Push:</p>
+              <ol className={styles.ol}>
+                <li>For <strong>PCO service types</strong> — Beacon fetches the team from the matching Planning Center plan.</li>
+                <li>For <strong>Manual service types</strong> — Beacon loads the prebuilt team roster you defined.</li>
+                <li>Automation rules run to assign mic and IEM labels.</li>
+                <li>Assignments are sent to the screens configured in that service's schedule. If no schedule exists, it pushes to all screens.</li>
+              </ol>
+              <p>The result shows inline: <em>"✓ N musicians pushed"</em>, a warning if no musicians were found, or an error message (e.g., if PCO isn't connected). This is the fastest way to update displays when your roster changes mid-week or you want to test without setting up a schedule.</p>
+            </SubSection>
+
+            <SubSection id="dashboard-activity" title="Recent Activity Card">
+              <p>Shows which screens were most recently updated, sorted newest first. The time shown (e.g. <em>"3m ago"</em>, <em>"2h ago"</em>, <em>"1d ago"</em>) reflects when musicians were last pushed to that screen.</p>
+              <p>Useful for a quick sanity check — you can see at a glance which screens have been refreshed today and which are still showing an older push. Click the card header to go to the Screens management page.</p>
             </SubSection>
           </Section>
 
@@ -577,7 +614,7 @@ export default function Docs() {
             </SubSection>
 
             <SubSection id="invite-links" title="Invite Links">
-              <p>Instead of asking team members to register manually, you can invite them by email. Go to <strong>Organization → Invite Team Members</strong>, enter their email address, choose a role (Admin or Team Member), and click <strong>Send invite</strong>.</p>
+              <p>Instead of asking team members to register manually, you can invite them by email. Go to <strong>Admin → Users</strong> (or <strong>Admin → Organization</strong>) and use the <strong>Invite Team Members</strong> section — enter their email address, choose a role (Admin or Team Member), and click <strong>Send invite</strong>.</p>
               <p>The recipient gets an email with a personal invite link. When they click it, their email is already pre-filled on the registration form — they only need to enter their name and a password. The link:</p>
               <ul className={styles.ul}>
                 <li>Expires after <strong>7 days</strong>.</li>
@@ -589,7 +626,7 @@ export default function Docs() {
                 If SMTP is not configured in <code>server/.env</code>, the app won't send an email. Instead it shows the raw invite link in the admin panel so you can copy-paste it manually. Set <code>SMTP_HOST</code>, <code>SMTP_USER</code>, and <code>SMTP_PASS</code> to enable email sending.
               </Callout>
               <Callout type="info">
-                If an invite expires before the recipient uses it, generate a new one. Expired tokens are cleaned up automatically. You can also revoke active invites from the Organization page.
+                If an invite expires before the recipient uses it, generate a new one. Expired tokens are cleaned up automatically. You can revoke active invites from either the <strong>Organization</strong> page or the <strong>Users</strong> page.
               </Callout>
             </SubSection>
 
@@ -630,9 +667,12 @@ export default function Docs() {
 
           {/* ── Hosting ── */}
           <Section id="hosting" title="Self-Hosting">
-            <p>Beacon runs anywhere Node.js 18+ is available — a laptop, a Raspberry Pi, a VPS, a home server. Display screens are just browser tabs, so any device on the same network (or any network if you use a tunnel) can show them.</p>
+            <p>Beacon runs anywhere Node.js 22+ is available — a laptop, a Raspberry Pi, a VPS, a home server. Display screens are just browser tabs, so any device on the same network (or any network if you use a tunnel) can show them.</p>
+            <Callout type="warning">
+              Node.js 22 or higher is required — Beacon uses the built-in <code>node:sqlite</code> module which was introduced in Node 22. Earlier versions will fail to start.
+            </Callout>
             <ol className={styles.ol}>
-              <li>Install Node.js (<code>nvm</code> recommended).</li>
+              <li>Install Node.js 22+ (<code>nvm</code> recommended: <code>nvm install 22</code>).</li>
               <li>Clone the repo and run <code>npm run install:all</code>.</li>
               <li>Create <code>server/.env</code> from <code>server/.env.example</code> and fill in your values.</li>
               <li>Build the client: <code>cd client && npm run build</code>.</li>

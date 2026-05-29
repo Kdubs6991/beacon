@@ -801,9 +801,11 @@ export default function Schedules() {
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <h2 className={styles.pageTitle}>Services</h2>
-          <InfoPopover docsHref="/docs#services">
-            Manage service types and automated push schedules. PCO types sync from Planning Center;
-            Manual types let you predefine a team roster and push it to screens on a schedule.
+          <InfoPopover title="Services & Schedules" docsHref="/docs#services">
+            <p>A <strong>service type</strong> is a recurring service at a campus — Sunday Morning, Wednesday Night, etc. Each one has a mode that determines where its team roster comes from.</p>
+            <p><strong>PCO mode</strong> pulls your team automatically from the Planning Center plan that matches today's date. Requires a PCO connection and your PCO service type ID (found in the PCO URL for that service type).</p>
+            <p><strong>Manual mode</strong> lets you predefine a fixed team roster right here — no PCO needed. Great for a consistent weekly core team or services that aren't in Planning Center.</p>
+            <p>Each service type can have an <strong>auto-push schedule</strong> — pick a day and time and Beacon will load the team, run your automation rules to assign mics and IEMs, and push assignments to your selected screens automatically. Use the <strong>Push</strong> button at any time to trigger it manually.</p>
           </InfoPopover>
         </div>
         {!addingType && (

@@ -1,5 +1,221 @@
+.page {
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Section card ────────────────────────────────────────── */
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px 24px;
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin: 0 0 6px;
+}
+
+.sectionDesc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+/* ── Invite form ─────────────────────────────────────────── */
+
+.inviteForm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.formInput {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+}
+.formInput:focus { border-color: var(--accent); }
+
+.formSelect {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.formSelect:focus { border-color: var(--accent); }
+
+.btnPrimary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btnPrimary:hover:not(:disabled) { opacity: 0.88; }
+.btnPrimary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.successMsg {
+  font-size: 0.82rem;
+  color: #4ade80;
+  margin-top: 10px;
+}
+
+.warning {
+  font-size: 0.8rem;
+  color: #fbbf24;
+  margin: 0 0 6px;
+}
+
+.formError {
+  font-size: 0.82rem;
+  color: #f87171;
+  margin-top: 10px;
+}
+
+/* ── Invite link copy row ────────────────────────────────── */
+
+.inviteLinkWrap {
+  margin-top: 10px;
+}
+
+.inviteRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inviteInput {
+  flex: 1;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  color: var(--text-sec);
+  font-size: 0.78rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.copyBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-sec);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.copyBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Active invite list ──────────────────────────────────── */
+
+.inviteList {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inviteListLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+}
+
+.inviteItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+
+.inviteItemEmail {
+  font-size: 0.85rem;
+  color: var(--text-pri);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inviteItemRole {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.inviteItemExpiry {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.inviteRevokeBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+.inviteRevokeBtn:hover { color: #f87171; }
+
+/* ── Users table ─────────────────────────────────────────── */
+
 .tableWrap {
   overflow-x: auto;
+  margin: 0 -4px;
 }
 
 .table {
@@ -21,7 +237,7 @@
 
 .table td {
   padding: 12px;
-  border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
@@ -57,10 +273,7 @@
 
 .muted {
   color: var(--text-muted);
-}
-
-.error {
-  color: #f87171;
+  font-size: 0.82rem;
 }
 
 .roleSelect {
@@ -77,10 +290,8 @@
   outline: none;
   transition: border-color 0.15s;
 }
-
-.roleSelect:focus {
-  border-color: var(--accent);
-}
+.roleSelect:focus { border-color: var(--accent); }
+.roleSelect:disabled { opacity: 0.5; cursor: default; }
 
 .roleSelect.admin {
   color: var(--accent);
@@ -103,7 +314,6 @@
   transition: color 0.15s, border-color 0.15s;
   font-family: inherit;
 }
-
 .deleteBtn:hover {
   color: #f87171;
   border-color: rgba(239, 68, 68, 0.3);

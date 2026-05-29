@@ -456,8 +456,9 @@ export default function Screens() {
     <AdminLayout title="Screens">
       <div className={styles.topBar}>
         <InfoPopover title="Screens" docsHref="/docs#screens">
-          <p>Screens are permanent display URLs you point TVs and kiosks at. Each screen gets a unique URL that never changes.</p>
-          <p>Use <strong>Mirror mode</strong> to show the same content on multiple screens. Use the <strong>share code</strong> to let team members push assignments without admin access.</p>
+          <p>Screens are permanent URLs you open on TVs and kiosks. Each screen gets a unique address — open it in any browser and it shows the musician card grid, auto-refreshing every 30 seconds to pick up new assignments.</p>
+          <p>A screen shows a pulsing <strong>Live</strong> dot when it's currently open in a browser. Auto-push schedules only target screens that are currently live, so keep your TVs on before a service fires.</p>
+          <p><strong>Mirror mode</strong> — set one screen to copy another so both show the same assignments without needing two separate pushes. <strong>Share code</strong> — a short code that lets a team member push the current service to this screen from their phone without needing an admin account.</p>
         </InfoPopover>
         <button className={`${styles.btnPrimary} ${styles.newScreenBtn}`} onClick={() => setModal({ type: 'screen', data: null })}>
           + New Screen

@@ -627,12 +627,9 @@ export default function Templates() {
     <AdminLayout title="Templates">
       <div className={styles.topBar}>
         <InfoPopover title="Templates" docsHref="/docs#templates">
-          <p>Templates define a custom display grid for a screen — how many rows, how many slots per row, and what each slot shows.</p>
-          <p><strong>Rows</strong> can be different heights (Tiny → Tall) and widths (1–8 slots). Add an optional section label to identify rows like "Vocals" or "Band" on screen.</p>
-          <p><strong>Slot configuration</strong> — click any cell to set its display mode and optional settings. <strong>Full card</strong> and <strong>Label only</strong> can be pinned to a specific mic/IEM label — the slot will show whoever has that label assigned by automation. <strong>Name only</strong> can link to another slot to repeat the same person in a different style. <strong>Image only</strong> shows just the headshot.</p>
-          <p><strong>Labels only show on screen when automation rules have assigned that mic or IEM to someone.</strong> If nobody has the label, the slot is empty.</p>
-          <p><strong>Empty slot behavior</strong> controls whether unused slots stay as placeholders or collapse when nobody is assigned.</p>
-          <p>Once created, select a template when setting up a screen instead of a preset layout.</p>
+          <p>Templates define a <strong>custom grid layout</strong> for a TV screen — you control rows, how many slots per row, row heights, and what each individual slot shows.</p>
+          <p>Click any slot cell to configure it. <strong>Display modes</strong>: Full card (photo + name + labels), Name only, Image only, or Label only. You can also <strong>pin a slot to a specific mic or IEM label</strong> — when automation assigns that label to someone, they automatically appear in that slot. If nobody has that label this week, the slot stays empty.</p>
+          <p><strong>Empty slot behavior</strong> controls whether unfilled slots show as blank placeholders or collapse so the remaining cards spread out. Once created, assign a template to a screen from its layout settings.</p>
         </InfoPopover>
         <div className={styles.topBarRight}>
           <div className={styles.viewToggle}>

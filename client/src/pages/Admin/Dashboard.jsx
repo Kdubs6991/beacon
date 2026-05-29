@@ -606,9 +606,10 @@ export default function Dashboard() {
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <h2 className={styles.pageTitle}>Dashboard</h2>
-          <InfoPopover docsHref="/docs#dashboard">
-            An at-a-glance overview of your active screens, upcoming services, and team roster.
-            Click any card header to go to its full management page.
+          <InfoPopover title="Dashboard" docsHref="/docs#dashboard">
+            <p>Your at-a-glance view of everything running in Beacon. Eight cards each show a live snapshot of one area — click any card's title bar to go to its full management page.</p>
+            <p><strong>Screens</strong> shows which TVs are live right now. <strong>Services</strong> shows what's currently pushed to those screens. <strong>Quick Push</strong> lets you push a service's team to screens immediately — useful before a service or when the roster changes mid-week. <strong>Schedules</strong> shows your auto-push timers and when they last fired. <strong>Recent Activity</strong> shows which screens were updated most recently.</p>
+            <p>Hide cards or drag them into a different order using <strong>Customize dashboard →</strong> above.</p>
           </InfoPopover>
         </div>
         <Link to="/admin/profile#dashboard" className={styles.customizeLink}>Customize dashboard →</Link>
