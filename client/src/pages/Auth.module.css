@@ -167,3 +167,9 @@
   color: #f87171;
   border-color: rgba(239, 68, 68, 0.4);
 }
+
+@media (max-width: 480px) {
+  .page { padding: 64px 16px 24px; align-items: flex-start; }
+  .card { padding: 28px 20px; }
+  .title { font-size: 1.2rem; }
+}

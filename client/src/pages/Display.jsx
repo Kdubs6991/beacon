@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import QRCode from 'qrcode'
 import PublicNav from '../components/PublicNav'
 import CardGrid from '../components/CardGrid'
@@ -70,6 +70,28 @@ function DisplayView({ screenToken }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [clock, setClock] = useState(() => new Date())
+  const [exitVisible, setExitVisible] = useState(false)
+  const exitTimerRef = useRef(null)
+
+  useEffect(() => {
+    function showExit() {
+      setExitVisible(true)
+      clearTimeout(exitTimerRef.current)
+      exitTimerRef.current = setTimeout(() => setExitVisible(false), 3000)
+    }
+    window.addEventListener('mousemove', showExit)
+    window.addEventListener('touchstart', showExit)
+    return () => {
+      window.removeEventListener('mousemove', showExit)
+      window.removeEventListener('touchstart', showExit)
+      clearTimeout(exitTimerRef.current)
+    }
+  }, [])
+
+  function handleExit() {
+    clearCookie('beacon_screen')
+    window.location.href = '/display?setup=1'
+  }
 
   const fetchData = useCallback(async () => {
     try {
@@ -149,6 +171,13 @@ function DisplayView({ screenToken }) {
       <main className={`${styles.main} ${data.template ? styles.mainTemplate : ''}`}>
         <CardGrid musicians={data.musicians} template={data.template} />
       </main>
+      <button
+        className={`${styles.exitBtn} ${exitVisible ? styles.exitBtnVisible : ''}`}
+        type="button"
+        onClick={handleExit}
+      >
+        Exit display
+      </button>
     </div>
   )
 }
@@ -160,22 +189,81 @@ export default function Display() {
 }
 
 function CookieDisplay() {
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isSetupMode = searchParams.get('setup') === '1'
 
-  const [step, setStep] = useState('checking') // 'checking' | 'screen' | 'display'
+  // 'checking' | 'org-auth' | 'screen-pick' | 'screen-created' | 'display'
+  const [step, setStep] = useState('checking')
   const [screenToken, setScreenToken] = useState(null)
   const [orgInfo, setOrgInfo] = useState(null)
 
-  const [screenName, setScreenName] = useState('')
-  const [screenError, setScreenError] = useState(null)
-  const [screenLoading, setScreenLoading] = useState(false)
+  // Org auth
+  const [orgSlug, setOrgSlug] = useState('')
+  const [orgCode, setOrgCode] = useState('')
+  const [orgError, setOrgError] = useState(null)
+  const [orgLoading, setOrgLoading] = useState(false)
 
+  // Screen picker
+  const [screens, setScreens] = useState([])
+  const [screensLoading, setScreensLoading] = useState(false)
+
+  // New screen
+  const [newScreenName, setNewScreenName] = useState('')
+  const [newScreenLoading, setNewScreenLoading] = useState(false)
+  const [newScreenError, setNewScreenError] = useState(null)
+  const [createdScreen, setCreatedScreen] = useState(null)
+
+  // QR codes
   const [qrSessionId, setQrSessionId] = useState(null)
-  const [qrDataUrl, setQrDataUrl] = useState(null)
+  const [remoteQrUrl, setRemoteQrUrl] = useState(null)
+  const [adminQrUrl, setAdminQrUrl] = useState(null)
 
-  // Generate QR session for phone-based screen setup
+  // Initial cookie check
   useEffect(() => {
-    if (step !== 'screen') return
+    const savedScreen = getCookie('beacon_screen')
+    const savedOrgRaw = getCookie('beacon_org')
+    const savedOrg = savedOrgRaw ? (() => { try { return JSON.parse(savedOrgRaw) } catch { return null } })() : null
+
+    if (isSetupMode) {
+      clearCookie('beacon_screen')
+      if (savedOrg) { setOrgInfo(savedOrg); setStep('screen-pick') }
+      else setStep('org-auth')
+      return
+    }
+
+    if (savedScreen) {
+      fetch(`/api/display/${savedScreen}`)
+        .then(r => {
+          if (r.ok) { setScreenToken(savedScreen); setStep('display') }
+          else if (r.status === 404) {
+            clearCookie('beacon_screen')
+            if (savedOrg) { setOrgInfo(savedOrg); setStep('screen-pick') }
+            else setStep('org-auth')
+          } else { setScreenToken(savedScreen); setStep('display') }
+        })
+        .catch(() => { setScreenToken(savedScreen); setStep('display') })
+    } else if (savedOrg) {
+      setOrgInfo(savedOrg)
+      setStep('screen-pick')
+    } else {
+      setStep('org-auth')
+    }
+  }, [isSetupMode])
+
+  // Fetch screens list when entering screen-pick
+  useEffect(() => {
+    if (step !== 'screen-pick' || !orgInfo) return
+    setScreensLoading(true)
+    fetch(`/api/display/auth/screens?org_id=${orgInfo.id}`)
+      .then(r => r.json())
+      .then(data => setScreens(data.screens ?? []))
+      .catch(() => setScreens([]))
+      .finally(() => setScreensLoading(false))
+  }, [step, orgInfo])
+
+  // QR for remote phone-based setup (existing flow — lets a phone set up this device)
+  useEffect(() => {
+    if (step !== 'screen-pick') return
     let cancelled = false
     fetch('/api/display/setup-init', { method: 'POST' })
       .then(r => r.json())
@@ -183,14 +271,14 @@ function CookieDisplay() {
         if (cancelled) return
         setQrSessionId(data.sessionId)
         const url = `${window.location.origin}/display/setup?session=${data.sessionId}`
-        return QRCode.toDataURL(url, { width: 220, margin: 2, color: { dark: '#0f0f0f', light: '#ffffff' } })
+        return QRCode.toDataURL(url, { width: 160, margin: 2, color: { dark: '#0f0f0f', light: '#ffffff' } })
       })
-      .then(url => { if (url && !cancelled) setQrDataUrl(url) })
+      .then(url => { if (url && !cancelled) setRemoteQrUrl(url) })
       .catch(() => {})
     return () => { cancelled = true }
   }, [step])
 
-  // Poll for phone completing the QR-based screen setup
+  // Poll for phone completing QR setup
   useEffect(() => {
     if (!qrSessionId) return
     const id = setInterval(async () => {
@@ -208,111 +296,224 @@ function CookieDisplay() {
     return () => clearInterval(id)
   }, [qrSessionId])
 
+  // Admin QR after screen creation
   useEffect(() => {
-    const savedScreen = getCookie('beacon_screen')
-    const savedOrgRaw = getCookie('beacon_org')
-    const savedOrg = savedOrgRaw
-      ? (() => { try { return JSON.parse(savedOrgRaw) } catch { return null } })()
-      : null
+    if (step !== 'screen-created') return
+    const adminUrl = `${window.location.origin}/org`
+    QRCode.toDataURL(adminUrl, { width: 160, margin: 2, color: { dark: '#0f0f0f', light: '#ffffff' } })
+      .then(setAdminQrUrl)
+      .catch(() => {})
+  }, [step])
 
-    if (savedScreen) {
-      fetch(`/api/display/${savedScreen}`)
-        .then(r => {
-          if (r.ok) { setScreenToken(savedScreen); setStep('display') }
-          else if (r.status === 404) {
-            clearCookie('beacon_screen')
-            if (savedOrg) { setOrgInfo(savedOrg); setStep('screen') }
-            else navigate('/org', { replace: true })
-          } else { setScreenToken(savedScreen); setStep('display') }
-        })
-        .catch(() => { setScreenToken(savedScreen); setStep('display') })
-    } else if (savedOrg) {
-      setOrgInfo(savedOrg)
-      setStep('screen')
-    } else {
-      navigate('/org', { replace: true })
-    }
-  }, [navigate])
-
-  async function handleScreenSubmit(e) {
+  async function handleOrgSubmit(e) {
     e.preventDefault()
-    setScreenError(null)
-    setScreenLoading(true)
+    setOrgError(null)
+    setOrgLoading(true)
     try {
-      const res = await fetch('/api/display/auth/screen', {
+      const res = await fetch('/api/display/auth/org', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ org_id: orgInfo.id, screen_name: screenName.trim() }),
+        body: JSON.stringify({ slug: orgSlug.trim(), access_code: orgCode.trim() }),
       })
       const data = await res.json()
-      if (!res.ok) { setScreenError(data.error || 'Screen not found'); return }
+      if (!res.ok) { setOrgError(data.error || 'Invalid credentials'); return }
+      setCookie('beacon_org', JSON.stringify(data.org))
+      setOrgInfo(data.org)
+      setStep('screen-pick')
+    } catch {
+      setOrgError('Connection error. Please try again.')
+    } finally {
+      setOrgLoading(false)
+    }
+  }
+
+  function selectScreen(token) {
+    setCookie('beacon_screen', token)
+    setScreenToken(token)
+    setStep('display')
+  }
+
+  async function handleCreateScreen(e) {
+    e.preventDefault()
+    if (!newScreenName.trim()) return
+    setNewScreenError(null)
+    setNewScreenLoading(true)
+    try {
+      const res = await fetch('/api/display/auth/screen/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org_id: orgInfo.id, screen_name: newScreenName.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setNewScreenError(data.error || 'Failed to create screen'); return }
+      setCreatedScreen(data.screen)
       setCookie('beacon_screen', data.screen.token)
       setScreenToken(data.screen.token)
-      setStep('display')
+      setStep('screen-created')
     } catch {
-      setScreenError('Connection error. Please try again.')
+      setNewScreenError('Connection error. Please try again.')
     } finally {
-      setScreenLoading(false)
+      setNewScreenLoading(false)
     }
   }
 
   function handleWrongOrg() {
     clearCookie('beacon_org')
     clearCookie('beacon_screen')
-    navigate('/org', { replace: true })
+    setOrgInfo(null)
+    setOrgSlug('')
+    setOrgCode('')
+    setStep('org-auth')
   }
 
   if (step === 'checking') {
-    return (
-      <div className={styles.loadingState}>
-        <div className={styles.spinner} />
-      </div>
-    )
+    return <div className={styles.loadingState}><div className={styles.spinner} /></div>
   }
 
   if (step === 'display' && screenToken) {
     return <DisplayView screenToken={screenToken} />
   }
 
-  return (
-    <>
-      <PublicNav />
-      <div className={styles.loginPage}>
-        <div className={styles.loginCard}>
-          <div className={styles.loginBrand}>Beacon</div>
-          <h1 className={styles.loginTitle}>Select a screen</h1>
-          <p className={styles.loginDesc}>
-            Organization: <strong>{orgInfo?.name}</strong>
-          </p>
-          {qrDataUrl && (
-            <div className={styles.qrSection}>
-              <img src={qrDataUrl} alt="Scan to set up this screen" className={styles.qrImg} />
-              <p className={styles.qrHint}>Scan with your phone to set up this screen remotely</p>
-            </div>
-          )}
-          <div className={styles.loginDivider}>or enter manually</div>
-          <form className={styles.loginForm} onSubmit={handleScreenSubmit}>
-            <input
-              className={styles.loginInput}
-              type="text"
-              placeholder="Screen name (e.g. Main Stage)"
-              value={screenName}
-              onChange={e => setScreenName(e.target.value)}
-              autoFocus
-              required
-            />
-            {screenError && <div className={styles.loginError}>{screenError}</div>}
-            <button className={styles.loginBtn} type="submit" disabled={screenLoading}>
-              {screenLoading ? 'Loading...' : 'Open Screen'}
-            </button>
-          </form>
-          <div className={styles.loginFooter}>
-            <button className={styles.loginLink} type="button" onClick={handleWrongOrg}>
-              Wrong organization?
-            </button>
+  if (step === 'org-auth') {
+    return (
+      <>
+        <PublicNav />
+        <div className={styles.loginPage}>
+          <div className={styles.loginCard}>
+            <div className={styles.loginBrand}>Beacon — Display Setup</div>
+            <h1 className={styles.loginTitle}>Connect to your organization</h1>
+            <p className={styles.loginDesc}>Enter your org credentials to get started.</p>
+            <form className={styles.loginForm} onSubmit={handleOrgSubmit}>
+              <input
+                className={styles.loginInput}
+                type="text"
+                placeholder="Organization code (e.g. mychurch)"
+                value={orgSlug}
+                onChange={e => setOrgSlug(e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, ''))}
+                autoFocus
+                autoCapitalize="none"
+                autoCorrect="off"
+                required
+              />
+              <input
+                className={styles.loginInput}
+                type="text"
+                placeholder="Access code (e.g. ABC123)"
+                value={orgCode}
+                onChange={e => setOrgCode(e.target.value)}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                required
+              />
+              {orgError && <div className={styles.loginError}>{orgError}</div>}
+              <button className={styles.loginBtn} type="submit" disabled={orgLoading}>
+                {orgLoading ? 'Connecting…' : 'Continue'}
+              </button>
+            </form>
           </div>
         </div>
-      </div>
-    </>
-  )
+      </>
+    )
+  }
+
+  if (step === 'screen-pick') {
+    return (
+      <>
+        <PublicNav />
+        <div className={styles.loginPage}>
+          <div className={`${styles.loginCard} ${styles.loginCardWide}`}>
+            <div className={styles.loginBrand}>Beacon — Display Setup</div>
+            <h1 className={styles.loginTitle}>Choose a screen</h1>
+            <p className={styles.loginDesc}>Organization: <strong>{orgInfo?.name}</strong></p>
+
+            {screensLoading ? (
+              <div className={styles.screenListLoading}><div className={styles.spinner} /></div>
+            ) : screens.length > 0 && (
+              <ul className={styles.screenList}>
+                {screens.map(s => (
+                  <li key={s.id} className={styles.screenItem}>
+                    <div className={styles.screenItemInfo}>
+                      <span className={styles.screenItemName}>{s.name}</span>
+                      {!!s.is_active && <span className={styles.screenItemLive}>Live</span>}
+                    </div>
+                    <button className={styles.screenItemBtn} type="button" onClick={() => selectScreen(s.token)}>
+                      Use this screen
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className={styles.loginDivider}>{screens.length > 0 ? 'or create new' : 'create a screen'}</div>
+
+            <form className={styles.loginForm} onSubmit={handleCreateScreen}>
+              <input
+                className={styles.loginInput}
+                type="text"
+                placeholder="Screen name (e.g. Main Stage, Green Room)"
+                value={newScreenName}
+                onChange={e => setNewScreenName(e.target.value)}
+                autoFocus={screens.length === 0}
+              />
+              {newScreenError && <div className={styles.loginError}>{newScreenError}</div>}
+              <button className={styles.loginBtn} type="submit" disabled={newScreenLoading || !newScreenName.trim()}>
+                {newScreenLoading ? 'Creating…' : 'Create new screen'}
+              </button>
+            </form>
+
+            {remoteQrUrl && (
+              <>
+                <div className={styles.loginDivider}>or set up from another device</div>
+                <div className={styles.qrRow}>
+                  <img src={remoteQrUrl} alt="Scan to set up from another device" className={styles.qrImgSmall} />
+                  <p className={styles.qrHint}>Scan with a phone to configure this display remotely</p>
+                </div>
+              </>
+            )}
+
+            <div className={styles.loginFooter}>
+              <button className={styles.loginLink} type="button" onClick={handleWrongOrg}>
+                Wrong organization?
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  if (step === 'screen-created') {
+    return (
+      <>
+        <PublicNav />
+        <div className={styles.loginPage}>
+          <div className={styles.loginCard}>
+            <div className={styles.loginBrand}>Beacon — Display Setup</div>
+            <div className={styles.createdCheck}>✓</div>
+            <h1 className={styles.loginTitle}>Screen created!</h1>
+            <p className={styles.loginDesc}>
+              <strong>{createdScreen?.name}</strong> has been added to your organization.
+              Sign in to the admin panel to configure its layout, assign it to a service, and set up a push schedule.
+            </p>
+            <div className={styles.adminLinkRow}>
+              <a href="/org" className={styles.loginBtn}>Sign in to Admin →</a>
+              {adminQrUrl && (
+                <div className={styles.adminQrWrap}>
+                  <img src={adminQrUrl} alt="Admin login QR" className={styles.qrImgSmall} />
+                  <p className={styles.qrHint}>Scan to sign in from another device</p>
+                </div>
+              )}
+            </div>
+            <div className={styles.loginFooter}>
+              <button className={styles.loginLink} type="button" onClick={() => setStep('display')}>
+                Skip — go to display →
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  return null
 }

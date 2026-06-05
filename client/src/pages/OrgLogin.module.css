@@ -220,3 +220,10 @@
   text-decoration: none;
 }
 .footerLink:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+  .page { padding: 20px 16px; align-items: flex-start; padding-top: 64px; }
+  .card { padding: 28px 20px; }
+  .title { font-size: 1.2rem; }
+  .qrImg { width: 140px; height: 140px; }
+}

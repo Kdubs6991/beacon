@@ -59,3 +59,10 @@
   color: #f87171;
   border-color: rgba(239, 68, 68, 0.4);
 }
+
+@media (max-width: 480px) {
+  .nav { padding: 0 16px; height: 44px; }
+  .link { padding: 6px 8px; font-size: 0.75rem; }
+  .linkDocs { display: none; }
+  .orgBtn { font-size: 0.72rem; padding: 4px 8px; }
+}

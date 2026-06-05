@@ -133,7 +133,7 @@ export default function OrgLogin() {
               type="text"
               placeholder="e.g. mychurch"
               value={orgSlug}
-              onChange={e => setOrgSlug(e.target.value)}
+              onChange={e => setOrgSlug(e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, ''))}
               autoFocus
               autoCapitalize="none"
               autoCorrect="off"
@@ -224,6 +224,9 @@ export default function OrgLogin() {
           </div>
         )}
 
+        <div className={styles.footer}>
+          <Link to="/display?setup=1" className={styles.footerLink}>Set up this device as a display screen →</Link>
+        </div>
         <div className={styles.footer}>
           <Link to="/setup" className={styles.footerLink}>Create an organization</Link>
         </div>

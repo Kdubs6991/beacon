@@ -47,6 +47,37 @@ router.post('/auth/screen', (req, res) => {
   res.json({ screen })
 })
 
+// GET /api/display/auth/screens?org_id=X — list all screens for an org
+router.get('/auth/screens', (req, res) => {
+  const { org_id } = req.query
+  if (!org_id) return res.status(400).json({ error: 'org_id is required' })
+  const screens = db.prepare(
+    `SELECT id, name, token,
+       CASE WHEN last_heartbeat > datetime('now', '-90 seconds') THEN 1 ELSE 0 END AS is_active
+     FROM screens WHERE org_id = ? ORDER BY name`
+  ).all(org_id)
+  res.json({ screens })
+})
+
+// POST /api/display/auth/screen/create — create a new blank screen
+router.post('/auth/screen/create', (req, res) => {
+  const { org_id, screen_name } = req.body
+  if (!org_id || !screen_name?.trim()) {
+    return res.status(400).json({ error: 'org_id and screen_name are required' })
+  }
+  const org = db.prepare('SELECT id FROM organizations WHERE id = ?').get(org_id)
+  if (!org) return res.status(404).json({ error: 'Organization not found' })
+  const dupe = db.prepare('SELECT id FROM screens WHERE LOWER(name) = LOWER(?) AND org_id = ?').get(screen_name.trim(), org_id)
+  if (dupe) return res.status(409).json({ error: `A screen named "${screen_name.trim()}" already exists` })
+  const token = randomBytes(8).toString('hex')
+  const shareCode = randomBytes(3).toString('hex').toUpperCase()
+  const result = db.prepare(
+    'INSERT INTO screens (org_id, name, token, share_code, layout) VALUES (?, ?, ?, ?, ?)'
+  ).run(org_id, screen_name.trim(), token, shareCode, 'grid-standard')
+  const screen = db.prepare('SELECT id, name, token FROM screens WHERE id = ?').get(result.lastInsertRowid)
+  res.json({ screen })
+})
+
 // ── Scan-to-login session API ─────────────────────────────────────────────────
 
 // POST /api/display/setup-init — TV calls this to get a session ID for the QR code

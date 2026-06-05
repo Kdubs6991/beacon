@@ -29,14 +29,16 @@ export default function PublicNav() {
 
   return (
     <nav className={styles.nav}>
-      <Link to="/login" className={styles.brand}>Beacon</Link>
+      <Link to={orgName ? '/login' : '/org'} className={styles.brand}>Beacon</Link>
       <div className={styles.links}>
-        <Link to="/login" className={styles.link}>Sign in</Link>
-        <Link to="/display" className={styles.link}>Display Login</Link>
-        <Link to="/docs" className={styles.link}>Docs</Link>
+        <Link to={orgName ? '/login' : '/org'} className={styles.link}>
+          {orgName ? 'Sign in' : 'Org login'}
+        </Link>
+        <Link to="/display?setup=1" className={styles.link}>Display</Link>
+        <Link to="/docs" className={`${styles.link} ${styles.linkDocs}`}>Docs</Link>
         {orgName && (
           <button className={styles.orgBtn} type="button" onClick={handleSignOutOrg}>
-            Sign out of {orgName}
+            {orgName} ✕
           </button>
         )}
       </div>

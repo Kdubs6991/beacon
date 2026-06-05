@@ -18,7 +18,10 @@ const setupRoutes = require('./routes/setup')
 const app = express()
 const PORT = process.env.PORT || 3001
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? false : true,
+  credentials: true,
+}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(session({
@@ -64,7 +67,16 @@ function seedAdmin() {
 }
 
 app.listen(PORT, () => {
+  const { networkInterfaces } = require('os')
+  const nets = networkInterfaces()
+  const networkIPs = []
+  for (const iface of Object.values(nets)) {
+    for (const net of iface) {
+      if (net.family === 'IPv4' && !net.internal) networkIPs.push(net.address)
+    }
+  }
   console.log(`Server running on http://localhost:${PORT}`)
+  networkIPs.forEach(ip => console.log(`  Network:  http://${ip}:${PORT}`))
   console.log(`Mock mode: ${process.env.USE_MOCK_DATA === 'true' ? 'ON' : 'OFF'}`)
   seedAdmin()
   startScheduler()
