@@ -1,24 +1,7 @@
-import { useEffect, useState } from 'react'
 import AdminLayout from './_Layout'
 import styles from './Integrations.module.css'
 
 export default function Integrations() {
-  const [pco, setPco] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/auth/pco/status', { credentials: 'include' })
-      .then(r => r.json())
-      .then(setPco)
-      .finally(() => setLoading(false))
-  }, [])
-
-  async function disconnect() {
-    if (!confirm('Disconnect Planning Center? Scheduled auto-fetch will stop working.')) return
-    await fetch('/api/auth/pco/disconnect', { method: 'DELETE', credentials: 'include' })
-    setPco(prev => ({ ...prev, connected: false, expiresAt: null }))
-  }
-
   return (
     <AdminLayout title="Integrations">
       <div className={styles.card}>
@@ -29,55 +12,23 @@ export default function Integrations() {
           <div>
             <h2 className={styles.cardTitle}>Planning Center Online</h2>
             <p className={styles.cardDesc}>
-              Connect to automatically pull service plans, team members, and positions.
+              Automatically pull service plans, team members, and positions from Planning Center.
             </p>
           </div>
+          <span className={styles.comingSoonBadge}>Coming soon</span>
         </div>
 
-        {loading ? (
-          <p className={styles.muted}>Checking connection…</p>
-        ) : (
-          <>
-            <div className={styles.statusRow}>
-              <span className={`${styles.dot} ${pco?.connected ? styles.dotGreen : styles.dotGray}`} />
-              <span className={styles.statusLabel}>
-                {pco?.connected
-                  ? `Connected · token expires ${new Date(pco.expiresAt).toLocaleString()}`
-                  : 'Not connected'}
-              </span>
-            </div>
-
-            {pco?.mockMode && (
-              <div className={styles.notice}>
-                Mock mode is ON — the app is using local test data. PCO API calls are disabled.
-                Set <code>USE_MOCK_DATA=false</code> in your <code>.env</code> to enable live data.
-              </div>
-            )}
-
-            {!pco?.configured && (
-              <div className={styles.notice}>
-                PCO OAuth credentials are not set. Add <code>PCO_CLIENT_ID</code> and{' '}
-                <code>PCO_CLIENT_SECRET</code> to <code>server/.env</code> to enable this.
-              </div>
-            )}
-
-            <div className={styles.actions}>
-              {pco?.connected ? (
-                <button className={styles.btnDanger} onClick={disconnect}>
-                  Disconnect
-                </button>
-              ) : (
-                <a
-                  href="/api/auth/pco/connect"
-                  className={`${styles.btnPrimary} ${!pco?.configured ? styles.btnDisabled : ''}`}
-                  onClick={e => { if (!pco?.configured) e.preventDefault() }}
-                >
-                  Connect to Planning Center
-                </a>
-              )}
-            </div>
-          </>
-        )}
+        <div className={styles.comingSoonBody}>
+          <p>PCO integration is under active development and will be available in a future update. Once connected, Beacon will be able to:</p>
+          <ul className={styles.featureList}>
+            <li>Pull your team roster directly from Planning Center plans</li>
+            <li>Match team members to automation rules automatically on a schedule</li>
+            <li>Sync photos and positions without any manual entry</li>
+          </ul>
+          <p className={styles.comingSoonNote}>
+            In the meantime, use <strong>Manual service types</strong> on the Services page to define your team and push assignments to your display screens.
+          </p>
+        </div>
       </div>
     </AdminLayout>
   )

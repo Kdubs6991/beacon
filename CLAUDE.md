@@ -429,6 +429,27 @@ overlay.
 - Admin `_Layout.jsx`: `{org.name}` → `{org.short_name || org.name}` in sidebar header — root cause of nickname not showing; `beacon_org` cookie stores both fields
 - Docs + What's This InfoPopovers updated for all changes above
 
+### Email / account features
+- Integrations page → "coming soon" placeholder — removed all connect/status
+  logic; shows yellow badge + feature list + pointer to manual mode
+- Email/SMTP config in Organization settings — `EmailConfigSection` component;
+  saves to `settings` table (no env file edits needed); password never returned
+  to frontend (only `passSet: bool` + `passHint` last-4-chars); edit mode
+  preserves existing pass if field submitted empty
+- `GET /api/admin/email-config` + `PUT /api/admin/email-config` +
+  `POST /api/admin/email-config/test` endpoints in admin.js
+- Gmail App Password guide in Docs — `#email-setup` subsection; links from
+  Organization SMTP section open in new tab and auto-scroll to that anchor
+- Admin-triggered password reset email — `POST /api/admin/users/:id/send-reset-email`;
+  shown in Users page edit modal; if SMTP not configured shows raw link instead
+- Beacon-branded HTML email templates — `emailWrapper()` shared layout in
+  `server/utils/mailer.js`; dark `#1e2433` header with Beacon wordmark,
+  white card body, light gray footer; all inline styles + table layout for
+  email client compatibility; preheader text for inbox previews
+- ResetPassword.jsx two-button fix — `.footer` ("Back to sign in") was outside
+  the `{done}` conditional; wrapped in `{!done && (...)}`
+- `server/.env.example` updated with SMTP vars + comments
+
 ### Backlog
 - PCO OAuth connect flow (Integrations page) — PCO_CLIENT_ID/SECRET not yet
   configured
@@ -519,6 +540,15 @@ overlay.
 - Users page: role change lives in the Edit modal (disabled when editing self);
   table shows static role badge only; PUT `/api/admin/users/:id` conditionally
   includes role in UPDATE (prevents accidental role reset when editing name/email)
+- SMTP config stored in `settings` table — `getSmtpConfig()` in `mailer.js`
+  reads DB first, falls back to env vars; no transporter caching so changes
+  take effect immediately without restart
+- Email password never exposed to frontend — `GET /api/admin/email-config`
+  returns `passSet: bool` + `passHint` (last 4 chars); `PUT` skips password
+  update if the submitted field is blank
+- `emailWrapper({preheader, headerLabel, body, footerText})` in `mailer.js` —
+  shared layout for all emails; dark `#1e2433` header, white card body, gray
+  footer; table-based with full inline styles for email client compatibility
 
 ---
 
@@ -527,9 +557,18 @@ overlay.
 ```
 PORT=3001
 SESSION_SECRET=<long random string>
+
+# SMTP email — optional, can also be configured in Admin → Organization
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=yourchurch@gmail.com
+SMTP_PASS=
+SMTP_FROM=
+
+# Planning Center OAuth — fill in when PCO integration is ready
 PCO_CLIENT_ID=<from PCO developer console>
 PCO_CLIENT_SECRET=<from PCO developer console>
-PCO_REDIRECT_URI=http://localhost:3001/auth/pco/callback
+PCO_REDIRECT_URI=http://localhost:3001/api/auth/pco/callback
 USE_MOCK_DATA=false
 ```
 

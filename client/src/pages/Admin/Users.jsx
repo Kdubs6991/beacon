@@ -10,6 +10,8 @@ function EditUserModal({ user, isSelf, onSave, onClose }) {
   const [role, setRole] = useState(user.role)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [resetStatus, setResetStatus] = useState(null)
+  const [resetLoading, setResetLoading] = useState(false)
 
   async function submit(e) {
     e.preventDefault()
@@ -30,6 +32,24 @@ function EditUserModal({ user, isSelf, onSave, onClose }) {
       setError('Connection error. Please try again.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function sendReset() {
+    setResetLoading(true)
+    setResetStatus(null)
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/send-reset-email`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (!res.ok) { setResetStatus({ error: data.error || 'Failed to send' }); return }
+      setResetStatus({ sent: data.sent, link: data.link, email: data.email })
+    } catch {
+      setResetStatus({ error: 'Connection error.' })
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -62,6 +82,22 @@ function EditUserModal({ user, isSelf, onSave, onClose }) {
           <option value="team_member">Team Member</option>
         </select>
         {isSelf && <p className={styles.modalHint}>You cannot change your own role.</p>}
+      </div>
+      <div className={styles.resetSection}>
+        <p className={styles.resetLabel}>Password Reset</p>
+        <button className={styles.btnReset} type="button" onClick={sendReset} disabled={resetLoading}>
+          {resetLoading ? 'Sending…' : 'Send password reset email'}
+        </button>
+        {resetStatus && !resetStatus.error && resetStatus.sent && (
+          <p className={styles.resetSuccess}>Reset link sent to {resetStatus.email}</p>
+        )}
+        {resetStatus && !resetStatus.error && !resetStatus.sent && resetStatus.link && (
+          <div className={styles.resetLinkWrap}>
+            <p className={styles.resetWarning}>SMTP not configured — share this link manually:</p>
+            <input className={styles.resetLinkInput} type="text" value={resetStatus.link} readOnly onClick={e => e.target.select()} />
+          </div>
+        )}
+        {resetStatus?.error && <p className={styles.formError}>{resetStatus.error}</p>}
       </div>
     </Modal>
   )

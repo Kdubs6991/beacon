@@ -369,3 +369,156 @@
   box-sizing: border-box;
 }
 .formSelect:focus { border-color: var(--accent); }
+
+/* ── Ghost button ── */
+.btnGhost {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+}
+.btnGhost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btnGhost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Email / SMTP section ── */
+.smtpHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.smtpHeader .sectionTitle { margin-bottom: 4px; }
+.smtpHeader .sectionDesc { margin-bottom: 0; }
+
+.smtpBadge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-top: 2px;
+}
+.smtpBadgeOn {
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+.smtpBadgeOff {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.smtpNotice {
+  margin: 12px 0 16px;
+  padding: 10px 14px;
+  background: rgba(251, 191, 36, 0.07);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  line-height: 1.5;
+}
+
+.smtpDocsLink {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.smtpDocsLink:hover { text-decoration: underline; }
+
+.smtpViewGrid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-top: 12px;
+}
+.smtpViewLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 9px 12px;
+  background: var(--bg-card-hover);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+.smtpViewValue {
+  font-size: 0.85rem;
+  color: var(--text-pri);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.smtpViewLabel:last-of-type,
+.smtpViewValue:last-of-type { border-bottom: none; }
+
+.smtpMasked {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  letter-spacing: 0.05em;
+}
+.smtpEmpty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.82rem;
+}
+
+.smtpViewActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.smtpTestError {
+  font-size: 0.82rem;
+  color: #f87171;
+}
+
+.smtpSetupNote {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.smtpTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 10px;
+}
+
+.smtpHint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.smtpOptional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}

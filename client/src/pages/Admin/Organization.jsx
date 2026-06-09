@@ -18,6 +18,175 @@ const TIMEZONES = [
   ['Australia/Sydney',      'Australia Eastern Time (AEST)'],
 ]
 
+function EmailConfigSection() {
+  const [config, setConfig] = useState(null)
+  const [editing, setEditing] = useState(false)
+  const [host, setHost] = useState('')
+  const [port, setPort] = useState('587')
+  const [user, setUser] = useState('')
+  const [pass, setPass] = useState('')
+  const [from, setFrom] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/admin/email-config', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => { setConfig(data); populateEdit(data) })
+  }, [])
+
+  function populateEdit(data) {
+    setHost(data.host || '')
+    setPort(data.port || '587')
+    setUser(data.user || '')
+    setPass('')
+    setFrom(data.from || '')
+  }
+
+  function startEdit() { populateEdit(config); setEditing(true); setError(null); setSuccess(false); setTestResult(null) }
+  function cancelEdit() { setEditing(false); setError(null) }
+
+  async function handleSave(e) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/email-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ host: host.trim(), port, user: user.trim(), pass, from: from.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Failed to save'); return }
+      setConfig(data)
+      setEditing(false)
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch { setError('Connection error.') }
+    finally { setSaving(false) }
+  }
+
+  async function handleTest() {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const res = await fetch('/api/admin/email-config/test', { method: 'POST', credentials: 'include' })
+      const data = await res.json()
+      setTestResult(res.ok ? { ok: true, to: data.to } : { ok: false, error: data.error })
+    } catch { setTestResult({ ok: false, error: 'Connection error.' }) }
+    finally { setTesting(false) }
+  }
+
+  const isConfigured = config?.host && config?.user && config?.passSet
+
+  return (
+    <div className={styles.section}>
+      <div className={styles.smtpHeader}>
+        <div>
+          <h2 className={styles.sectionTitle}>Email / SMTP</h2>
+          <p className={styles.sectionDesc}>Required for sending password reset emails and invite links.</p>
+        </div>
+        <span className={`${styles.smtpBadge} ${isConfigured ? styles.smtpBadgeOn : styles.smtpBadgeOff}`}>
+          {isConfigured ? 'Configured' : 'Not configured'}
+        </span>
+      </div>
+
+      {!isConfigured && !editing && (
+        <div className={styles.smtpNotice}>
+          <strong>Email is not set up yet.</strong> Without it, password reset emails and invite links won't be sent automatically — admins will need to share links manually instead.{' '}
+          <a href="/docs#email-setup" target="_blank" rel="noopener noreferrer" className={styles.smtpDocsLink}>How to set up Gmail →</a>
+        </div>
+      )}
+
+      {!editing && config && (
+        <>
+          <div className={styles.smtpViewGrid}>
+            <span className={styles.smtpViewLabel}>SMTP Host</span>
+            <span className={styles.smtpViewValue}>{config.host || <em className={styles.smtpEmpty}>Not set</em>}</span>
+
+            <span className={styles.smtpViewLabel}>Port</span>
+            <span className={styles.smtpViewValue}>{config.port || '587'}</span>
+
+            <span className={styles.smtpViewLabel}>Username</span>
+            <span className={styles.smtpViewValue}>{config.user || <em className={styles.smtpEmpty}>Not set</em>}</span>
+
+            <span className={styles.smtpViewLabel}>Password</span>
+            <span className={styles.smtpViewValue}>
+              {config.passSet
+                ? <span className={styles.smtpMasked}>••••••••{config.passHint}</span>
+                : <em className={styles.smtpEmpty}>Not set</em>}
+            </span>
+
+            <span className={styles.smtpViewLabel}>From address</span>
+            <span className={styles.smtpViewValue}>{config.from || <em className={styles.smtpEmpty}>Defaults to username</em>}</span>
+          </div>
+          <div className={styles.smtpViewActions}>
+            <button className={styles.btnGhost} type="button" onClick={startEdit}>Edit</button>
+            {isConfigured && (
+              <button className={styles.btnGhost} type="button" onClick={handleTest} disabled={testing}>
+                {testing ? 'Sending…' : 'Send test email'}
+              </button>
+            )}
+            {success && <span className={styles.successMsg}>Saved!</span>}
+            {testResult?.ok && <span className={styles.successMsg}>Test email sent to {testResult.to}</span>}
+            {testResult?.ok === false && <span className={styles.smtpTestError}>{testResult.error}</span>}
+          </div>
+        </>
+      )}
+
+      {editing && (
+        <form onSubmit={handleSave} className={styles.form}>
+          <div className={styles.smtpSetupNote}>
+            Need help? <a href="/docs#email-setup" target="_blank" rel="noopener noreferrer" className={styles.smtpDocsLink}>Step-by-step Gmail App Password guide →</a>
+          </div>
+          <div className={styles.smtpTwoCol}>
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>SMTP Host</label>
+              <input className={styles.formInput} value={host} onChange={e => setHost(e.target.value)} placeholder="smtp.gmail.com" />
+            </div>
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>Port</label>
+              <input className={styles.formInput} value={port} onChange={e => setPort(e.target.value)} placeholder="587" />
+            </div>
+          </div>
+          <div className={styles.formField}>
+            <label className={styles.formLabel}>Username (your Gmail address)</label>
+            <input className={styles.formInput} type="email" value={user} onChange={e => setUser(e.target.value)} placeholder="yourchurch@gmail.com" />
+          </div>
+          <div className={styles.formField}>
+            <label className={styles.formLabel}>App Password</label>
+            <input
+              className={styles.formInput}
+              type="password"
+              value={pass}
+              onChange={e => setPass(e.target.value)}
+              placeholder={config?.passSet ? 'Leave blank to keep current password' : 'Paste your 16-character app password'}
+              autoComplete="new-password"
+            />
+            <p className={styles.smtpHint}>Use a Gmail App Password, not your regular Google password. <a href="/docs#email-setup" target="_blank" rel="noopener noreferrer" className={styles.smtpDocsLink}>How to create one →</a></p>
+          </div>
+          <div className={styles.formField}>
+            <label className={styles.formLabel}>From address <span className={styles.smtpOptional}>(optional)</span></label>
+            <input className={styles.formInput} type="email" value={from} onChange={e => setFrom(e.target.value)} placeholder="Beacon <yourchurch@gmail.com>" />
+            <p className={styles.smtpHint}>Defaults to your username if left blank.</p>
+          </div>
+          {error && <p className={styles.formError}>{error}</p>}
+          <div className={styles.formActions}>
+            <button className={styles.btnPrimary} type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button className={styles.btnGhost} type="button" onClick={cancelEdit}>Cancel</button>
+          </div>
+        </form>
+      )}
+    </div>
+  )
+}
+
 export default function Organization() {
   const [org, setOrg] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -371,6 +540,9 @@ export default function Organization() {
             {codeRegenError && <p className={styles.formError}>{codeRegenError}</p>}
           </div>
         </div>
+
+        {/* Email / SMTP */}
+        <EmailConfigSection />
 
         {/* Invite Team Members */}
         <div className={styles.section}>

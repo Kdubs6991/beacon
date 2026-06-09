@@ -7,7 +7,7 @@ const fs = require('fs')
 const multer = require('multer')
 const db = require('../db')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
-const { sendInviteEmail } = require('../utils/mailer')
+const { sendInviteEmail, sendPasswordResetEmail } = require('../utils/mailer')
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'photos')
 
@@ -92,6 +92,28 @@ router.delete('/users/:id', requireAdmin, (req, res) => {
   }
   db.prepare('DELETE FROM users WHERE id = ? AND org_id = ?').run(userId, orgId)
   res.json({ ok: true })
+})
+
+router.post('/users/:id/send-reset-email', requireAdmin, async (req, res) => {
+  const orgId = req.session.orgId
+  const userId = parseInt(req.params.id)
+  const user = db.prepare('SELECT * FROM users WHERE id = ? AND org_id = ?').get(userId, orgId)
+  if (!user) return res.status(404).json({ error: 'User not found' })
+
+  const token = randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+  db.prepare('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)').run(user.id, token, expiresAt)
+
+  const org = db.prepare('SELECT name FROM organizations WHERE id = ?').get(orgId)
+  const origin = req.headers.origin || `http://localhost:${process.env.PORT || 3001}`
+  const resetUrl = `${origin}/reset-password?token=${token}`
+
+  try {
+    const result = await sendPasswordResetEmail({ to: user.email, orgName: org?.name ?? 'Beacon', resetUrl })
+    res.json({ ok: true, sent: result.sent, link: result.sent ? null : resetUrl, email: user.email })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to send email: ' + err.message })
+  }
 })
 
 // --- Invite tokens (admin only) ---
@@ -367,6 +389,62 @@ router.delete('/people/:id', (req, res) => {
   }
   db.prepare('DELETE FROM people WHERE id = ? AND org_id = ?').run(req.params.id, orgId)
   res.json({ ok: true })
+})
+
+// --- Email / SMTP config ---
+
+function getEmailConfigResponse() {
+  function s(key) { return db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '' }
+  const pass = s('smtp_pass') || process.env.SMTP_PASS || ''
+  return {
+    host: s('smtp_host') || process.env.SMTP_HOST || '',
+    port: s('smtp_port') || process.env.SMTP_PORT || '587',
+    user: s('smtp_user') || process.env.SMTP_USER || '',
+    from: s('smtp_from') || process.env.SMTP_FROM || '',
+    passSet: !!pass,
+    passHint: pass.length >= 4 ? pass.slice(-4) : (pass ? '****' : ''),
+  }
+}
+
+router.get('/email-config', requireAdmin, (req, res) => {
+  res.json(getEmailConfigResponse())
+})
+
+router.put('/email-config', requireAdmin, (req, res) => {
+  const { host, port, user, pass, from } = req.body
+  function upsert(key, value) {
+    if (value === null || value === undefined) return
+    if (value === '') {
+      db.prepare('DELETE FROM settings WHERE key = ?').run(key)
+    } else {
+      db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, value)
+    }
+  }
+  upsert('smtp_host', host?.trim() ?? null)
+  upsert('smtp_port', port?.toString() ?? null)
+  upsert('smtp_user', user?.trim() ?? null)
+  upsert('smtp_from', from?.trim() ?? null)
+  if (pass && pass.trim()) upsert('smtp_pass', pass.trim())
+  res.json(getEmailConfigResponse())
+})
+
+router.post('/email-config/test', requireAdmin, async (req, res) => {
+  const user = db.prepare('SELECT email, name FROM users WHERE id = ?').get(req.session.userId)
+  const org = db.prepare('SELECT name FROM organizations WHERE id = ?').get(req.session.orgId)
+  const { sendPasswordResetEmail } = require('../utils/mailer')
+  try {
+    const { randomBytes } = require('node:crypto')
+    const token = randomBytes(32).toString('hex')
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    db.prepare('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)').run(req.session.userId, token, expiresAt)
+    const origin = req.headers.origin || `http://localhost:${process.env.PORT || 3001}`
+    const resetUrl = `${origin}/reset-password?token=${token}`
+    const result = await sendPasswordResetEmail({ to: user.email, orgName: org?.name ?? 'Beacon', resetUrl })
+    if (!result.sent) return res.status(503).json({ error: 'SMTP is not configured. Add your settings and save first.' })
+    res.json({ ok: true, to: user.email })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // --- Labels ---

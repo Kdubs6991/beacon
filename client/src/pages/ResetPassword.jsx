@@ -94,9 +94,11 @@ export default function ResetPassword() {
             </>
           )}
 
-          <div className={styles.footer}>
-            <Link to="/login">Back to sign in</Link>
-          </div>
+          {!done && (
+            <div className={styles.footer}>
+              <Link to="/login">Back to sign in</Link>
+            </div>
+          )}
         </div>
       </div>
     </>

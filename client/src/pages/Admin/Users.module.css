@@ -440,6 +440,67 @@
 }
 .btnGhost:hover { border-color: var(--text-sec); }
 
+/* ── Reset password section (inside edit modal) ─────────────── */
+.resetSection {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.resetLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-sec);
+  margin-bottom: 10px;
+}
+
+.btnReset {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+}
+.btnReset:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btnReset:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.resetSuccess {
+  font-size: 0.8rem;
+  color: #4ade80;
+  margin-top: 8px;
+}
+
+.resetWarning {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.resetLinkWrap {
+  margin-top: 8px;
+}
+
+.resetLinkInput {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  color: var(--text-sec);
+  font-size: 0.78rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  outline: none;
+  box-sizing: border-box;
+  cursor: text;
+}
+
 /* ── Touch devices: always-visible delete button ────────────── */
 @media (hover: none) and (pointer: coarse) {
   .deleteBtn {
