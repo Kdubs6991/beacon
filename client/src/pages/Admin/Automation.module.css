@@ -115,8 +115,27 @@
 }
 .filterClear:hover { color: #f87171; }
 
-.filterSearch {
+.filterSearchWrap {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.filterSearchLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #a59cf5;
+  white-space: nowrap;
+}
+
+.filterSearch {
   background: var(--bg-page);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -125,7 +144,7 @@
   font-size: 0.8rem;
   outline: none;
   font-family: inherit;
-  width: 170px;
+  width: 160px;
   transition: border-color 0.12s;
 }
 .filterSearch:focus { border-color: var(--accent); }

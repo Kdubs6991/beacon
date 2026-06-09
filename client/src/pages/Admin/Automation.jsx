@@ -428,13 +428,19 @@ export default function Automation() {
                 Clear
               </button>
             )}
-            <input
-              className={styles.filterSearch}
-              type="search"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search rules…"
-            />
+            <div className={styles.filterSearchWrap}>
+              <span className={styles.filterSearchLabel}>
+                <WandIcon />
+                Smart search
+              </span>
+              <input
+                className={styles.filterSearch}
+                type="search"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search rules…"
+              />
+            </div>
           </div>
           <div
             className={styles.ruleList}
