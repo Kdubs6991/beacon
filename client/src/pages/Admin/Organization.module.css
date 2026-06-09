@@ -221,6 +221,162 @@
   color: var(--accent);
 }
 
+/* ── Restore from backup ── */
+.restoreDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+.restoreTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  margin: 0 0 4px;
+}
+.restoreDesc {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  margin: 0 0 14px;
+}
+.restoreError {
+  font-size: 0.85rem;
+  color: #f87171;
+  margin: 8px 0 0;
+}
+.importLabel {
+  display: inline-block;
+  cursor: pointer;
+}
+.importInput {
+  display: none;
+}
+.importBtn {
+  display: inline-block;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+}
+.importBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.importPreview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 4px;
+  background: var(--bg-card);
+}
+.importPreviewHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.importPreviewOrg {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-pri);
+}
+.importPreviewDate {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.importPreviewCounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.importPreviewStat {
+  background: var(--bg-page, #0f1117);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.importPreviewNum {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  line-height: 1;
+}
+.importPreviewLbl {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.importWarning {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.83rem;
+  color: #f87171;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.importActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.importConfirmBtn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.importConfirmBtn:hover:not(:disabled) { background: #dc2626; }
+.importConfirmBtn:disabled { opacity: 0.6; cursor: default; }
+.importCancelBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 9px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+.importCancelBtn:hover:not(:disabled) { border-color: var(--text-sec); }
+.importCancelBtn:disabled { opacity: 0.5; cursor: default; }
+.importSuccessBox {
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.06);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+.importSuccessTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 0 0 4px;
+}
+.importSuccessDesc {
+  font-size: 0.83rem;
+  color: var(--text-sec);
+  margin: 0 0 12px;
+}
+
 /* ── Invite tokens ── */
 .inviteRow {
   display: flex;

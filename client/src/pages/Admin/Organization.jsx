@@ -221,6 +221,11 @@ export default function Organization() {
   const [invites, setInvites] = useState([])
   const [copiedInvite, setCopiedInvite] = useState(false)
 
+  const [importPreview, setImportPreview] = useState(null)
+  const [importError, setImportError] = useState(null)
+  const [importLoading, setImportLoading] = useState(false)
+  const [importSuccess, setImportSuccess] = useState(null)
+
   useEffect(() => {
     fetch('/api/org', { credentials: 'include' })
       .then(r => r.json())
@@ -400,6 +405,51 @@ export default function Organization() {
         a.click()
         URL.revokeObjectURL(url)
       })
+  }
+
+  function handleImportFileChange(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setImportError(null)
+    setImportSuccess(null)
+    const reader = new FileReader()
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result)
+        if (!data.organization) { setImportError('This doesn\'t look like a Beacon backup file.'); return }
+        setImportPreview(data)
+      } catch {
+        setImportError('Could not parse file — make sure it\'s a valid Beacon backup (.json).')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  async function handleImportConfirm() {
+    if (!importPreview) return
+    setImportLoading(true)
+    setImportError(null)
+    try {
+      const res = await fetch('/api/org/import', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(importPreview),
+      })
+      const data = await res.json()
+      if (!res.ok) { setImportError(data.error || 'Restore failed'); return }
+      setImportPreview(null)
+      setImportSuccess(data.counts)
+      // Refresh org data in the form
+      const orgRes = await fetch('/api/org', { credentials: 'include' })
+      const orgData = await orgRes.json()
+      if (!orgData.error) { setOrg(orgData); populateForm(orgData) }
+    } catch {
+      setImportError('Connection error. Please try again.')
+    } finally {
+      setImportLoading(false)
+    }
   }
 
   if (loading) return <AdminLayout title="Organization"><p className={styles.muted}>Loading...</p></AdminLayout>
@@ -620,13 +670,97 @@ export default function Organization() {
 
         {/* Backup & Export */}
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Backup & Export</h2>
+          <h2 className={styles.sectionTitle}>Backup &amp; Restore</h2>
           <p className={styles.sectionDesc}>
-            Download a full JSON export of your organization's data — campuses, screens, people, labels, automation rules, and users. Use it to restore after a Pi wipe or migrate to a new server.
+            Download a full JSON backup of your organization — campuses, service types, people, labels, automation rules, templates, screens, schedules, manual team rosters, and position types. Use it to restore after a wipe or migrate to a new server.
           </p>
           <button className={styles.exportBtn} type="button" onClick={handleExport}>
             Download backup (.json)
           </button>
+
+          <div className={styles.restoreDivider} />
+
+          <h3 className={styles.restoreTitle}>Restore from backup</h3>
+          <p className={styles.restoreDesc}>
+            Upload a backup file to replace all current org data. Users and email settings are not affected.
+          </p>
+
+          {!importPreview && !importSuccess && (
+            <label className={styles.importLabel}>
+              <input type="file" accept=".json,application/json" className={styles.importInput} onChange={handleImportFileChange} />
+              <span className={styles.importBtn}>Choose backup file…</span>
+            </label>
+          )}
+
+          {importError && <p className={styles.restoreError}>{importError}</p>}
+
+          {importPreview && !importSuccess && (
+            <div className={styles.importPreview}>
+              <div className={styles.importPreviewHeader}>
+                <span className={styles.importPreviewOrg}>{importPreview.organization?.name}</span>
+                {importPreview.exported_at && (
+                  <span className={styles.importPreviewDate}>
+                    Backed up {new Date(importPreview.exported_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </span>
+                )}
+              </div>
+              <div className={styles.importPreviewCounts}>
+                {[
+                  ['Campuses',        importPreview.campuses?.length],
+                  ['Service types',   importPreview.service_types?.length],
+                  ['People',          importPreview.people?.length],
+                  ['Labels',          importPreview.labels?.length],
+                  ['Templates',       importPreview.templates?.length],
+                  ['Screens',         importPreview.screens?.length],
+                  ['Automation rules',importPreview.automation_rules?.length],
+                  ['Schedules',       importPreview.schedules?.length],
+                ].map(([label, count]) => (
+                  <div key={label} className={styles.importPreviewStat}>
+                    <span className={styles.importPreviewNum}>{count ?? 0}</span>
+                    <span className={styles.importPreviewLbl}>{label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.importWarning}>
+                <strong>This will permanently replace all current org data.</strong> This cannot be undone.
+                Download a fresh backup first if you want to save the current state.
+              </div>
+              <div className={styles.importActions}>
+                <button
+                  className={styles.importConfirmBtn}
+                  type="button"
+                  onClick={handleImportConfirm}
+                  disabled={importLoading}
+                >
+                  {importLoading ? 'Restoring…' : 'Restore backup'}
+                </button>
+                <button
+                  className={styles.importCancelBtn}
+                  type="button"
+                  onClick={() => { setImportPreview(null); setImportError(null) }}
+                  disabled={importLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {importSuccess && (
+            <div className={styles.importSuccessBox}>
+              <p className={styles.importSuccessTitle}>Restore complete</p>
+              <p className={styles.importSuccessDesc}>
+                {importSuccess.people} people · {importSuccess.screens} screens · {importSuccess.automation_rules} automation rules · {importSuccess.schedules} schedules
+              </p>
+              <button
+                className={styles.importBtn}
+                type="button"
+                onClick={() => setImportSuccess(null)}
+              >
+                Restore another file
+              </button>
+            </div>
+          )}
         </div>
 
         {org?.created_at && (
