@@ -254,7 +254,7 @@ export default function Organization() {
               <div className={styles.formLabelRow}>
                 <label className={styles.formLabel}>Short Name / Nickname</label>
                 <InfoPopover title="Short Name / Nickname">
-                  <p>If your organization's full name is long, you can set a shorter nickname here (e.g. "AFC" instead of "Ankeny Free Church").</p>
+                  <p>If your organization's full name is long, you can set a shorter nickname here (e.g. "Northgate" instead of "Northgate Community Fellowship").</p>
                   <p style={{ marginTop: '8px' }}>The short name appears in the navigation bar sign-out button, the display screen header, and anywhere space is tight. If left blank, your full organization name is used everywhere.</p>
                 </InfoPopover>
               </div>
@@ -263,7 +263,7 @@ export default function Organization() {
                 type="text"
                 value={shortName}
                 onChange={e => setShortName(e.target.value)}
-                placeholder="e.g. AFC, Grace Church, First Baptist…"
+                placeholder="e.g. Northgate, Hillside, Grace Community…"
                 maxLength={40}
               />
             </div>
