@@ -46,11 +46,19 @@ function SocialIcon({ type }) {
   return null
 }
 
+function formatTime(d) {
+  let h = d.getHours()
+  const m = d.getMinutes().toString().padStart(2, '0')
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  h = h % 12 || 12
+  return `${h}:${m} ${ampm}`
+}
+
 const MOCK_MUSICIANS = [
-  { name: 'Sarah M.', mic: 'Vox 1',   iem: 'IEM 2' },
-  { name: 'James K.', mic: 'Vox 2',   iem: 'IEM 1' },
-  { name: 'Drew A.',  mic: 'Keys DI', iem: 'IEM 4' },
-  { name: 'Lily R.',  mic: 'Vox 3',   iem: 'IEM 3' },
+  { name: 'Sarah M.', mic: 'Vox 1',   iem: 'IEM 2', photo: '/mock-1.jpg' },
+  { name: 'James K.', mic: 'Vox 2',   iem: 'IEM 1', photo: '/mock-2.jpg' },
+  { name: 'Drew A.',  mic: 'Keys DI', iem: 'IEM 4', photo: '/mock-3.jpg' },
+  { name: 'Lily R.',  mic: 'Vox 3',   iem: 'IEM 3', photo: '/mock-4.jpg' },
 ]
 
 const FEATURES = [
@@ -112,6 +120,12 @@ const STEPS = [
 
 export default function Landing() {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [time, setTime] = useState(() => formatTime(new Date()))
+
+  useEffect(() => {
+    const tick = setInterval(() => setTime(formatTime(new Date())), 1000)
+    return () => clearInterval(tick)
+  }, [])
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -159,13 +173,14 @@ export default function Landing() {
             <div className={styles.mockHeader}>
               <span className={styles.mockBrand}>Beacon</span>
               <span className={styles.mockEvent}>Sunday Service</span>
-              <span className={styles.mockClock}>10:45 AM</span>
+              <span className={styles.mockClock}>{time}</span>
             </div>
             <div className={styles.mockGrid}>
               {MOCK_MUSICIANS.map(p => (
                 <div key={p.name} className={styles.mockCard}>
                   <div className={styles.mockPhoto}>
                     <span className={styles.mockInitial}>{p.name[0]}</span>
+                    <img src={p.photo} alt="" className={styles.mockPhotoImg} onError={e => { e.target.style.display = 'none' }} />
                   </div>
                   <div className={styles.mockName}>{p.name}</div>
                   <div className={styles.mockLabels}>
