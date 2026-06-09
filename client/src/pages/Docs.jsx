@@ -22,6 +22,7 @@ const NAV = [
     children: [
       { id: 'display-login',  label: 'Display Login' },
       { id: 'qr-code',        label: 'QR Code' },
+      { id: 'short-name',     label: 'Short Name' },
       { id: 'backup-export',  label: 'Backup & Export' },
     ]
   },
@@ -260,10 +261,18 @@ export default function Docs() {
             <SubSection id="display-login" title="Display Login">
               <p>Display screens authenticate using two pieces of information:</p>
               <ul className={styles.ul}>
-                <li><strong>Org code</strong> — your organization's slug (e.g. <code>first-church</code>). This is the same for every screen in your org.</li>
-                <li><strong>Access code</strong> — a short alphanumeric code shown on the Organization page. This is shared across all screens at your org.</li>
+                <li><strong>Org code</strong> — your organization's slug (e.g. <code>first-church</code>). Spaces are not allowed — hyphens are used instead.</li>
+                <li><strong>Access code</strong> — a short uppercase alphanumeric code shown on the Organization page. Shared across all screens at your org.</li>
               </ul>
-              <p>When a browser on a TV or kiosk enters these credentials, a session cookie is stored that persists for <strong>1 year</strong>. The screen will stay authenticated and continue auto-refreshing without requiring re-login, even after the browser restarts.</p>
+              <p><strong>How the setup flow works:</strong></p>
+              <ol className={styles.ol}>
+                <li>Open <code>/display</code> (or <code>/display?setup=1</code> to re-run setup) on the TV or kiosk browser.</li>
+                <li>Enter your org code and access code to authenticate your organization.</li>
+                <li>Choose an existing screen from the list, or create a new one by typing a name.</li>
+                <li>The display loads immediately and stores both credentials as cookies for 1 year — no re-login needed even after the browser restarts.</li>
+              </ol>
+              <p>Once a screen is created, go to the admin panel to assign it a template and include it in a push schedule.</p>
+              <p>To exit a display and return to the screen picker (e.g. to switch screens), move the mouse or touch the screen — an <strong>Exit display</strong> button will appear in the top-right corner.</p>
               <p>The <strong>access code</strong> is shown on the Organization page. You can <strong>regenerate</strong> it at any time, but note that doing so will immediately invalidate the existing cookie on every screen — all displays will be redirected to the login page and will need to re-enter the new code.</p>
               <Callout type="warning">
                 Regenerate the access code only when necessary (e.g. if it was shared with someone who should no longer have access). You'll need to re-authenticate every display screen afterward.
@@ -271,18 +280,29 @@ export default function Docs() {
             </SubSection>
 
             <SubSection id="qr-code" title="Scan-to-Login QR">
-              <p>The display login page (<code>/display</code>) shows a <strong>QR code</strong> unique to that browser session. A staff member can scan this QR code with their phone and complete the login on their phone instead of typing on the TV.</p>
-              <p><strong>How the flow works:</strong></p>
+              <p>The org login page (<code>/org</code>) and the display screen picker both show a <strong>QR code</strong>. A staff member can scan this code with their phone to complete the display setup remotely — no keyboard needed on the TV itself.</p>
+              <p><strong>How the remote QR flow works:</strong></p>
               <ol className={styles.ol}>
-                <li>Open <code>/display</code> on the TV browser — a QR code appears automatically.</li>
+                <li>Open <code>/org</code> or the screen picker on the TV browser — a QR code appears automatically.</li>
                 <li>Scan the QR code with your phone — it opens a mobile setup page.</li>
-                <li>Enter the org code, access code, and screen name on your phone.</li>
+                <li>Enter the org code, access code, and choose or create a screen name on your phone.</li>
                 <li>The TV detects the completed setup and transitions to the display immediately — no interaction on the TV required.</li>
               </ol>
-              <p>This is the recommended way to authenticate TVs: no keyboard needed on the TV itself. The QR code expires after 10 minutes. If it expires, refreshing the page generates a new one.</p>
+              <p>The QR code expires after 10 minutes. Refreshing the page generates a new one.</p>
+              <p>After creating a new screen, a separate QR code appears that links directly to the <strong>admin panel</strong> — scan it from any device to sign in and configure the screen's template and schedule.</p>
               <Callout type="info">
-                If you prefer, you can still enter the org code and access code manually using the form below the QR code on the display login page.
+                You can also enter the org code and access code manually on any device by navigating to <code>/display?setup=1</code>.
               </Callout>
+            </SubSection>
+
+            <SubSection id="short-name" title="Short Name / Nickname">
+              <p>If your organization's full name is long, you can set a <strong>short name</strong> under Organization → Organization Profile. This nickname appears in:</p>
+              <ul className={styles.ul}>
+                <li>The navigation bar sign-out button</li>
+                <li>The display screen header alongside your logo</li>
+                <li>The screen picker during display setup</li>
+              </ul>
+              <p>Leave it blank and your full organization name is used everywhere. The full name is always used on the Organization settings page itself.</p>
             </SubSection>
 
             <SubSection id="backup-export" title="Backup & Export">
