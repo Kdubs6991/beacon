@@ -262,6 +262,7 @@ if (orgCount.n === 0) {
   if (!orgCols.includes('address_state')) db.exec('ALTER TABLE organizations ADD COLUMN address_state TEXT')
   if (!orgCols.includes('address_zip'))   db.exec('ALTER TABLE organizations ADD COLUMN address_zip TEXT')
   if (!orgCols.includes('logo_url'))      db.exec('ALTER TABLE organizations ADD COLUMN logo_url TEXT')
+  if (!orgCols.includes('short_name'))    db.exec('ALTER TABLE organizations ADD COLUMN short_name TEXT')
 
   // --- Add email to people ---
   const peopleCols = db.prepare('PRAGMA table_info(people)').all().map(c => c.name)

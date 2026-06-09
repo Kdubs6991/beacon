@@ -23,7 +23,7 @@ router.post('/auth/org', (req, res) => {
     return res.status(400).json({ error: 'slug and access_code are required' })
   }
   const org = db.prepare(
-    'SELECT id, name, slug FROM organizations WHERE slug = ? AND access_code = ?'
+    'SELECT id, name, short_name, slug FROM organizations WHERE slug = ? AND access_code = ?'
   ).get(slug.toLowerCase().trim(), access_code.trim().toUpperCase())
   if (!org) {
     return res.status(401).json({ error: 'Invalid organization code or access code' })
@@ -140,9 +140,9 @@ router.get('/:token', (req, res) => {
   const screenInfo = { id: screen.id, name: screen.name, layout }
 
   const orgRow = screen.org_id
-    ? db.prepare('SELECT name, logo_url FROM organizations WHERE id = ?').get(screen.org_id)
+    ? db.prepare('SELECT name, short_name, logo_url FROM organizations WHERE id = ?').get(screen.org_id)
     : null
-  const orgInfo = orgRow ? { name: orgRow.name, logo_url: orgRow.logo_url ?? null } : null
+  const orgInfo = orgRow ? { name: orgRow.short_name || orgRow.name, logo_url: orgRow.logo_url ?? null } : null
 
   // Resolve template config when layout is template:ID
   let templateConfig = null

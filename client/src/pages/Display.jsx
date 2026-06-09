@@ -428,7 +428,7 @@ function CookieDisplay() {
           <div className={`${styles.loginCard} ${styles.loginCardWide}`}>
             <div className={styles.loginBrand}>Beacon — Display Setup</div>
             <h1 className={styles.loginTitle}>Choose a screen</h1>
-            <p className={styles.loginDesc}>Organization: <strong>{orgInfo?.name}</strong></p>
+            <p className={styles.loginDesc}>Organization: <strong>{orgInfo?.short_name || orgInfo?.name}</strong></p>
 
             {screensLoading ? (
               <div className={styles.screenListLoading}><div className={styles.spinner} /></div>

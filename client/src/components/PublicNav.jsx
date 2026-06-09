@@ -17,7 +17,8 @@ export default function PublicNav() {
   const [orgName] = useState(() => {
     try {
       const raw = getCookie('beacon_org')
-      return raw ? JSON.parse(raw)?.name : null
+      const org = raw ? JSON.parse(raw) : null
+      return org ? (org.short_name || org.name) : null
     } catch { return null }
   })
 

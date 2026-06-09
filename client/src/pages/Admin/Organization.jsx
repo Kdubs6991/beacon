@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import AdminLayout from './_Layout'
+import InfoPopover from '../../components/InfoPopover'
 import styles from './Organization.module.css'
 
 const TIMEZONES = [
@@ -23,6 +24,7 @@ export default function Organization() {
   const [fetchError, setFetchError] = useState(null)
 
   const [name, setName] = useState('')
+  const [shortName, setShortName] = useState('')
   const [addressStreet, setAddressStreet] = useState('')
   const [addressCity, setAddressCity] = useState('')
   const [addressState, setAddressState] = useState('')
@@ -69,6 +71,7 @@ export default function Organization() {
 
   function populateForm(data) {
     setName(data.name || '')
+    setShortName(data.short_name || '')
     setAddressStreet(data.address_street || '')
     setAddressCity(data.address_city || '')
     setAddressState(data.address_state || '')
@@ -90,6 +93,7 @@ export default function Organization() {
         credentials: 'include',
         body: JSON.stringify({
           name: name.trim(),
+          shortName: shortName.trim() || null,
           addressStreet: addressStreet.trim() || null,
           addressCity: addressCity.trim() || null,
           addressState: addressState.trim() || null,
@@ -244,6 +248,24 @@ export default function Organization() {
             <div className={styles.formField}>
               <label className={styles.formLabel}>Organization Name <span className={styles.required}>*</span></label>
               <input className={styles.formInput} type="text" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+
+            <div className={styles.formField}>
+              <div className={styles.formLabelRow}>
+                <label className={styles.formLabel}>Short Name / Nickname</label>
+                <InfoPopover title="Short Name / Nickname">
+                  <p>If your organization's full name is long, you can set a shorter nickname here (e.g. "AFC" instead of "Ankeny Free Church").</p>
+                  <p style={{ marginTop: '8px' }}>The short name appears in the navigation bar sign-out button, the display screen header, and anywhere space is tight. If left blank, your full organization name is used everywhere.</p>
+                </InfoPopover>
+              </div>
+              <input
+                className={styles.formInput}
+                type="text"
+                value={shortName}
+                onChange={e => setShortName(e.target.value)}
+                placeholder="e.g. AFC, Grace Church, First Baptist…"
+                maxLength={40}
+              />
             </div>
 
             <div className={styles.formField}>

@@ -52,6 +52,16 @@
   margin-bottom: 6px;
 }
 
+.formLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.formLabelRow .formLabel {
+  margin-bottom: 0;
+}
+
 .required {
   color: var(--accent);
 }

@@ -31,14 +31,15 @@ router.get('/', requireAuth, (req, res) => {
 
 router.use(requireAdmin)
 
-// PUT /api/org — update name, address fields, website, phone, timezone (not slug or access_code)
+// PUT /api/org — update name, short_name, address fields, website, phone, timezone (not slug or access_code)
 router.put('/', (req, res) => {
-  const { name, addressStreet, addressCity, addressState, addressZip, website, phone, timezone } = req.body
+  const { name, shortName, addressStreet, addressCity, addressState, addressZip, website, phone, timezone } = req.body
   if (!name) return res.status(400).json({ error: 'name is required' })
   db.prepare(
-    'UPDATE organizations SET name = ?, address_street = ?, address_city = ?, address_state = ?, address_zip = ?, website = ?, phone = ?, timezone = ? WHERE id = ?'
+    'UPDATE organizations SET name = ?, short_name = ?, address_street = ?, address_city = ?, address_state = ?, address_zip = ?, website = ?, phone = ?, timezone = ? WHERE id = ?'
   ).run(
     name.trim(),
+    shortName?.trim() || null,
     addressStreet?.trim() || null,
     addressCity?.trim() || null,
     addressState?.trim() || null,
