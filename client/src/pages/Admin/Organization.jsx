@@ -162,10 +162,29 @@ export default function Organization() {
   }
 
   function copyToClipboard(text, setCopied) {
-    navigator.clipboard.writeText(text).then(() => {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+        .catch(() => fallbackCopy(text, setCopied))
+    } else {
+      fallbackCopy(text, setCopied)
+    }
+  }
+
+  function fallbackCopy(text, setCopied) {
+    const el = document.createElement('textarea')
+    el.value = text
+    el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0'
+    document.body.appendChild(el)
+    el.focus()
+    el.select()
+    el.setSelectionRange(0, 99999)
+    try {
+      document.execCommand('copy')
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    })
+    } catch {}
+    document.body.removeChild(el)
   }
 
   async function handleSendInvite() {

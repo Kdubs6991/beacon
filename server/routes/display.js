@@ -117,6 +117,12 @@ router.post('/:token/heartbeat', (req, res) => {
   res.json({ ok: true })
 })
 
+// POST /api/display/:token/leave — clears heartbeat so screen shows inactive immediately
+router.post('/:token/leave', (req, res) => {
+  db.prepare('UPDATE screens SET last_heartbeat = NULL WHERE token = ?').run(req.params.token)
+  res.json({ ok: true })
+})
+
 // ── Legacy / admin token-based route ─────────────────────────────────────────
 
 router.get('/:token', (req, res) => {

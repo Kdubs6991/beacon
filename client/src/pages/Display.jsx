@@ -88,8 +88,9 @@ function DisplayView({ screenToken }) {
     }
   }, [])
 
-  function handleExit() {
+  async function handleExit() {
     clearCookie('beacon_screen')
+    try { await fetch(`/api/display/${screenToken}/leave`, { method: 'POST' }) } catch {}
     window.location.href = '/display?setup=1'
   }
 
@@ -502,7 +503,7 @@ function CookieDisplay() {
             </button>
             <div className={styles.loginDivider}>admin access</div>
             <div className={styles.adminLinkRow}>
-              <a href="/org" className={styles.loginLink}>Sign in to Admin →</a>
+              <a href="/org" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Sign in to Admin →</a>
               {adminQrUrl && (
                 <div className={styles.adminQrWrap}>
                   <img src={adminQrUrl} alt="Admin login QR" className={styles.qrImgSmall} />
