@@ -302,6 +302,21 @@
   color: var(--text-sec);
 }
 
+.editBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.editBtn:hover { border-color: var(--accent); color: var(--accent); }
+
 .deleteBtn {
   background: none;
   border: 1px solid transparent;
@@ -317,4 +332,53 @@
 .deleteBtn:hover {
   color: #f87171;
   border-color: rgba(239, 68, 68, 0.3);
+}
+
+.modalField { margin-bottom: 18px; }
+.modalLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+.modalInput {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+}
+.modalInput:focus { border-color: var(--accent); }
+
+.btnGhost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+.btnGhost:hover { border-color: var(--text-sec); }
+
+/* ── Touch devices: always-visible delete button ────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .deleteBtn {
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+  .editBtn, .deleteBtn { padding: 8px 14px; font-size: 0.8rem; }
+  .table td { padding: 14px 12px; }
 }

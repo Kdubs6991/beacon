@@ -1,13 +1,69 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import AdminLayout from './_Layout'
+import Modal from '../../components/Modal'
 import styles from './Users.module.css'
+
+function EditUserModal({ user, onSave, onClose }) {
+  const [name, setName] = useState(user.name)
+  const [email, setEmail] = useState(user.email)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function submit(e) {
+    e.preventDefault()
+    if (!name.trim() || !email.trim()) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Failed to save'); return }
+      onSave(data)
+    } catch {
+      setError('Connection error. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Modal
+      title="Edit User"
+      onClose={onClose}
+      footer={
+        <>
+          <button className={styles.btnGhost} onClick={onClose}>Cancel</button>
+          <button className={styles.btnPrimary} onClick={submit} disabled={saving || !name.trim() || !email.trim()}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </>
+      }
+    >
+      {error && <p className={styles.formError}>{error}</p>}
+      <div className={styles.modalField}>
+        <label className={styles.modalLabel}>Name</label>
+        <input className={styles.modalInput} value={name} onChange={e => setName(e.target.value)} placeholder="Full name" />
+      </div>
+      <div className={styles.modalField}>
+        <label className={styles.modalLabel}>Email</label>
+        <input className={styles.modalInput} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" />
+      </div>
+    </Modal>
+  )
+}
 
 export default function Users() {
   const { user: me } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [editModal, setEditModal] = useState(null)
 
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('team_member')
@@ -165,6 +221,7 @@ export default function Users() {
                     <th>Role</th>
                     <th>Joined</th>
                     <th></th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -188,6 +245,9 @@ export default function Users() {
                       </td>
                       <td className={styles.muted}>{new Date(u.created_at).toLocaleDateString()}</td>
                       <td>
+                        <button className={styles.editBtn} onClick={() => setEditModal(u)}>Edit</button>
+                      </td>
+                      <td>
                         {u.id !== me?.id && (
                           <button className={styles.deleteBtn} onClick={() => deleteUser(u.id, u.name)}>
                             Remove
@@ -203,6 +263,17 @@ export default function Users() {
         </div>
 
       </div>
+
+      {editModal && (
+        <EditUserModal
+          user={editModal}
+          onSave={updated => {
+            setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
+            setEditModal(null)
+          }}
+          onClose={() => setEditModal(null)}
+        />
+      )}
     </AdminLayout>
   )
 }

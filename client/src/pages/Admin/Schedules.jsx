@@ -539,12 +539,13 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
   return (
     <>
     <div className={styles.stCard}>
-      <div className={styles.stHeader}>
+      <div
+        className={styles.stHeader}
+        onClick={() => !editingSt && setOpen(o => !o)}
+        style={{ cursor: editingSt ? 'default' : 'pointer' }}
+      >
         <div className={styles.stHeaderLeft}>
-          <span
-            className={`${styles.stChevron} ${open ? styles.stChevronOpen : ''}`}
-            onClick={() => setOpen(o => !o)}
-          >
+          <span className={`${styles.stChevron} ${open ? styles.stChevronOpen : ''}`}>
             <ChevronIcon />
           </span>
           {editingSt ? (
@@ -601,7 +602,7 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
             </>
           )}
         </div>
-        <div className={styles.stActions}>
+        <div className={styles.stActions} onClick={e => e.stopPropagation()}>
           {!editingSt && (
             <>
               <button className={styles.btnIcon} onClick={() => setPushOpen(true)} title="Push to screens now">

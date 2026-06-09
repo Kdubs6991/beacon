@@ -291,3 +291,16 @@
   .btnPrimary, .btnGhost { padding: 12px 18px; font-size: 0.9rem; }
   .formInput { padding: 12px; font-size: 0.9rem; }
 }
+
+/* ── Touch tablet landscape: Labels + IEM side-by-side, Positions full width ── */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .sections > div:last-child {
+    grid-column: 1 / -1;
+  }
+}

@@ -35,6 +35,18 @@ router.get('/users', requireAdmin, (req, res) => {
   res.json(db.prepare('SELECT id, name, email, role, created_at FROM users WHERE org_id = ? ORDER BY created_at').all(orgId))
 })
 
+router.put('/users/:id', requireAdmin, (req, res) => {
+  const orgId = req.session.orgId
+  const userId = parseInt(req.params.id)
+  const { name, email } = req.body
+  if (!name?.trim()) return res.status(400).json({ error: 'Name is required' })
+  if (!email?.trim()) return res.status(400).json({ error: 'Email is required' })
+  const conflict = db.prepare('SELECT id FROM users WHERE email = ? AND org_id = ? AND id != ?').get(email.toLowerCase().trim(), orgId, userId)
+  if (conflict) return res.status(400).json({ error: 'That email is already in use' })
+  db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ? AND org_id = ?').run(name.trim(), email.toLowerCase().trim(), userId, orgId)
+  res.json(db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ? AND org_id = ?').get(userId, orgId))
+})
+
 router.put('/users/:id/role', requireAdmin, (req, res) => {
   const orgId = req.session.orgId
   const { role } = req.body

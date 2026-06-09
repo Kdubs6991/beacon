@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import AdminLayout from './_Layout'
 import Modal from '../../components/Modal'
 import InfoPopover from '../../components/InfoPopover'
@@ -142,7 +142,6 @@ function RuleModal({ initial, labels, rulesCount, onSave, onClose }) {
           className={styles.formInput}
           value={condValue}
           onChange={e => setCondValue(e.target.value)}
-          autoFocus
           placeholder={condField === 'name' ? 'e.g. John Smith' : 'e.g. Vocalist, Worship Leader'}
         />
       </div>
@@ -194,19 +193,24 @@ function RuleModal({ initial, labels, rulesCount, onSave, onClose }) {
 
 // ── Rule row ──────────────────────────────────────────────────────────────────
 
-function RuleRow({ rule, labels, isDragging, isOver, onDragStart, onDragOver, onDrop, onDragEnd, onEdit, onDelete }) {
+function RuleRow({ rule, idx, labels, isDragging, isOver, onDragStart, onDragOver, onDrop, onDragEnd, onTouchDragStart, onEdit, onDelete }) {
   const condField = rule.condition_field === 'name' ? 'Name' : 'Position'
 
   return (
     <div
       className={`${styles.ruleRow} ${isDragging ? styles.ruleRowDragging : ''} ${isOver ? styles.ruleRowOver : ''}`}
       draggable
+      data-rule-idx={idx}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
     >
-      <div className={styles.dragHandle}><GripIcon /></div>
+      <div
+        className={styles.dragHandle}
+        onTouchStart={e => { if (e.cancelable) e.preventDefault(); onTouchDragStart(e, idx) }}
+        style={{ touchAction: 'none' }}
+      ><GripIcon /></div>
       <div className={styles.ruleBody}>
         <span className={styles.ruleCondition}>
           <span className={styles.condField}>{condField}</span>
@@ -250,6 +254,7 @@ export default function Automation() {
   const [overIdx, setOverIdx] = useState(null)
   const [running, setRunning] = useState(false)
   const [runResult, setRunResult] = useState(null)
+  const touchDragRef = useRef({ active: false, startIdx: null, overIdx: null })
 
   useEffect(() => {
     Promise.all([api('/automation-rules'), api('/labels')])
@@ -277,6 +282,37 @@ export default function Automation() {
   }
   function handleDragEnd() { resetDrag() }
   function resetDrag() { setDragIdx(null); setOverIdx(null) }
+
+  function handleTouchDragStart(e, i) {
+    touchDragRef.current = { active: true, startIdx: i, overIdx: i }
+    setDragIdx(i)
+    setOverIdx(i)
+  }
+  function handleTouchDragMove(e) {
+    if (!touchDragRef.current.active) return
+    const touch = e.touches[0]
+    const el = document.elementFromPoint(touch.clientX, touch.clientY)
+    const row = el?.closest('[data-rule-idx]')
+    if (row) {
+      const idx = parseInt(row.dataset.ruleIdx, 10)
+      if (!isNaN(idx) && idx !== touchDragRef.current.overIdx) {
+        touchDragRef.current.overIdx = idx
+        setOverIdx(idx)
+      }
+    }
+  }
+  function handleTouchDragEnd() {
+    if (!touchDragRef.current.active) return
+    const { startIdx, overIdx: endIdx } = touchDragRef.current
+    touchDragRef.current = { active: false, startIdx: null, overIdx: null }
+    if (startIdx !== null && endIdx !== null && startIdx !== endIdx) {
+      const next = [...rules]
+      const [item] = next.splice(startIdx, 1)
+      next.splice(endIdx, 0, item)
+      handleReorder(next)
+    }
+    resetDrag()
+  }
 
   async function deleteRule(id) {
     if (!confirm('Delete this rule?')) return
@@ -341,11 +377,17 @@ export default function Automation() {
       )}
 
       {!loading && rules.length > 0 && (
-        <div className={styles.ruleList}>
+        <div
+          className={styles.ruleList}
+          onTouchMove={handleTouchDragMove}
+          onTouchEnd={handleTouchDragEnd}
+          onTouchCancel={handleTouchDragEnd}
+        >
           {rules.map((rule, i) => (
             <RuleRow
               key={rule.id}
               rule={rule}
+              idx={i}
               labels={labels}
               isDragging={dragIdx === i}
               isOver={overIdx === i && dragIdx !== i}
@@ -353,6 +395,7 @@ export default function Automation() {
               onDragOver={e => handleDragOver(e, i)}
               onDrop={() => handleDrop(i)}
               onDragEnd={handleDragEnd}
+              onTouchDragStart={handleTouchDragStart}
               onEdit={() => setModal({ rule })}
               onDelete={deleteRule}
             />

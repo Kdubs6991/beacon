@@ -140,7 +140,7 @@ function ScreenModal({ initial, campuses, allScreens, templates, onSave, onClose
 
       <div className={styles.formField}>
         <label className={styles.formLabel}>Screen name</label>
-        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} autoFocus placeholder="e.g. Main Stage, Lobby, Overflow" />
+        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Main Stage, Lobby, Overflow" />
       </div>
 
       <div className={styles.formField}>
@@ -360,13 +360,16 @@ function ScreenCard({ screen, onEdit, onDelete, onAssignments }) {
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
           </svg>
-          {copied === 'url' ? 'Copied!' : 'Copy URL'}
+          {copied === 'url' ? 'Copied!' : 'Copy display URL'}
         </button>
 
-        <button className={`${styles.shareCodeBtn} ${copied === 'code' ? styles.linkBtnCopied : ''}`}
-          onClick={() => copy(screen.share_code, 'code')}>
-          {copied === 'code' ? '✓ Copied' : screen.share_code}
-        </button>
+        <div className={styles.shareCodeWrap}>
+          <span className={styles.shareCodeLabel}>screen code</span>
+          <button className={`${styles.shareCodeBtn} ${copied === 'code' ? styles.linkBtnCopied : ''}`}
+            onClick={() => copy(screen.share_code, 'code')}>
+            {copied === 'code' ? '✓' : screen.share_code}
+          </button>
+        </div>
       </div>
 
       <button className={styles.currentAssignmentsBtn} onClick={() => onAssignments(screen)}>

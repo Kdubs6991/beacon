@@ -255,7 +255,6 @@ function TemplateModal({ initial, onSave, onClose }) {
           className={styles.formInput}
           value={name}
           onChange={e => setName(e.target.value)}
-          autoFocus
           placeholder="e.g. Main Stage, Mic Cart, Overflow"
         />
       </div>

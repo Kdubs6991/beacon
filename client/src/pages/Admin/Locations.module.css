@@ -430,4 +430,5 @@
   .addStBtn { padding: 10px 16px; }
   .runNowBtn { padding: 7px 12px; }
   .runNowBtnPanel { padding: 12px 18px; }
+  .chevronBtn { padding: 10px; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
 }

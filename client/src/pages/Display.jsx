@@ -200,6 +200,14 @@ function CookieDisplay() {
   const [step, setStep] = useState('checking')
   const [screenToken, setScreenToken] = useState(null)
   const [orgInfo, setOrgInfo] = useState(null)
+  const [adminUser, setAdminUser] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setAdminUser(data?.user ?? null))
+      .catch(() => {})
+  }, [])
 
   // Org auth
   const [orgSlug, setOrgSlug] = useState('')
@@ -503,7 +511,11 @@ function CookieDisplay() {
             </button>
             <div className={styles.loginDivider}>admin access</div>
             <div className={styles.adminLinkRow}>
-              <a href="/org" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Sign in to Admin →</a>
+              {adminUser ? (
+                <a href="/admin" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Go to Dashboard →</a>
+              ) : (
+                <a href="/org" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Sign in to Admin →</a>
+              )}
               {adminQrUrl && (
                 <div className={styles.adminQrWrap}>
                   <img src={adminQrUrl} alt="Admin login QR" className={styles.qrImgSmall} />

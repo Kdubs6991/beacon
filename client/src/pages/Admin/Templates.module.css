@@ -916,4 +916,5 @@
   .btnPrimary, .btnGhost { padding: 12px 18px; font-size: 0.9rem; }
   .formInput, .rowSelect, .rowInput { padding: 12px; font-size: 0.9rem; }
   .rowConfig { padding: 14px; }
+  .themeSwatch { width: 36px; height: 36px; }
 }

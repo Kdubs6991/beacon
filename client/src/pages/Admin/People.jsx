@@ -352,7 +352,7 @@ function PersonModal({ initial, onSave, onClose }) {
 
       <div className={styles.formField}>
         <label className={styles.formLabel}>Name <span className={styles.req}>*</span></label>
-        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} autoFocus />
+        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} />
       </div>
 
       <div className={styles.formField}>

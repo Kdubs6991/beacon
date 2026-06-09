@@ -96,7 +96,6 @@ function LabelModal({ initial, defaultType, onSave, onClose }) {
           className={styles.formInput}
           value={name}
           onChange={e => setName(e.target.value)}
-          autoFocus
           placeholder="e.g. Vox 1, Keys DI, IEM 3"
         />
       </div>

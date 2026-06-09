@@ -704,4 +704,5 @@
   .btnPrimary, .btnGhost, .btnDanger, .btnDangerSolid { padding: 12px 18px; font-size: 0.9rem; }
   .formInput, .formSelect { padding: 12px; font-size: 0.9rem; }
   .catCheckbox { padding: 8px 12px 8px 10px; }
+  .pcoBannerClose { padding: 8px 10px; min-width: 36px; min-height: 36px; }
 }
