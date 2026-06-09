@@ -13,6 +13,7 @@ import ResetPassword from './pages/ResetPassword'
 import Display from './pages/Display'
 import DisplayMobileSetup from './pages/DisplayMobileSetup'
 import Docs from './pages/Docs'
+import Landing from './pages/Landing'
 
 import Dashboard from './pages/Admin/Dashboard'
 import Locations from './pages/Admin/Locations'
@@ -62,7 +63,7 @@ export default function App() {
         <Route path="/admin/integrations" element={<AdminRoute><Integrations /></AdminRoute>} />
         <Route path="/admin/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-        <Route path="/" element={<Navigate to="/org" replace />} />
+        <Route path="/" element={<Landing />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>

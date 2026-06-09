@@ -221,6 +221,12 @@ code {
   color: var(--text-sec);
 }
 
+.tip {
+  background: rgba(52, 211, 153, 0.07);
+  border-color: #34d399;
+  color: var(--text-sec);
+}
+
 .callout strong { color: var(--text-pri); }
 .callout code {
   background: rgba(255,255,255,0.08);
@@ -229,9 +235,104 @@ code {
   font-size: 0.88em;
 }
 
+/* ── Scroll-spy active states ── */
+.navItemActive {
+  color: var(--text-pri);
+  font-weight: 600;
+}
+
+.navChildActive {
+  color: var(--text-sec);
+  border-color: var(--accent);
+}
+
+/* ── Anchor link buttons ── */
+.h2Wrap,
+.h3Wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.anchor {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition: opacity 0.12s, color 0.12s;
+  opacity: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.anchorCopied {
+  font-size: 0.75rem;
+  color: #34d399;
+  text-decoration: none;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid #34d399;
+  transition: opacity 0.12s, color 0.12s;
+  opacity: 1;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.h2Wrap:hover .anchor,
+.h3Wrap:hover .anchor {
+  opacity: 1;
+}
+
+/* ── Mobile nav ── */
+.mobileNav {
+  display: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0;
+  margin-bottom: 28px;
+  background: var(--bg-card);
+}
+
+.mobileNavSummary {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-sec);
+  cursor: pointer;
+  padding: 10px 14px;
+  list-style: none;
+  user-select: none;
+}
+
+.mobileNavSummary::-webkit-details-marker { display: none; }
+
+.mobileNav[open] .mobileNavSummary {
+  border-bottom: 1px solid var(--border);
+}
+
+.mobileNavItem {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  text-decoration: none;
+  padding: 7px 14px;
+}
+
+.mobileNavChild {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 5px 14px 5px 26px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
   .sidebar { display: none; }
+  .mobileNav { display: block; }
   .layout { padding: 24px 16px; }
   .h1 { font-size: 1.5rem; }
 }

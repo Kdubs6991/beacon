@@ -1,0 +1,538 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--text-pri);
+}
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── Nav ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 40px;
+  background: rgba(9, 14, 26, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.navBrand {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.navLink {
+  font-size: 0.875rem;
+  color: var(--text-sec);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.navLink:hover { color: var(--text-pri); }
+
+.navCta {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.navCta:hover { opacity: 0.75; }
+
+/* ── Hero ── */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 72px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 96px 32px 80px;
+}
+
+.heroText {
+  flex: 1;
+  min-width: 0;
+}
+
+.heroBadge {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  margin-bottom: 24px;
+}
+
+.heroHeadline {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--text-pri);
+  margin: 0 0 20px;
+}
+
+.heroDesc {
+  font-size: 1.05rem;
+  color: var(--text-sec);
+  line-height: 1.7;
+  margin: 0 0 36px;
+  max-width: 460px;
+}
+
+.heroCtas {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ── Shared CTAs ── */
+.ctaPrimary {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 11px 26px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.ctaPrimary:hover { opacity: 0.85; }
+
+.ctaSecondary {
+  display: inline-block;
+  color: var(--text-sec);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 11px 26px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, border-color 0.15s;
+}
+.ctaSecondary:hover { color: var(--text-pri); border-color: var(--text-muted); }
+
+/* ── Hero display mockup ── */
+.heroVisual {
+  flex-shrink: 0;
+  width: 420px;
+  position: relative;
+}
+
+.mockDisplay {
+  background: #0d1424;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(59, 130, 246, 0.06);
+  position: relative;
+  z-index: 1;
+}
+
+.mockHeader {
+  background: #1e2433;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mockBrand {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.mockEvent {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.mockClock {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-variant-numeric: tabular-nums;
+}
+
+.mockGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px;
+}
+
+.mockCard {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.mockAvatar {
+  width: 28px;
+  height: 28px;
+  background: rgba(59, 130, 246, 0.14);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.mockName {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.mockLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.mockMic {
+  background: rgba(59, 130, 246, 0.14);
+  color: #60a5fa;
+  font-size: 0.52rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-align: center;
+  display: block;
+}
+
+.mockIem {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  font-size: 0.52rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-align: center;
+  display: block;
+}
+
+.mockGlow {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 80px;
+  background: var(--accent);
+  opacity: 0.07;
+  border-radius: 50%;
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+/* ── Trust bar ── */
+.trustBar {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.trustText {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.trustText strong { color: var(--text-sec); font-weight: 600; }
+
+.trustDot {
+  width: 3px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Features ── */
+.features {
+  padding: 96px 0;
+}
+
+.sectionTitle {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 800;
+  color: var(--text-pri);
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.sectionSub {
+  font-size: 1rem;
+  color: var(--text-sec);
+  text-align: center;
+  margin: 0 0 48px;
+  line-height: 1.6;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.featureCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  transition: border-color 0.15s;
+}
+.featureCard:hover { border-color: rgba(59, 130, 246, 0.35); }
+
+.featureIcon {
+  font-size: 1.4rem;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.featureTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin: 0 0 8px;
+}
+
+.featureDesc {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── How it works ── */
+.howItWorks {
+  padding: 96px 0;
+  background: rgba(255, 255, 255, 0.015);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 48px;
+}
+
+.step {
+  padding: 0 40px;
+  border-left: 1px solid var(--border);
+}
+
+.stepFirst {
+  border-left: none;
+  padding-left: 0;
+}
+
+.steps .step:last-child {
+  padding-right: 0;
+}
+
+.stepNum {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--accent);
+  opacity: 0.25;
+  line-height: 1;
+  margin-bottom: 16px;
+  letter-spacing: -0.05em;
+}
+
+.stepTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin: 0 0 10px;
+}
+
+.stepDesc {
+  font-size: 0.875rem;
+  color: var(--text-sec);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── CTA banner ── */
+.ctaBanner {
+  padding: 96px 0;
+  text-align: center;
+}
+
+.ctaBannerTitle {
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  font-weight: 800;
+  color: var(--text-pri);
+  letter-spacing: -0.025em;
+  margin: 0 0 12px;
+}
+
+.ctaBannerDesc {
+  font-size: 1rem;
+  color: var(--text-sec);
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+.ctaBannerActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Developer section ── */
+.devSection {
+  padding: 96px 0;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.devBadge {
+  display: inline-block;
+  background: rgba(52, 211, 153, 0.08);
+  color: #34d399;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(52, 211, 153, 0.18);
+  margin-bottom: 16px;
+}
+
+.devTitle {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 800;
+  color: var(--text-pri);
+  letter-spacing: -0.025em;
+  margin: 0 0 28px;
+}
+
+.devPlaceholder {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-style: italic;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.devPlaceholder p { margin: 0; }
+
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 40px;
+}
+
+.footerInner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footerBrand {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 24px;
+}
+
+.footerLink {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.footerLink:hover { color: var(--text-sec); }
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .hero {
+    flex-direction: column;
+    padding: 64px 24px 56px;
+    gap: 48px;
+  }
+  .heroVisual { width: 100%; max-width: 480px; margin: 0 auto; }
+  .featureGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .nav { padding: 14px 20px; }
+  .navLinks { gap: 16px; }
+  .hero { padding: 48px 20px 40px; }
+  .heroDesc { max-width: 100%; }
+  .mockGrid { grid-template-columns: repeat(2, 1fr); }
+  .featureGrid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; gap: 0; }
+  .step { border-left: none; border-top: 1px solid var(--border); padding: 32px 0 0; margin-top: 32px; }
+  .stepFirst { border-top: none; margin-top: 0; padding-top: 0; }
+  .container { padding: 0 20px; }
+  .features,
+  .howItWorks,
+  .ctaBanner,
+  .devSection { padding: 64px 0; }
+  .footer { padding: 20px; }
+  .footerInner { flex-direction: column; gap: 16px; align-items: flex-start; }
+}

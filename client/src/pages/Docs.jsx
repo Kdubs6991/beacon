@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import styles from './Docs.module.css'
@@ -84,10 +84,34 @@ const NAV = [
   { id: 'hosting',       label: 'Self-Hosting' },
 ]
 
+function AnchorButton({ id }) {
+  const [copied, setCopied] = useState(false)
+  function handleClick() {
+    navigator.clipboard?.writeText(
+      window.location.origin + window.location.pathname + '#' + id
+    ).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+  return (
+    <button
+      onClick={handleClick}
+      className={copied ? styles.anchorCopied : styles.anchor}
+      title="Copy link"
+    >
+      {copied ? '✓' : '#'}
+    </button>
+  )
+}
+
 function Section({ id, title, children }) {
   return (
     <section id={id} className={styles.section}>
-      <h2 className={styles.h2}>{title}</h2>
+      <div className={styles.h2Wrap}>
+        <h2 className={styles.h2}>{title}</h2>
+        <AnchorButton id={id} />
+      </div>
       {children}
     </section>
   )
@@ -96,7 +120,10 @@ function Section({ id, title, children }) {
 function SubSection({ id, title, children }) {
   return (
     <div id={id} className={styles.subsection}>
-      <h3 className={styles.h3}>{title}</h3>
+      <div className={styles.h3Wrap}>
+        <h3 className={styles.h3}>{title}</h3>
+        <AnchorButton id={id} />
+      </div>
       {children}
     </div>
   )
@@ -109,6 +136,8 @@ function Callout({ type = 'info', children }) {
 export default function Docs() {
   const { hash } = useLocation()
   const { user } = useAuth()
+  const [activeId, setActiveId] = useState('')
+  const detailsRef = useRef(null)
 
   useEffect(() => {
     if (hash) {
@@ -118,6 +147,21 @@ export default function Docs() {
       }, 80)
     }
   }, [hash])
+
+  useEffect(() => {
+    const allIds = NAV.flatMap(item => [item.id, ...(item.children?.map(c => c.id) ?? [])])
+    function onScroll() {
+      let current = ''
+      for (const id of allIds) {
+        const el = document.getElementById(id)
+        if (el && el.getBoundingClientRect().top <= 96) current = id
+      }
+      setActiveId(current)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
     <div className={styles.page}>
@@ -138,9 +182,20 @@ export default function Docs() {
           <p className={styles.sidebarTitle}>Documentation</p>
           {NAV.map(item => (
             <div key={item.id}>
-              <a href={`#${item.id}`} className={styles.navItem}>{item.label}</a>
+              <a
+                href={`#${item.id}`}
+                className={`${styles.navItem}${activeId === item.id ? ' ' + styles.navItemActive : ''}`}
+              >
+                {item.label}
+              </a>
               {item.children?.map(child => (
-                <a key={child.id} href={`#${child.id}`} className={styles.navChild}>{child.label}</a>
+                <a
+                  key={child.id}
+                  href={`#${child.id}`}
+                  className={`${styles.navChild}${activeId === child.id ? ' ' + styles.navChildActive : ''}`}
+                >
+                  {child.label}
+                </a>
               ))}
             </div>
           ))}
@@ -148,6 +203,30 @@ export default function Docs() {
 
         {/* ── Content ── */}
         <main className={styles.content}>
+          <details ref={detailsRef} className={styles.mobileNav}>
+            <summary className={styles.mobileNavSummary}>On this page ▾</summary>
+            {NAV.map(item => (
+              <div key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  className={styles.mobileNavItem}
+                  onClick={() => { detailsRef.current.open = false }}
+                >
+                  {item.label}
+                </a>
+                {item.children?.map(child => (
+                  <a
+                    key={child.id}
+                    href={`#${child.id}`}
+                    className={styles.mobileNavChild}
+                    onClick={() => { detailsRef.current.open = false }}
+                  >
+                    {child.label}
+                  </a>
+                ))}
+              </div>
+            ))}
+          </details>
           <h1 className={styles.h1}>Beacon — Documentation</h1>
           <p className={styles.lead}>
             Everything you need to know to set up and run Beacon for your church.
