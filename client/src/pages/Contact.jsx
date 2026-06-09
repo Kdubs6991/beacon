@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import PublicNav from '../components/PublicNav'
 import styles from './Contact.module.css'
 
@@ -19,12 +20,6 @@ function ContactIcon({ type }) {
       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
     </svg>
   )
-  if (type === 'location') return (
-    <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  )
   return null
 }
 
@@ -43,7 +38,7 @@ const CONTACT_ITEMS = [
     label: 'GitHub',
     value: 'github.com/Kdubs6991',
     href: 'https://github.com/Kdubs6991',
-    desc: 'Browse the source code, open issues, or submit a pull request.',
+    desc: 'Browse the Beacon source code, view other projects, open issues, or submit a pull request.',
     color: 'rgba(148,163,184,0.1)',
     iconColor: '#94a3b8',
   },
@@ -56,15 +51,6 @@ const CONTACT_ITEMS = [
     color: 'rgba(59,130,246,0.1)',
     iconColor: '#60a5fa',
   },
-  {
-    type: 'location',
-    label: 'Location',
-    value: 'Ames, Iowa',
-    href: null,
-    desc: 'Iowa State University — Software Engineering student.',
-    color: 'rgba(52,211,153,0.08)',
-    iconColor: '#34d399',
-  },
 ]
 
 export default function Contact() {
@@ -73,6 +59,7 @@ export default function Contact() {
       <PublicNav />
 
       <div className={styles.hero}>
+        <Link to="/" className={styles.backLink}>← Back to home</Link>
         <div className={styles.heroBadge}>Contact</div>
         <h1 className={styles.heroTitle}>Get in touch</h1>
         <p className={styles.heroDesc}>
@@ -89,23 +76,30 @@ export default function Contact() {
             </div>
             <div className={styles.cardBody}>
               <div className={styles.cardLabel}>{item.label}</div>
-              {item.href ? (
-                <a
-                  href={item.href}
-                  className={styles.cardValue}
-                  target={item.href.startsWith('http') ? '_blank' : undefined}
-                  rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                >
-                  {item.value}
-                </a>
-              ) : (
-                <span className={styles.cardValueStatic}>{item.value}</span>
-              )}
+              <a
+                href={item.href}
+                className={styles.cardValue}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
+                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              >
+                {item.value}
+              </a>
               <p className={styles.cardDesc}>{item.desc}</p>
             </div>
           </div>
         ))}
       </div>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerInner}>
+          <Link to="/" className={styles.footerBrand}>Beacon</Link>
+          <div className={styles.footerLinks}>
+            <Link to="/docs"    className={styles.footerLink}>Documentation</Link>
+            <Link to="/display" className={styles.footerLink}>Display login</Link>
+            <Link to="/org"     className={styles.footerLink}>Admin panel</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

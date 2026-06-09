@@ -2,14 +2,26 @@
   min-height: 100vh;
   background: var(--bg-page);
   color: var(--text-pri);
+  display: flex;
+  flex-direction: column;
 }
 
 .hero {
   max-width: 680px;
   margin: 0 auto;
-  padding: 72px 32px 56px;
+  padding: 56px 32px 48px;
   text-align: center;
 }
+
+.backLink {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: color 0.15s;
+}
+.backLink:hover { color: var(--text-sec); }
 
 .heroBadge {
   display: inline-block;
@@ -40,13 +52,15 @@
   margin: 0;
 }
 
+/* 3 cards — single row on desktop, stack on mobile */
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  max-width: 860px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 0 32px 96px;
+  padding: 0 32px 80px;
+  flex: 1;
 }
 
 .card {
@@ -58,6 +72,7 @@
   border-radius: var(--radius);
   padding: 28px;
   transition: border-color 0.15s;
+  flex-direction: column;
 }
 .card:hover { border-color: rgba(255, 255, 255, 0.12); }
 
@@ -97,14 +112,6 @@
 }
 .cardValue:hover { opacity: 0.75; }
 
-.cardValueStatic {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-pri);
-  margin-bottom: 8px;
-}
-
 .cardDesc {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -112,7 +119,48 @@
   margin: 0;
 }
 
-@media (max-width: 600px) {
-  .grid { grid-template-columns: 1fr; padding: 0 20px 64px; }
-  .hero { padding: 48px 20px 40px; }
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 40px;
+  margin-top: auto;
+}
+
+.footerInner {
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footerBrand {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 24px;
+}
+
+.footerLink {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.footerLink:hover { color: var(--text-sec); }
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .grid { grid-template-columns: 1fr; padding: 0 20px 56px; }
+  .hero { padding: 40px 20px 32px; }
+  .card { flex-direction: row; }
+  .footer { padding: 20px; }
+  .footerInner { flex-direction: column; gap: 16px; align-items: flex-start; }
 }
