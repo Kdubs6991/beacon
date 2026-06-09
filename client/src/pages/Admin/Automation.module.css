@@ -286,3 +286,12 @@
 
 /* ── Misc ── */
 .muted { color: var(--text-muted); font-size: 0.85rem; }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .ruleRow { padding: 16px; }
+  .segBtn { padding: 12px; }
+  .menuBtn { padding: 8px 12px; min-height: 36px; }
+  .btnRun, .btnPrimary, .btnGhost { padding: 12px 18px; font-size: 0.9rem; }
+  .formInput, .formSelect { padding: 12px; font-size: 0.9rem; }
+}

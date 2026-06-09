@@ -595,3 +595,15 @@
   padding: 1px 7px;
   white-space: nowrap;
 }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .filterPill { padding: 7px 14px; }
+  .card { padding: 20px; }
+  .menuBtn { padding: 7px 10px; }
+  .linkBtn, .currentAssignmentsBtn, .shareCodeBtn { padding: 9px 12px; }
+  .radioOpt { padding: 14px; }
+  .layoutOption { padding: 14px; }
+  .btnPrimary, .btnGhost, .btnDanger { padding: 12px 20px; font-size: 0.9rem; }
+  .formInput, .formSelect { padding: 12px; font-size: 0.9rem; }
+}

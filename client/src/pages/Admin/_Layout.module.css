@@ -263,3 +263,32 @@
     display: none;
   }
 }
+
+/* ── Touch devices: larger nav tap targets ──────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .navLink { padding: 12px 12px; }
+  .logoutBtn { padding: 8px; }
+  .themeToggle { padding: 9px; }
+  .userArea { padding: 14px 14px; }
+}
+
+/* ── Touch tablet portrait: collapse sidebar to hamburger ───── */
+@media (hover: none) and (pointer: coarse) and (min-width: 769px) and (max-width: 1024px) {
+  .hamburger { display: flex; }
+  .sidebar {
+    position: fixed;
+    left: -240px;
+    top: 0;
+    height: 100%;
+    z-index: 300;
+    width: 240px;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebarOpen {
+    left: 0;
+    box-shadow: 6px 0 32px rgba(0, 0, 0, 0.5);
+  }
+  .pageHeader { padding: 12px 16px; }
+  .pageBody { padding: 20px 16px; }
+  .headerOrg { display: none; }
+}

@@ -227,3 +227,10 @@
   .title { font-size: 1.2rem; }
   .qrImg { width: 140px; height: 140px; }
 }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .input { padding: 14px 14px; font-size: 1rem; }
+  .btn { padding: 14px 18px; font-size: 1rem; }
+  .recoveryUseBtn { padding: 13px; }
+}

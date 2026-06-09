@@ -66,3 +66,9 @@
   .linkDocs { display: none; }
   .orgBtn { font-size: 0.72rem; padding: 4px 8px; }
 }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .link { padding: 10px 12px; }
+  .orgBtn { padding: 9px 14px; }
+}

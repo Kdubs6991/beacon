@@ -484,3 +484,12 @@
   background: rgba(0, 0, 0, 0.75);
   border-color: rgba(255, 255, 255, 0.25);
 }
+
+/* ── Touch devices: larger tap targets in login/setup UI ─────── */
+@media (hover: none) and (pointer: coarse) {
+  .loginInput { padding: 14px 16px; font-size: 1rem; }
+  .loginBtn { padding: 14px 20px; font-size: 1rem; }
+  .screenItem { padding: 14px 16px; }
+  .screenItemBtn { padding: 12px 16px; }
+  .exitBtn { padding: 12px 20px; font-size: 0.85rem; }
+}

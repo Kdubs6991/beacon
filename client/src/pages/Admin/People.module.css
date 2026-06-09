@@ -691,3 +691,17 @@
 .count { font-size: 0.75rem; color: var(--text-muted); margin-top: 14px; text-align: right; }
 .muted { color: var(--text-muted); font-size: 0.85rem; }
 .emptyState { padding: 40px 0; text-align: center; color: var(--text-sec); line-height: 1.8; }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .avatarCell { padding: 14px 8px 14px 0; }
+  .nameCell, .metaCell, .catCell { padding: 14px 12px; }
+  .actionsCell { padding: 14px 0 14px 12px; }
+  .actionBtn { padding: 8px 12px; min-height: 36px; }
+  .filterPill { padding: 7px 12px; }
+  .viewBtn { padding: 10px 12px; }
+  .search { padding: 11px 12px 11px 34px; }
+  .btnPrimary, .btnGhost, .btnDanger, .btnDangerSolid { padding: 12px 18px; font-size: 0.9rem; }
+  .formInput, .formSelect { padding: 12px; font-size: 0.9rem; }
+  .catCheckbox { padding: 8px 12px 8px 10px; }
+}

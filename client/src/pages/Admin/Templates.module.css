@@ -908,3 +908,12 @@
   font-size: 1rem;
   margin-bottom: 4px;
 }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .viewBtn { padding: 10px 12px; }
+  .actionBtn { padding: 9px 14px; }
+  .btnPrimary, .btnGhost { padding: 12px 18px; font-size: 0.9rem; }
+  .formInput, .rowSelect, .rowInput { padding: 12px; font-size: 0.9rem; }
+  .rowConfig { padding: 14px; }
+}

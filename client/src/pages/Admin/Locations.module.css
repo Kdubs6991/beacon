@@ -422,3 +422,12 @@
 .muted { color: var(--text-muted); font-size: 0.85rem; }
 .emptyMsg { font-size: 0.8rem; color: var(--text-muted); padding: 8px 0; }
 .emptyState { padding: 40px 0; text-align: center; color: var(--text-sec); line-height: 1.8; }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .stRow { padding: 12px 14px; }
+  .btnPrimary { padding: 12px 18px; font-size: 0.9rem; }
+  .addStBtn { padding: 10px 16px; }
+  .runNowBtn { padding: 7px 12px; }
+  .runNowBtnPanel { padding: 12px 18px; }
+}

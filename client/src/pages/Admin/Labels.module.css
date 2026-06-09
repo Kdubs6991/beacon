@@ -281,3 +281,13 @@
   transition: color 0.12s, background 0.12s;
 }
 .addPositionBtn:hover { color: var(--accent); background: rgba(59,130,246,0.04); }
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .labelRow, .positionRow { padding: 14px 18px; }
+  .menuBtn { padding: 8px 12px; min-height: 36px; }
+  .addPositionBtn { padding: 14px 18px; }
+  .positionInput { padding: 10px; }
+  .btnPrimary, .btnGhost { padding: 12px 18px; font-size: 0.9rem; }
+  .formInput { padding: 12px; font-size: 0.9rem; }
+}
