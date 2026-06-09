@@ -14,6 +14,7 @@ import Display from './pages/Display'
 import DisplayMobileSetup from './pages/DisplayMobileSetup'
 import Docs from './pages/Docs'
 import Landing from './pages/Landing'
+import Contact from './pages/Contact'
 
 import Dashboard from './pages/Admin/Dashboard'
 import Locations from './pages/Admin/Locations'
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="/admin/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
         <Route path="/" element={<Landing />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>

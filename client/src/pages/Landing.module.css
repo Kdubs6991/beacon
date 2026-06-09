@@ -452,25 +452,117 @@
   margin-bottom: 16px;
 }
 
-.devTitle {
+.devSectionTitle {
   font-size: clamp(1.5rem, 3vw, 2.1rem);
   font-weight: 800;
   color: var(--text-pri);
   letter-spacing: -0.025em;
-  margin: 0 0 28px;
+  margin: 0 0 36px;
 }
 
-.devPlaceholder {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  font-style: italic;
-  border: 1px dashed var(--border);
+.devCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 40px 32px;
-  text-align: center;
+  padding: 40px;
 }
 
-.devPlaceholder p { margin: 0; }
+.devPhotoWrap {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.devPhotoFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: rgba(96, 165, 250, 0.5);
+  letter-spacing: -0.02em;
+}
+
+.devPhoto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.devInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.devName {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-pri);
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.devMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.devMetaDot {
+  opacity: 0.4;
+}
+
+.devBio {
+  font-size: 0.9rem;
+  color: var(--text-sec);
+  line-height: 1.75;
+  margin: 0 0 28px;
+  max-width: 560px;
+}
+
+.devLinks {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.devLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-sec);
+  text-decoration: none;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, border-color 0.15s;
+}
+.devLink:hover {
+  color: var(--text-pri);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 640px) {
+  .devCard { flex-direction: column; padding: 24px; gap: 24px; }
+  .devPhotoWrap { width: 100px; height: 100px; }
+}
 
 /* ── Footer ── */
 .footer {
