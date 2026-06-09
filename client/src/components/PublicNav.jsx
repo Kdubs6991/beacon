@@ -39,7 +39,7 @@ export default function PublicNav() {
 
   return (
     <nav className={styles.nav}>
-      <Link to={orgName ? '/login' : '/org'} className={styles.brand}>Beacon</Link>
+      <Link to="/" className={styles.brand}>Beacon</Link>
       <div className={styles.links}>
         {adminUser ? (
           <Link to="/admin" className={styles.link}>Dashboard</Link>

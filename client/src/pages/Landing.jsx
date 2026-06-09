@@ -10,12 +10,48 @@ const MOCK_MUSICIANS = [
 ]
 
 const FEATURES = [
-  { icon: '📺', title: 'Any screen, any device',   desc: 'Each display is just a browser URL. Point a TV, tablet, or kiosk at it and it auto-refreshes every 30 seconds — no app installs, no logins on the display.' },
-  { icon: '⚡', title: 'Smart automation',          desc: 'Write rules once. Beacon auto-assigns mic and IEM labels based on name or position, every service, without any manual work.' },
-  { icon: '🔗', title: 'Planning Center sync',      desc: 'Connect PCO and Beacon pulls your team roster automatically. Manual mode works great too — no integration required.' },
-  { icon: '🎨', title: 'Templates & themes',        desc: 'Custom grid layouts with per-slot modes, label pins, and 7 colour themes. You control what every screen shows and how it looks.' },
-  { icon: '🗓️', title: 'Scheduled push',           desc: 'Set a schedule and displays update themselves before you arrive. Saturday night, Sunday morning — it just runs.' },
-  { icon: '🔒', title: 'Self-hosted',               desc: 'Your data stays on your server. Runs on a Raspberry Pi, a laptop, or a VPS. No subscription fees, no vendor lock-in.' },
+  {
+    icon: '📺',
+    color: 'rgba(59,130,246,0.13)',
+    iconColor: '#60a5fa',
+    title: 'Any screen, any device',
+    desc: 'Each display is a permanent browser URL. Point a TV, tablet, or kiosk at it and it auto-refreshes every 30 seconds — no app installs, no logins on the display.',
+  },
+  {
+    icon: '⚡',
+    color: 'rgba(168,85,247,0.13)',
+    iconColor: '#c084fc',
+    title: 'Smart automation',
+    desc: 'Write rules once. Beacon auto-assigns mic and IEM labels based on each person\'s name or position — no manual work each service.',
+  },
+  {
+    icon: '🎨',
+    color: 'rgba(251,146,60,0.13)',
+    iconColor: '#fb923c',
+    title: 'Templates & themes',
+    desc: 'Custom grid layouts with per-slot modes, label pins, and 7 colour themes. Full control over what every screen shows and how it looks.',
+  },
+  {
+    icon: '🗓️',
+    color: 'rgba(52,211,153,0.11)',
+    iconColor: '#34d399',
+    title: 'Scheduled push',
+    desc: 'Set a schedule and displays update themselves before you arrive. Saturday at 6 PM, Sunday morning — it just runs.',
+  },
+  {
+    icon: '👥',
+    color: 'rgba(251,191,36,0.11)',
+    iconColor: '#fbbf24',
+    title: 'Manual service teams',
+    desc: 'Build your roster in Beacon and assign each person a position. No external integrations needed — everything runs from within the app.',
+  },
+  {
+    icon: '🔒',
+    color: 'rgba(148,163,184,0.1)',
+    iconColor: '#94a3b8',
+    title: 'Self-hosted',
+    desc: 'Your data stays on your server. Runs on any machine with Node.js. No subscription fees, no vendor lock-in.',
+  },
 ]
 
 const STEPS = [
@@ -34,7 +70,7 @@ export default function Landing() {
       .catch(() => {})
   }, [])
 
-  const signInHref = isAdmin ? '/admin' : '/org'
+  const signInHref  = isAdmin ? '/admin' : '/org'
   const signInLabel = isAdmin ? 'Go to dashboard' : 'Get started'
 
   return (
@@ -42,10 +78,10 @@ export default function Landing() {
 
       {/* ── Nav ── */}
       <header className={styles.nav}>
-        <span className={styles.navBrand}>Beacon</span>
+        <Link to="/" className={styles.navBrand}>Beacon</Link>
         <div className={styles.navLinks}>
-          <Link to="/docs"    className={styles.navLink}>Docs</Link>
-          <Link to="/display" className={styles.navLink}>Display</Link>
+          <Link to="/docs"      className={styles.navLink}>Docs</Link>
+          <Link to="/display"   className={styles.navLink}>Display</Link>
           <Link to={signInHref} className={styles.navCta}>{isAdmin ? 'Dashboard' : 'Sign in'} →</Link>
         </div>
       </header>
@@ -59,8 +95,8 @@ export default function Landing() {
           </h1>
           <p className={styles.heroDesc}>
             Beacon auto-assigns mics and IEMs for your worship team and pushes
-            them to any TV or kiosk in your venue — synced from Planning Center
-            or managed manually.
+            them to any TV or kiosk in your venue — built manually or pulled
+            from your service schedule automatically.
           </p>
           <div className={styles.heroCtas}>
             <Link to={signInHref} className={styles.ctaPrimary}>{signInLabel} →</Link>
@@ -78,7 +114,9 @@ export default function Landing() {
             <div className={styles.mockGrid}>
               {MOCK_MUSICIANS.map(p => (
                 <div key={p.name} className={styles.mockCard}>
-                  <div className={styles.mockAvatar}>{p.name[0]}</div>
+                  <div className={styles.mockPhoto}>
+                    <span className={styles.mockInitial}>{p.name[0]}</span>
+                  </div>
                   <div className={styles.mockName}>{p.name}</div>
                   <div className={styles.mockLabels}>
                     <span className={styles.mockMic}>{p.mic}</span>
@@ -92,15 +130,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Trust bar ── */}
-      <div className={styles.trustBar}>
-        <span className={styles.trustText}>Integrates with <strong>Planning Center Online</strong></span>
-        <span className={styles.trustDot} />
-        <span className={styles.trustText}>Works fully without it too</span>
-        <span className={styles.trustDot} />
-        <span className={styles.trustText}>Runs on a Raspberry Pi</span>
-      </div>
-
       {/* ── Features ── */}
       <section className={styles.features}>
         <div className={styles.container}>
@@ -109,9 +138,16 @@ export default function Landing() {
           <div className={styles.featureGrid}>
             {FEATURES.map(f => (
               <div key={f.title} className={styles.featureCard}>
-                <span className={styles.featureIcon}>{f.icon}</span>
-                <h3 className={styles.featureTitle}>{f.title}</h3>
-                <p className={styles.featureDesc}>{f.desc}</p>
+                <div
+                  className={styles.featureVisual}
+                  style={{ background: f.color }}
+                >
+                  <span className={styles.featureIcon} style={{ color: f.iconColor }}>{f.icon}</span>
+                </div>
+                <div className={styles.featureBody}>
+                  <h3 className={styles.featureTitle}>{f.title}</h3>
+                  <p className={styles.featureDesc}>{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -164,11 +200,12 @@ export default function Landing() {
       {/* ── Footer ── */}
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
-          <span className={styles.footerBrand}>Beacon</span>
+          <Link to="/" className={styles.footerBrand}>Beacon</Link>
           <div className={styles.footerLinks}>
             <Link to="/docs"      className={styles.footerLink}>Documentation</Link>
             <Link to="/display"   className={styles.footerLink}>Display login</Link>
             <Link to={signInHref} className={styles.footerLink}>Admin panel</Link>
+            <Link to="/contact"   className={styles.footerLink}>Contact</Link>
           </div>
         </div>
       </footer>
