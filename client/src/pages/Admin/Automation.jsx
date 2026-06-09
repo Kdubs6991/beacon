@@ -258,6 +258,7 @@ export default function Automation() {
   const touchDragRef = useRef({ active: false, startIdx: null, overIdx: null })
   const [filterField, setFilterField] = useState(null)
   const [filterAction, setFilterAction] = useState(null)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     Promise.all([api('/automation-rules'), api('/labels')])
@@ -349,6 +350,12 @@ export default function Automation() {
   function matchesFilter(rule) {
     if (filterField && rule.condition_field !== filterField) return false
     if (filterAction && rule.action_type !== filterAction) return false
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      const actionDesc = describeAction(rule, labels).toLowerCase()
+      const ruleText = `${rule.condition_field} ${rule.condition_op} ${rule.condition_value} ${actionDesc}`.toLowerCase()
+      if (!ruleText.includes(q)) return false
+    }
     return true
   }
 
@@ -389,32 +396,45 @@ export default function Automation() {
 
       {!loading && rules.length > 0 && (
         <>
-          <div className={styles.filterBar}>
-            <div className={styles.filterRow}>
+          <div className={styles.filterRow}>
+            <div className={styles.filterHead}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+              Filters
+            </div>
+            <div className={styles.filterGroup}>
               <span className={styles.filterLabel}>Field</span>
               {[['name', 'Name'], ['position', 'Position']].map(([v, l]) => (
                 <button
                   key={v}
-                  className={`${styles.filterChip} ${filterField === v ? styles.filterChipActive : ''}`}
+                  className={`${styles.filterPill} ${filterField === v ? styles.filterPillActive : ''}`}
                   onClick={() => setFilterField(prev => prev === v ? null : v)}
                 >{l}</button>
               ))}
             </div>
-            <div className={styles.filterRow}>
+            <div className={styles.filterGroup}>
               <span className={styles.filterLabel}>Action</span>
               {[['mic', 'Mic'], ['iem', 'IEM']].map(([v, l]) => (
                 <button
                   key={v}
-                  className={`${styles.filterChip} ${filterAction === v ? styles.filterChipActive : ''}`}
+                  className={`${styles.filterPill} ${filterAction === v ? styles.filterPillActive : ''}`}
                   onClick={() => setFilterAction(prev => prev === v ? null : v)}
                 >{l}</button>
               ))}
             </div>
             {hasFilter && (
               <button className={styles.filterClear} onClick={() => { setFilterField(null); setFilterAction(null) }}>
-                Clear filters
+                Clear
               </button>
             )}
+            <input
+              className={styles.filterSearch}
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search rules…"
+            />
           </div>
           <div
             className={styles.ruleList}

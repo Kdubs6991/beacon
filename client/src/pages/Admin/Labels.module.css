@@ -292,8 +292,8 @@
   .formInput { padding: 12px; font-size: 0.9rem; }
 }
 
-/* ── Touch tablet landscape: Labels + IEM side-by-side, Positions full width ── */
-@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+/* ── Wider screens: Mic + IEM side-by-side, Positions full width ── */
+@media (min-width: 860px) {
   .sections {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -353,7 +353,7 @@ export default function Labels() {
           <p><strong>Positions</strong> are at the bottom of this page — role names like Singer, Worship Leader, or Electric Guitar. Define them here first so they appear as dropdown options when building Manual service teams.</p>
         </InfoPopover>
         <button className={styles.btnPrimary} onClick={() => setModal({ label: null, defaultType: 'mic' })}>
-          + Add Label
+          + Add Device Label
         </button>
       </div>
 

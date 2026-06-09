@@ -39,18 +39,34 @@
 }
 
 /* ── Filter bar ── */
-.filterBar {
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
-.filterRow {
+.filterHead {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding-right: 12px;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filterGroup {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -63,26 +79,26 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  width: 52px;
-  flex-shrink: 0;
+  margin-right: 2px;
+  white-space: nowrap;
 }
 
-.filterChip {
+.filterPill {
   background: none;
   border: 1px solid var(--border);
-  border-radius: 20px;
   color: var(--text-sec);
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 3px 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.12s;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
   white-space: nowrap;
 }
-.filterChip:hover { border-color: var(--accent); color: var(--accent); }
-.filterChipActive {
-  background: rgba(59,130,246,0.1);
+.filterPill:hover { border-color: var(--accent); color: var(--accent); }
+.filterPillActive {
+  background: rgba(59,130,246,0.12);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -91,16 +107,28 @@
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 500;
+  font-size: 0.75rem;
   cursor: pointer;
   font-family: inherit;
-  padding: 2px 0;
-  text-decoration: underline;
-  align-self: flex-start;
+  padding: 3px 6px;
   transition: color 0.12s;
 }
-.filterClear:hover { color: var(--text-sec); }
+.filterClear:hover { color: #f87171; }
+
+.filterSearch {
+  margin-left: auto;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  color: var(--text-pri);
+  font-size: 0.8rem;
+  outline: none;
+  font-family: inherit;
+  width: 170px;
+  transition: border-color 0.12s;
+}
+.filterSearch:focus { border-color: var(--accent); }
 
 /* ── Rule list ── */
 .ruleList {
@@ -358,5 +386,6 @@
   .menuBtn { padding: 8px 12px; min-height: 36px; }
   .btnRun, .btnPrimary, .btnGhost { padding: 12px 18px; font-size: 0.9rem; }
   .formInput, .formSelect { padding: 12px; font-size: 0.9rem; }
-  .filterChip { padding: 7px 14px; min-height: 36px; }
+  .filterPill { padding: 7px 14px; min-height: 36px; }
+  .filterSearch { padding: 9px 12px; font-size: 0.875rem; width: 150px; }
 }
