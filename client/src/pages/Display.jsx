@@ -404,7 +404,7 @@ function CookieDisplay() {
                 type="text"
                 placeholder="Access code (e.g. ABC123)"
                 value={orgCode}
-                onChange={e => setOrgCode(e.target.value)}
+                onChange={e => setOrgCode(e.target.value.toUpperCase())}
                 autoCapitalize="characters"
                 autoCorrect="off"
                 required
