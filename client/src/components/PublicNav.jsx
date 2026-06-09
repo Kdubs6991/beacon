@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './PublicNav.module.css'
 
@@ -22,6 +22,15 @@ export default function PublicNav() {
     } catch { return null }
   })
 
+  const [adminUser, setAdminUser] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.user) setAdminUser(data.user) })
+      .catch(() => {})
+  }, [])
+
   function handleSignOutOrg() {
     clearCookie('beacon_org')
     clearCookie('beacon_screen')
@@ -32,9 +41,13 @@ export default function PublicNav() {
     <nav className={styles.nav}>
       <Link to={orgName ? '/login' : '/org'} className={styles.brand}>Beacon</Link>
       <div className={styles.links}>
-        <Link to={orgName ? '/login' : '/org'} className={styles.link}>
-          {orgName ? 'Sign in' : 'Org login'}
-        </Link>
+        {adminUser ? (
+          <Link to="/admin" className={styles.link}>Dashboard →</Link>
+        ) : (
+          <Link to={orgName ? '/login' : '/org'} className={styles.link}>
+            {orgName ? 'Sign in' : 'Org login'}
+          </Link>
+        )}
         <Link to="/display?setup=1" className={styles.link}>Display</Link>
         <Link to="/docs" className={`${styles.link} ${styles.linkDocs}`}>Docs</Link>
         {orgName && (

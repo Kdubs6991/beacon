@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import AdminLayout from './_Layout'
@@ -368,6 +368,8 @@ function DashboardSection() {
     setCards(prev => prev.map(c => c.id === id ? { ...c, visible: !c.visible } : c))
   }
 
+  const touchDragRef = useRef({ active: false, startIdx: null, overIdx: null })
+
   function handleDragStart(i) { setDragIndex(i) }
   function handleDragOver(e, i) { e.preventDefault(); setOverIndex(i) }
   function handleDrop(i) {
@@ -380,6 +382,38 @@ function DashboardSection() {
     setOverIndex(null)
   }
   function handleDragEnd() { setDragIndex(null); setOverIndex(null) }
+
+  function handleTouchDragStart(e, i) {
+    touchDragRef.current = { active: true, startIdx: i, overIdx: i }
+    setDragIndex(i)
+    setOverIndex(i)
+  }
+  function handleTouchDragMove(e) {
+    if (!touchDragRef.current.active) return
+    const touch = e.touches[0]
+    const el = document.elementFromPoint(touch.clientX, touch.clientY)
+    const row = el?.closest('[data-card-idx]')
+    if (row) {
+      const idx = parseInt(row.dataset.cardIdx, 10)
+      if (!isNaN(idx) && idx !== touchDragRef.current.overIdx) {
+        touchDragRef.current.overIdx = idx
+        setOverIndex(idx)
+      }
+    }
+  }
+  function handleTouchDragEnd() {
+    if (!touchDragRef.current.active) return
+    const { startIdx, overIdx: endIdx } = touchDragRef.current
+    touchDragRef.current = { active: false, startIdx: null, overIdx: null }
+    if (startIdx !== null && endIdx !== null && startIdx !== endIdx) {
+      const next = [...cards]
+      const [moved] = next.splice(startIdx, 1)
+      next.splice(endIdx, 0, moved)
+      setCards(next)
+    }
+    setDragIndex(null)
+    setOverIndex(null)
+  }
 
   async function save() {
     setSaving(true); setSaveError(null); setSuccess(false)
@@ -395,7 +429,12 @@ function DashboardSection() {
     <div id="dashboard" className={styles.section}>
       <h2 className={styles.sectionTitle}>Dashboard Layout</h2>
       <p className={styles.sectionDesc}>Drag to reorder cards and toggle visibility. Settings are saved to your account.</p>
-      <div className={styles.dashList}>
+      <div
+        className={styles.dashList}
+        onTouchMove={handleTouchDragMove}
+        onTouchEnd={handleTouchDragEnd}
+        onTouchCancel={handleTouchDragEnd}
+      >
         {cards.map((card, i) => {
           const meta = DASH_CARD_META[card.id]
           const isDragging = dragIndex === i
@@ -403,6 +442,7 @@ function DashboardSection() {
           return (
             <div
               key={card.id}
+              data-card-idx={i}
               className={`${styles.dashRow}${isDragging ? ` ${styles.dashRowDragging}` : ''}${isOver ? ` ${styles.dashRowOver}` : ''}`}
               draggable
               onDragStart={() => handleDragStart(i)}
@@ -410,7 +450,11 @@ function DashboardSection() {
               onDrop={() => handleDrop(i)}
               onDragEnd={handleDragEnd}
             >
-              <span className={styles.dragHandle}><GripIcon /></span>
+              <span
+                className={styles.dragHandle}
+                onTouchStart={e => { if (e.cancelable) e.preventDefault(); handleTouchDragStart(e, i) }}
+                style={{ touchAction: 'none' }}
+              ><GripIcon /></span>
               <div className={styles.dashRowInfo}>
                 <span className={styles.dashRowLabel}>{meta.label}</span>
                 <span className={styles.dashRowDesc}>{meta.desc}</span>

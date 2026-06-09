@@ -239,9 +239,9 @@
 
 .shareCodeWrap {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
 }
 
 .shareCodeLabel {
@@ -250,6 +250,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .shareCodeBtn {

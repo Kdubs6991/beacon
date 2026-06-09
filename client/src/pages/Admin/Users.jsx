@@ -4,9 +4,10 @@ import AdminLayout from './_Layout'
 import Modal from '../../components/Modal'
 import styles from './Users.module.css'
 
-function EditUserModal({ user, onSave, onClose }) {
+function EditUserModal({ user, isSelf, onSave, onClose }) {
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
+  const [role, setRole] = useState(user.role)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -20,7 +21,7 @@ function EditUserModal({ user, onSave, onClose }) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), role }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Failed to save'); return }
@@ -54,6 +55,14 @@ function EditUserModal({ user, onSave, onClose }) {
         <label className={styles.modalLabel}>Email</label>
         <input className={styles.modalInput} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" />
       </div>
+      <div className={styles.modalField}>
+        <label className={styles.modalLabel}>Role</label>
+        <select className={styles.modalSelect} value={role} onChange={e => setRole(e.target.value)} disabled={isSelf}>
+          <option value="admin">Admin</option>
+          <option value="team_member">Team Member</option>
+        </select>
+        {isSelf && <p className={styles.modalHint}>You cannot change your own role.</p>}
+      </div>
     </Modal>
   )
 }
@@ -64,6 +73,7 @@ export default function Users() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editModal, setEditModal] = useState(null)
+  const [search, setSearch] = useState('')
 
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('team_member')
@@ -212,53 +222,64 @@ export default function Users() {
           {loading && <p className={styles.muted}>Loading…</p>}
           {error && <p className={styles.formError}>{error}</p>}
           {!loading && !error && (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Joined</th>
-                    <th></th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(u => (
-                    <tr key={u.id} className={u.id === me?.id ? styles.selfRow : ''}>
-                      <td>
-                        <span className={styles.name}>{u.name}</span>
-                        {u.id === me?.id && <span className={styles.youBadge}>you</span>}
-                      </td>
-                      <td className={styles.email}>{u.email}</td>
-                      <td>
-                        <select
-                          className={`${styles.roleSelect} ${styles[u.role]}`}
-                          value={u.role}
-                          onChange={e => changeRole(u.id, e.target.value)}
-                          disabled={u.id === me?.id}
-                        >
-                          <option value="admin">Admin</option>
-                          <option value="team_member">Team Member</option>
-                        </select>
-                      </td>
-                      <td className={styles.muted}>{new Date(u.created_at).toLocaleDateString()}</td>
-                      <td>
-                        <button className={styles.editBtn} onClick={() => setEditModal(u)}>Edit</button>
-                      </td>
-                      <td>
-                        {u.id !== me?.id && (
-                          <button className={styles.deleteBtn} onClick={() => deleteUser(u.id, u.name)}>
-                            Remove
-                          </button>
-                        )}
-                      </td>
+            <>
+              <div className={styles.searchRow}>
+                <input
+                  className={styles.searchInput}
+                  type="search"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search by name or email…"
+                />
+              </div>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Joined</th>
+                      <th></th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {users
+                      .filter(u => {
+                        if (!search.trim()) return true
+                        const q = search.toLowerCase()
+                        return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+                      })
+                      .map(u => (
+                        <tr key={u.id} className={u.id === me?.id ? styles.selfRow : ''}>
+                          <td>
+                            <span className={styles.name}>{u.name}</span>
+                            {u.id === me?.id && <span className={styles.youBadge}>you</span>}
+                          </td>
+                          <td className={styles.email}>{u.email}</td>
+                          <td>
+                            <span className={`${styles.roleBadge} ${u.role === 'admin' ? styles.roleBadgeAdmin : styles.roleBadgeMember}`}>
+                              {u.role === 'admin' ? 'Admin' : 'Team Member'}
+                            </span>
+                          </td>
+                          <td className={styles.muted}>{new Date(u.created_at).toLocaleDateString()}</td>
+                          <td>
+                            <button className={styles.editBtn} onClick={() => setEditModal(u)}>Edit</button>
+                          </td>
+                          <td>
+                            {u.id !== me?.id && (
+                              <button className={styles.deleteBtn} onClick={() => deleteUser(u.id, u.name)}>
+                                Remove
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -267,6 +288,7 @@ export default function Users() {
       {editModal && (
         <EditUserModal
           user={editModal}
+          isSelf={editModal.id === me?.id}
           onSave={updated => {
             setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
             setEditModal(null)

@@ -334,6 +334,50 @@
   border-color: rgba(239, 68, 68, 0.3);
 }
 
+/* ── Search ─────────────────────────────────────────────────── */
+
+.searchRow {
+  margin-bottom: 14px;
+}
+
+.searchInput {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+}
+.searchInput:focus { border-color: var(--accent); }
+
+/* ── Role badge ─────────────────────────────────────────────── */
+
+.roleBadge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.roleBadgeAdmin {
+  color: var(--accent);
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.2);
+}
+.roleBadgeMember {
+  color: var(--text-sec);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+}
+
+/* ── Modal ── */
+
 .modalField { margin-bottom: 18px; }
 .modalLabel {
   display: block;
@@ -358,6 +402,29 @@
   box-sizing: border-box;
 }
 .modalInput:focus { border-color: var(--accent); }
+
+.modalSelect {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+}
+.modalSelect:focus { border-color: var(--accent); }
+.modalSelect:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modalHint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
 
 .btnGhost {
   background: none;

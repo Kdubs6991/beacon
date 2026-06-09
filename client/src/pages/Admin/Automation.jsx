@@ -193,12 +193,13 @@ function RuleModal({ initial, labels, rulesCount, onSave, onClose }) {
 
 // ── Rule row ──────────────────────────────────────────────────────────────────
 
-function RuleRow({ rule, idx, labels, isDragging, isOver, onDragStart, onDragOver, onDrop, onDragEnd, onTouchDragStart, onEdit, onDelete }) {
+function RuleRow({ rule, idx, labels, isDragging, isOver, dimmed, onDragStart, onDragOver, onDrop, onDragEnd, onTouchDragStart, onEdit, onDelete }) {
   const condField = rule.condition_field === 'name' ? 'Name' : 'Position'
 
   return (
     <div
       className={`${styles.ruleRow} ${isDragging ? styles.ruleRowDragging : ''} ${isOver ? styles.ruleRowOver : ''}`}
+      style={dimmed ? { opacity: 0.3, transition: 'opacity 0.15s' } : { transition: 'opacity 0.15s' }}
       draggable
       data-rule-idx={idx}
       onDragStart={onDragStart}
@@ -255,6 +256,8 @@ export default function Automation() {
   const [running, setRunning] = useState(false)
   const [runResult, setRunResult] = useState(null)
   const touchDragRef = useRef({ active: false, startIdx: null, overIdx: null })
+  const [filterField, setFilterField] = useState(null)
+  const [filterAction, setFilterAction] = useState(null)
 
   useEffect(() => {
     Promise.all([api('/automation-rules'), api('/labels')])
@@ -343,6 +346,14 @@ export default function Automation() {
     setModal(null)
   }
 
+  function matchesFilter(rule) {
+    if (filterField && rule.condition_field !== filterField) return false
+    if (filterAction && rule.action_type !== filterAction) return false
+    return true
+  }
+
+  const hasFilter = filterField || filterAction
+
   return (
     <AdminLayout title="Automation">
       <div className={styles.topBar}>
@@ -377,31 +388,61 @@ export default function Automation() {
       )}
 
       {!loading && rules.length > 0 && (
-        <div
-          className={styles.ruleList}
-          onTouchMove={handleTouchDragMove}
-          onTouchEnd={handleTouchDragEnd}
-          onTouchCancel={handleTouchDragEnd}
-        >
-          {rules.map((rule, i) => (
-            <RuleRow
-              key={rule.id}
-              rule={rule}
-              idx={i}
-              labels={labels}
-              isDragging={dragIdx === i}
-              isOver={overIdx === i && dragIdx !== i}
-              onDragStart={() => handleDragStart(i)}
-              onDragOver={e => handleDragOver(e, i)}
-              onDrop={() => handleDrop(i)}
-              onDragEnd={handleDragEnd}
-              onTouchDragStart={handleTouchDragStart}
-              onEdit={() => setModal({ rule })}
-              onDelete={deleteRule}
-            />
-          ))}
-          <p className={styles.listHint}>Evaluated top-to-bottom · each person matches the first rule that applies</p>
-        </div>
+        <>
+          <div className={styles.filterBar}>
+            <div className={styles.filterRow}>
+              <span className={styles.filterLabel}>Field</span>
+              {[['name', 'Name'], ['position', 'Position']].map(([v, l]) => (
+                <button
+                  key={v}
+                  className={`${styles.filterChip} ${filterField === v ? styles.filterChipActive : ''}`}
+                  onClick={() => setFilterField(prev => prev === v ? null : v)}
+                >{l}</button>
+              ))}
+            </div>
+            <div className={styles.filterRow}>
+              <span className={styles.filterLabel}>Action</span>
+              {[['mic', 'Mic'], ['iem', 'IEM']].map(([v, l]) => (
+                <button
+                  key={v}
+                  className={`${styles.filterChip} ${filterAction === v ? styles.filterChipActive : ''}`}
+                  onClick={() => setFilterAction(prev => prev === v ? null : v)}
+                >{l}</button>
+              ))}
+            </div>
+            {hasFilter && (
+              <button className={styles.filterClear} onClick={() => { setFilterField(null); setFilterAction(null) }}>
+                Clear filters
+              </button>
+            )}
+          </div>
+          <div
+            className={styles.ruleList}
+            onTouchMove={handleTouchDragMove}
+            onTouchEnd={handleTouchDragEnd}
+            onTouchCancel={handleTouchDragEnd}
+          >
+            {rules.map((rule, i) => (
+              <RuleRow
+                key={rule.id}
+                rule={rule}
+                idx={i}
+                labels={labels}
+                isDragging={dragIdx === i}
+                isOver={overIdx === i && dragIdx !== i}
+                dimmed={!matchesFilter(rule)}
+                onDragStart={() => handleDragStart(i)}
+                onDragOver={e => handleDragOver(e, i)}
+                onDrop={() => handleDrop(i)}
+                onDragEnd={handleDragEnd}
+                onTouchDragStart={handleTouchDragStart}
+                onEdit={() => setModal({ rule })}
+                onDelete={deleteRule}
+              />
+            ))}
+            <p className={styles.listHint}>Evaluated top-to-bottom · each person matches the first rule that applies</p>
+          </div>
+        </>
       )}
 
       {modal !== null && (

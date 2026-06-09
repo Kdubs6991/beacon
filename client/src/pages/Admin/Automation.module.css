@@ -38,6 +38,70 @@
   color: #6ee7b7;
 }
 
+/* ── Filter bar ── */
+.filterBar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.filterChip {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-sec);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 3px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.filterChip:hover { border-color: var(--accent); color: var(--accent); }
+.filterChipActive {
+  background: rgba(59,130,246,0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filterClear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 0;
+  text-decoration: underline;
+  align-self: flex-start;
+  transition: color 0.12s;
+}
+.filterClear:hover { color: var(--text-sec); }
+
 /* ── Rule list ── */
 .ruleList {
   background: var(--bg-card);
@@ -294,4 +358,5 @@
   .menuBtn { padding: 8px 12px; min-height: 36px; }
   .btnRun, .btnPrimary, .btnGhost { padding: 12px 18px; font-size: 0.9rem; }
   .formInput, .formSelect { padding: 12px; font-size: 0.9rem; }
+  .filterChip { padding: 7px 14px; min-height: 36px; }
 }

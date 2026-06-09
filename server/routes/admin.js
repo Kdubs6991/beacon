@@ -38,12 +38,23 @@ router.get('/users', requireAdmin, (req, res) => {
 router.put('/users/:id', requireAdmin, (req, res) => {
   const orgId = req.session.orgId
   const userId = parseInt(req.params.id)
-  const { name, email } = req.body
+  const { name, email, role } = req.body
   if (!name?.trim()) return res.status(400).json({ error: 'Name is required' })
   if (!email?.trim()) return res.status(400).json({ error: 'Email is required' })
+  if (role && !['admin', 'team_member'].includes(role)) return res.status(400).json({ error: 'Invalid role' })
+  if (role && userId === req.session.userId && role !== 'admin') return res.status(400).json({ error: 'Cannot remove your own admin role' })
+  if (role === 'team_member') {
+    const adminCount = db.prepare("SELECT COUNT(*) as n FROM users WHERE role = 'admin' AND org_id = ?").get(orgId)
+    const target = db.prepare('SELECT role FROM users WHERE id = ? AND org_id = ?').get(userId, orgId)
+    if (target?.role === 'admin' && adminCount.n <= 1) return res.status(400).json({ error: 'Cannot remove the last admin account' })
+  }
   const conflict = db.prepare('SELECT id FROM users WHERE email = ? AND org_id = ? AND id != ?').get(email.toLowerCase().trim(), orgId, userId)
   if (conflict) return res.status(400).json({ error: 'That email is already in use' })
-  db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ? AND org_id = ?').run(name.trim(), email.toLowerCase().trim(), userId, orgId)
+  if (role) {
+    db.prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ? AND org_id = ?').run(name.trim(), email.toLowerCase().trim(), role, userId, orgId)
+  } else {
+    db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ? AND org_id = ?').run(name.trim(), email.toLowerCase().trim(), userId, orgId)
+  }
   res.json(db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ? AND org_id = ?').get(userId, orgId))
 })
 
