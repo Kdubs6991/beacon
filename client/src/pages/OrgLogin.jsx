@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
+import PublicNav from '../components/PublicNav'
 import styles from './OrgLogin.module.css'
 
 const getCookie = (name) => {
@@ -120,6 +121,8 @@ export default function OrgLogin() {
   }
 
   return (
+    <>
+    <PublicNav />
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.brand}>Beacon</div>
@@ -232,5 +235,6 @@ export default function OrgLogin() {
         </div>
       </div>
     </div>
+    </>
   )
 }

@@ -175,6 +175,9 @@ function DisplayView({ screenToken }) {
         className={`${styles.exitBtn} ${exitVisible ? styles.exitBtnVisible : ''}`}
         type="button"
         onClick={handleExit}
+        onFocus={() => { setExitVisible(true); clearTimeout(exitTimerRef.current) }}
+        onBlur={() => { exitTimerRef.current = setTimeout(() => setExitVisible(false), 1500) }}
+        style={{ top: '68px', bottom: 'auto' }}
       >
         Exit display
       </button>
@@ -492,22 +495,20 @@ function CookieDisplay() {
             <div className={styles.createdCheck}>✓</div>
             <h1 className={styles.loginTitle}>Screen created!</h1>
             <p className={styles.loginDesc}>
-              <strong>{createdScreen?.name}</strong> has been added to your organization.
-              Sign in to the admin panel to configure its layout, assign it to a service, and set up a push schedule.
+              <strong>{createdScreen?.name}</strong> is ready. Open the display now, or sign in to the admin panel to configure its layout and push schedule.
             </p>
+            <button className={styles.loginBtn} type="button" onClick={() => setStep('display')}>
+              Open display on this screen →
+            </button>
+            <div className={styles.loginDivider}>admin access</div>
             <div className={styles.adminLinkRow}>
-              <a href="/org" className={styles.loginBtn}>Sign in to Admin →</a>
+              <a href="/org" className={styles.loginLink}>Sign in to Admin →</a>
               {adminQrUrl && (
                 <div className={styles.adminQrWrap}>
                   <img src={adminQrUrl} alt="Admin login QR" className={styles.qrImgSmall} />
-                  <p className={styles.qrHint}>Scan to sign in from another device</p>
+                  <p className={styles.qrHint}>Opens the Beacon admin panel</p>
                 </div>
               )}
-            </div>
-            <div className={styles.loginFooter}>
-              <button className={styles.loginLink} type="button" onClick={() => setStep('display')}>
-                Skip — go to display →
-              </button>
             </div>
           </div>
         </div>

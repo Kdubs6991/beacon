@@ -38,7 +38,7 @@ export default function PublicNav() {
         <Link to="/docs" className={`${styles.link} ${styles.linkDocs}`}>Docs</Link>
         {orgName && (
           <button className={styles.orgBtn} type="button" onClick={handleSignOutOrg}>
-            {orgName} ✕
+            {orgName} · sign out
           </button>
         )}
       </div>

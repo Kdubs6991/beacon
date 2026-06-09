@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   background: var(--bg-page);
-  padding: 32px 24px;
+  padding: 80px 24px 32px;
 }
 
 .card {
