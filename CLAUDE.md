@@ -450,6 +450,26 @@ overlay.
   the `{done}` conditional; wrapped in `{!done && (...)}`
 - `server/.env.example` updated with SMTP vars + comments
 
+### Backup & Restore
+- `GET /api/org/export` — now includes templates, schedules, manual_assignments,
+  position_types, and full screen data (layout, share_code, mirror_screen_id);
+  excludes access_code, users, SMTP settings, PCO tokens, active_assignments;
+  adds `backup_version: 2` field
+- `POST /api/org/import` — full restore with ID remapping; runs in a single
+  SQLite transaction (ROLLBACK on any error); deletion order respects FK deps;
+  two-pass screen insert: all screens first, then mirror_screen_id update;
+  remap targets: automation `action_value` label IDs, template slot `labelId`
+  values (parsed from config JSON), screen `layout: "template:X"` references,
+  schedule `screen_ids` arrays; `express.json({ limit: '20mb' })` middleware
+  applied inline on this route only
+- Organization.jsx — "Backup & Restore" section replaces old "Backup & Export";
+  file input hidden behind a label button; client-side JSON parse on file select
+  (no round-trip until confirm); preview card shows org name + backup date +
+  8-stat count grid; red confirm button + warning callout; success state with
+  summary counts; "Restore another file" resets the flow
+- `backup_version` field: currently `2`; export shape is self-contained (no
+  install-specific IDs survive the restore — all remapped)
+
 ### Backlog
 - PCO OAuth connect flow (Integrations page) — PCO_CLIENT_ID/SECRET not yet
   configured
@@ -549,6 +569,9 @@ overlay.
 - `emailWrapper({preheader, headerLabel, body, footerText})` in `mailer.js` —
   shared layout for all emails; dark `#1e2433` header, white card body, gray
   footer; table-based with full inline styles for email client compatibility
+- Backup restore: client parses the file locally first (FileReader + JSON.parse)
+  to show a preview before any server call; the actual POST sends the full
+  parsed object — avoids a file upload endpoint and keeps the flow simple
 
 ---
 

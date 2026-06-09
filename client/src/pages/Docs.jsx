@@ -24,7 +24,7 @@ const NAV = [
       { id: 'qr-code',        label: 'QR Code' },
       { id: 'short-name',     label: 'Short Name' },
       { id: 'email-setup',    label: 'Email / SMTP Setup' },
-      { id: 'backup-export',  label: 'Backup & Export' },
+      { id: 'backup-export',  label: 'Backup & Restore' },
     ]
   },
   { id: 'locations',     label: 'Locations',
@@ -345,20 +345,31 @@ export default function Docs() {
               </Callout>
             </SubSection>
 
-            <SubSection id="backup-export" title="Backup & Export">
-              <p>The Organization page has a <strong>Download Backup</strong> button that exports your entire app configuration as a JSON file. The backup includes:</p>
+            <SubSection id="backup-export" title="Backup &amp; Restore">
+              <p>The Organization page has a <strong>Download Backup</strong> button that exports your entire org configuration as a JSON file. The backup includes:</p>
               <ul className={styles.ul}>
-                <li>Organization settings</li>
+                <li>Organization profile (name, timezone, address, logo URL)</li>
                 <li>Campuses and service types</li>
-                <li>People and photo overrides</li>
-                <li>Labels and label groups</li>
+                <li>People and all photo/name/category overrides</li>
+                <li>Labels, label groups, and position types</li>
                 <li>Automation rules</li>
-                <li>Screen configurations</li>
-                <li>Schedules</li>
+                <li>Templates (including full slot configuration)</li>
+                <li>Screens (including layout, share code, and mirror relationships)</li>
+                <li>Schedules (cron expression, enabled state, target screen list)</li>
+                <li>Manual service team rosters</li>
               </ul>
-              <p>Keep a backup somewhere safe — especially before making large changes or migrating to a new Pi. Backup restore is not yet automated (import it manually if needed), but the JSON structure is human-readable.</p>
+              <p><strong>What's not included:</strong> user accounts, email/SMTP settings, PCO OAuth tokens, and the org access code. These are install-specific and are not touched by a restore.</p>
+              <p><strong>Restoring a backup</strong> — below the download button, use <strong>Choose backup file…</strong> to upload a <code>.json</code> backup. The app parses the file and shows you a preview (org name, backup date, entity counts) before anything changes. Click <strong>Restore backup</strong> to confirm. The restore:</p>
+              <ul className={styles.ul}>
+                <li>Replaces all current org data (campuses, people, labels, screens, templates, rules, schedules, etc.) with the contents of the backup.</li>
+                <li>Remaps all internal IDs automatically — automation rules, template slot configs, schedule screen lists, and mirror relationships are all updated to the new IDs.</li>
+                <li>Runs in a single database transaction — if anything fails, nothing changes.</li>
+              </ul>
+              <Callout type="warning">
+                Restoring is <strong>destructive and immediate</strong> — it permanently replaces all current org data. Download a fresh backup of your current state first if you may want to go back.
+              </Callout>
               <Callout type="info">
-                The backup does <strong>not</strong> include PCO OAuth tokens or user account passwords. You'll need to reconnect Planning Center and reset passwords after a restore.
+                Photo files are not included in the backup — only the file paths are stored. Photos uploaded to the same server will still work after a restore. On a new server you'll need to re-upload photos.
               </Callout>
             </SubSection>
           </Section>
