@@ -368,6 +368,7 @@ export default function Automation() {
           <p>Rules are what automatically assign mics and IEMs to musicians each week — so you don't have to do it by hand every service. When a schedule fires or you hit Push, every person on the team gets checked against these rules.</p>
           <p>Rules run <strong>top-to-bottom</strong>. Each person picks up the first matching mic rule and the first matching IEM rule. Set a <strong>condition</strong> (match by name or position, exact or partial) and an <strong>action</strong> (assign a specific label, or "next available" starting from the top of your unassigned list).</p>
           <p><strong>Position</strong> matches both PCO team positions and Manual service positions, so the same rules work for both. You'll typically need two rules per role — one for mic, one for IEM. Drag rows to change priority.</p>
+          <p>Use the <strong>filter bar</strong> to narrow the list by Field (Name/Position) or Action (Mic/IEM) — rules that don't match are dimmed so matching ones stand out. The <strong>Smart search</strong> input on the right filters by any text in the rule as you type.</p>
         </InfoPopover>
         <div className={styles.topBarRight}>
           <button

@@ -196,7 +196,7 @@ export default function Docs() {
           {/* ── Dashboard ── */}
           <Section id="dashboard" title="Dashboard">
             <p>The <strong>Dashboard</strong> is the first page you see after logging in. It gives you a quick at-a-glance view of your system without requiring you to navigate to individual pages.</p>
-            <p>It is organized into <strong>eight cards</strong> — each card represents one area of the app. Clicking a card's title bar takes you directly to that page's full management view. You can hide cards or rearrange their order per-user from <strong>Settings → Profile → Dashboard Layout</strong>, or by clicking <strong>Customize dashboard →</strong> in the top right of the Dashboard page.</p>
+            <p>It is organized into <strong>eight cards</strong> — each card represents one area of the app. Clicking a card's title bar takes you directly to that page's full management view. You can hide cards or rearrange their order per-user from <strong>Settings → Profile → Dashboard Layout</strong>, or by clicking <strong>Customize dashboard →</strong> in the top right of the Dashboard page. Drag to reorder works on both mouse and touch/tablet.</p>
 
             <SubSection id="dashboard-screens" title="Screens Card">
               <p>Shows all screens in your organization, with a <strong>Live</strong> badge and a pulsing green dot for any screen that is currently open in a browser. The <strong>live detection</strong> works via a heartbeat: whenever a display screen is open, it silently pings the server every 30 seconds. If a screen hasn't pinged in the last 90 seconds it is considered inactive.</p>
@@ -548,7 +548,8 @@ export default function Docs() {
 
           {/* ── Labels ── */}
           <Section id="labels" title="Labels">
-            <p>Labels are your physical audio equipment inventory — every mic channel and IEM pack gets a label that you can assign to musicians. Use the <strong>+ Add Label</strong> button at the top of the page, choose the type, give it a name, and optionally assign it to a group.</p>
+            <p>Labels are your physical audio equipment inventory — every mic channel and IEM pack gets a label that you can assign to musicians. Use the <strong>+ Add Device Label</strong> button at the top of the page, choose the type, give it a name, and optionally assign it to a group.</p>
+            <p>On wider screens (860px+), Microphones and In-Ear Monitors appear in a <strong>two-column layout</strong> side by side, with Positions spanning the full width below them.</p>
 
             <SubSection id="labels-types" title="Mic vs IEM">
               <p>Labels are split into two types:</p>
@@ -616,7 +617,8 @@ export default function Docs() {
             <Callout type="info">
               You'll typically need two rules per person — one for the mic and one for the IEM. Add them as separate rules with the same condition.
             </Callout>
-            <p><strong>Priority order:</strong> grab the grip handle on any rule row and drag it up or down to change evaluation order. Rules at the top run first.</p>
+            <p><strong>Priority order:</strong> grab the grip handle on any rule row and drag it up or down to change evaluation order (drag works on both mouse and touch). Rules at the top run first.</p>
+            <p><strong>Filtering and search:</strong> the filter bar above the rule list lets you narrow by <strong>Field</strong> (Name or Position) and <strong>Action</strong> (Mic or IEM). Rules that don't match the active filter are dimmed rather than hidden, so you can still see where they fall in priority order. The <strong>Smart search</strong> input on the right filters by any text in the rule as you type — condition value, field, and assigned label are all searchable.</p>
             <Callout type="tip">
               You can re-run automation manually from the Automation page using the <strong>Run automation</strong> button — useful for testing without firing a full schedule.
             </Callout>
@@ -630,7 +632,8 @@ export default function Docs() {
               <p><strong>Admin</strong> — full access to every page in the admin panel, including Organization settings, Users management, and Integrations.</p>
               <p><strong>Team Member</strong> — access to the Dashboard and all content pages: Locations, Templates, People, Labels, Automation, Screens, and Services. They can view, add, and edit content for the organization. The three admin-only pages — <strong>Organization</strong>, <strong>Users</strong>, and <strong>Integrations</strong> — are hidden from the sidebar and redirect to an access-denied page if reached directly.</p>
               <p>All data is <strong>shared across the organization</strong> — people, screens, templates, and labels added by one user are visible to every user in the same org, regardless of role.</p>
-              <p>Admins can change any account's role from the <strong>Users</strong> page. Guards prevent removing the last admin account or demoting yourself.</p>
+              <p>Admins can change any account's role from the <strong>Users</strong> page — click the edit icon on any row to open the edit modal, which includes a Role dropdown. Guards prevent removing the last admin account or demoting yourself.</p>
+              <p>Use the <strong>search bar</strong> at the top of the Users table to filter by name or email address.</p>
             </SubSection>
 
             <SubSection id="invite-links" title="Invite Links">

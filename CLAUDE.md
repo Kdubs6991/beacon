@@ -414,6 +414,21 @@ overlay.
   and display header instead of the full org name
 - Vite `host: true` + CORS open in dev mode; network IP printed on server start
 
+### Tablet / admin polish pass (tablet-dev branch)
+- Touch-friendly CSS pass across all 12 admin CSS modules — `@media (hover: none) and (pointer: coarse)` blocks added to every page: larger tap targets (min 36px), bigger form inputs/selects, always-visible delete buttons
+- Automation: touch drag/drop for rule reordering — `elementFromPoint` + `useRef` pattern, `touch-action: none` on `.ruleList` container (required for reliable touch drag; handle alone is insufficient)
+- Automation: filter bar redesigned to People-page style single row — `filterHead` (Filters label + funnel icon), `filterGroup` containers with `filterPill`/`filterPillActive` buttons for Field (Name/Position) and Action (Mic/IEM), `filterClear`, non-matching rules dimmed (`opacity: 0.3`) instead of hidden so priority order stays visible
+- Automation: Smart search input at far right of filter bar — WandIcon + "Smart search" label in `#a59cf5` purple, searches condition value + field + action description as you type; `matchesFilter()` checks `filterField`, `filterAction`, AND `search`
+- Dashboard: touch drag/drop for card reorder in Profile → Dashboard Layout — `touch-action: none` on `.dashList` container (root cause: without this the browser treats finger movement as page scroll); `data-card-idx` on each `.dashRow`, `elementFromPoint` in `handleTouchDragMove`
+- Users: Edit modal now includes Role `<select>` (disabled when editing yourself); `PUT /api/admin/users/:id` updated to accept optional `role` field with self-demotion guard + last-admin guard; table role column replaced with static `.roleBadge`/`.roleBadgeAdmin`/`.roleBadgeMember` display
+- Users: search bar above table — filters by name or email, instant inline filter on `users.filter()`
+- Labels: 2-column desktop layout at `@media (min-width: 860px)` — Mics + IEMs side by side, Positions full-width below (was previously landscape-tablet-only)
+- Labels: "Add Label" button renamed to "Add Device Label"
+- Screens: `shareCodeWrap` changed from column to `flex-direction: row; align-items: center; gap: 6px` so "screen code" label is inline with share code button (fixes uneven cardLinks row height)
+- PublicNav: `useEffect` checks `GET /api/auth/me` on mount; shows "Dashboard" link when admin session exists instead of "Sign in"; no arrow on "Dashboard" link
+- Admin `_Layout.jsx`: `{org.name}` → `{org.short_name || org.name}` in sidebar header — root cause of nickname not showing; `beacon_org` cookie stores both fields
+- Docs + What's This InfoPopovers updated for all changes above
+
 ### Backlog
 - PCO OAuth connect flow (Integrations page) — PCO_CLIENT_ID/SECRET not yet
   configured
@@ -490,6 +505,20 @@ overlay.
 - Display exit button: `position: fixed; top: 68px; right: 20px` (under header);
   `opacity: 0 / pointer-events: none` when hidden; shown on `mousemove`, `touchstart`,
   or `:focus`; hides after 3s (1.5s after blur)
+- Touch drag pattern (Automation rules + Dashboard card reorder): `useRef` for drag
+  state (avoids re-renders), `document.elementFromPoint(touch.clientX, touch.clientY)`
+  to find drop target, `touch-action: none` on the CONTAINER element (not just the
+  handle) — without it the browser intercepts touch movement as scroll before React
+  can handle it
+- Automation filter bar: single-row People-page style — `filterHead`/`filterGroup`/
+  `filterPill`/`filterPillActive`/`filterClear` CSS classes; Smart search at far right
+  via `margin-left: auto` on `.filterSearchWrap`; non-matching rules get
+  `opacity: 0.3` (dimmed, not hidden) so priority order stays readable
+- Labels page: `@media (min-width: 860px)` 2-column grid for Mics + IEMs side by
+  side; `sections > div:last-child { grid-column: 1 / -1 }` pins Positions full-width
+- Users page: role change lives in the Edit modal (disabled when editing self);
+  table shows static role badge only; PUT `/api/admin/users/:id` conditionally
+  includes role in UPDATE (prevents accidental role reset when editing name/email)
 
 ---
 

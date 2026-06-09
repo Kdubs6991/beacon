@@ -350,7 +350,7 @@ export default function Labels() {
           <p>Labels are your physical audio equipment inventory — every mic channel, DI box, and IEM pack gets a label name like <strong>Vox 1</strong>, <strong>Keys DI</strong>, or <strong>Pack A</strong>. These are what appear on musician cards on the TV display.</p>
           <p><strong>Order matters</strong> — when automation assigns "next available", it starts from the top of the list and picks the first one that hasn't been given to someone else that service. Drag rows to set the priority.</p>
           <p>Use <strong>groups</strong> (e.g. "Vocals", "Instruments") to create separate pools so automation can pull a vocalist's mic from the Vocals group instead of mixing with DI boxes.</p>
-          <p><strong>Positions</strong> are at the bottom of this page — role names like Singer, Worship Leader, or Electric Guitar. Define them here first so they appear as dropdown options when building Manual service teams.</p>
+          <p>On wider screens, <strong>Mics and IEMs appear side by side</strong> — use <strong>+ Add Device Label</strong> in the top right to add a new mic or IEM channel. <strong>Positions</strong> at the bottom are role names (Singer, Worship Leader, etc.) used by Manual service teams and automation rules.</p>
         </InfoPopover>
         <button className={styles.btnPrimary} onClick={() => setModal({ label: null, defaultType: 'mic' })}>
           + Add Device Label
