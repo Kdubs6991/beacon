@@ -303,55 +303,52 @@
   line-height: 1.6;
 }
 
-.featureGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+/* Full-width gradient stripes — no container, stacked directly */
+.featureStripe {
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-/* Horizontal card: colored visual panel on left, text on right */
-.featureCard {
+.featureStripe:first-of-type {
+  border-top: none;
+}
+
+.featureStripeInner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 44px 32px;
   display: flex;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  transition: border-color 0.15s;
+  align-items: center;
+  gap: 36px;
 }
-.featureCard:hover { border-color: rgba(255, 255, 255, 0.14); }
 
-.featureVisual {
-  width: 110px;
+.featureIconWrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.featureIcon {
-  font-size: 2rem;
-  line-height: 1;
-}
-
 .featureBody {
-  padding: 22px 22px 22px 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex: 1;
 }
 
 .featureTitle {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-pri);
-  margin: 0 0 7px;
+  margin: 0 0 8px;
 }
 
 .featureDesc {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--text-sec);
-  line-height: 1.65;
+  line-height: 1.7;
   margin: 0;
+  max-width: 640px;
 }
 
 /* ── How it works ── */
@@ -521,10 +518,6 @@
   .heroVisual { width: 100%; max-width: 480px; margin: 0 auto; }
 }
 
-@media (max-width: 720px) {
-  .featureGrid { grid-template-columns: 1fr; }
-}
-
 @media (max-width: 640px) {
   .nav { padding: 14px 20px; }
   .navLinks { gap: 16px; }
@@ -535,6 +528,8 @@
   .step { border-left: none; border-top: 1px solid var(--border); padding: 32px 0 0; margin-top: 32px; }
   .stepFirst { border-top: none; margin-top: 0; padding-top: 0; }
   .container { padding: 0 20px; }
+  .featureStripeInner { padding: 32px 20px; gap: 24px; }
+  .featureIconWrap { width: 56px; height: 56px; }
   .features,
   .howItWorks,
   .ctaBanner,
