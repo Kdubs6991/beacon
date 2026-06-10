@@ -289,20 +289,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── CTA banner ── */}
-      <section className={styles.ctaBanner}>
-        <div className={styles.container}>
-          <h2 className={styles.ctaBannerTitle}>Ready to get started?</h2>
-          <p className={styles.ctaBannerDesc}>
-            Open the admin panel to configure your org, or read the documentation first.
-          </p>
-          <div className={styles.ctaBannerActions}>
-            <Link to={signInHref} className={styles.ctaPrimary}>{signInLabel} →</Link>
-            <Link to="/docs"      className={styles.ctaSecondary}>Documentation</Link>
-          </div>
-        </div>
-      </section>
-
       {/* ── Developer section ── */}
       <section className={styles.devSection} id="developer">
         <div className={styles.container}>
