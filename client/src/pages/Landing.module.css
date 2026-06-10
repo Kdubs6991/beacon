@@ -563,6 +563,41 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.devSupport {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.devSupportText {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: 0 0 14px;
+  max-width: 520px;
+}
+
+.devSupportLinks {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.devSupportLink {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 5px 16px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.devSupportLink:hover {
+  color: var(--support-color, var(--accent));
+  border-color: var(--support-color, var(--accent));
+}
+
 @media (max-width: 640px) {
   .devCard { flex-direction: column; padding: 24px; gap: 24px; }
   .devPhotoWrap { width: 100px; height: 100px; }

@@ -290,6 +290,18 @@ export default function Landing() {
                   <SocialIcon type="email" /> kjwrigley08@gmail.com
                 </a>
               </div>
+              <div className={styles.devSupport}>
+                <p className={styles.devSupportText}>
+                  Beacon is completely free to use and always will be. I built it to grow as a developer and to give churches
+                  a tool that actually helps. If you'd like to help cover hosting costs, it's genuinely appreciated — but
+                  there's absolutely no obligation.
+                </p>
+                <div className={styles.devSupportLinks}>
+                  <a href="https://venmo.com/u/kdubs6991"            target="_blank" rel="noopener noreferrer" className={styles.devSupportLink} style={{ '--support-color': '#008CFF' }}>Venmo</a>
+                  <a href="https://www.paypal.com/paypalme/Kdubs6991" target="_blank" rel="noopener noreferrer" className={styles.devSupportLink} style={{ '--support-color': '#009CDE' }}>PayPal</a>
+                  <a href="https://cash.app/$boolak"                  target="_blank" rel="noopener noreferrer" className={styles.devSupportLink} style={{ '--support-color': '#00C244' }}>Cash App</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
