@@ -58,8 +58,11 @@ export default function Contact() {
     <div className={styles.page}>
       <PublicNav />
 
-      <div className={styles.hero}>
+      <div className={styles.backRow}>
         <Link to="/" className={styles.backLink}>← Back to home</Link>
+      </div>
+
+      <div className={styles.hero}>
         <div className={styles.heroBadge}>Contact</div>
         <h1 className={styles.heroTitle}>Get in touch</h1>
         <p className={styles.heroDesc}>

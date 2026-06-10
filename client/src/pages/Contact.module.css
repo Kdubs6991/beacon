@@ -6,22 +6,31 @@
   flex-direction: column;
 }
 
-.hero {
-  max-width: 680px;
+.backRow {
+  max-width: 920px;
   margin: 0 auto;
-  padding: 56px 32px 48px;
-  text-align: center;
+  padding: 20px 32px 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .backLink {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.8rem;
   color: var(--text-muted);
   text-decoration: none;
-  margin-bottom: 24px;
   transition: color 0.15s;
 }
 .backLink:hover { color: var(--text-sec); }
+
+.hero {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 40px 32px 48px;
+  text-align: center;
+}
 
 .heroBadge {
   display: inline-block;
