@@ -4,7 +4,7 @@ const db = require('./db')
 const PCO_BASE = 'https://api.planningcenteronline.com'
 
 async function getStoredToken() {
-  return db.prepare('SELECT * FROM pco_tokens ORDER BY id DESC LIMIT 1').get()
+  return db.getOne('SELECT * FROM pco_tokens ORDER BY id DESC LIMIT 1')
 }
 
 async function refreshToken(token) {
@@ -21,9 +21,10 @@ async function refreshToken(token) {
   if (!res.ok) throw new Error(`Token refresh failed: ${res.status}`)
   const data = await res.json()
   const expiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString()
-  db.prepare(`
-    UPDATE pco_tokens SET access_token = ?, refresh_token = ?, expires_at = ? WHERE id = ?
-  `).run(data.access_token, data.refresh_token, expiresAt, token.id)
+  await db.execute(
+    'UPDATE pco_tokens SET access_token = ?, refresh_token = ?, expires_at = ? WHERE id = ?',
+    [data.access_token, data.refresh_token, expiresAt, token.id]
+  )
   return { ...token, access_token: data.access_token, expires_at: expiresAt }
 }
 

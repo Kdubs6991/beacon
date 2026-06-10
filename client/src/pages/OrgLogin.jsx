@@ -8,7 +8,7 @@ const getCookie = (name) => {
   const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
   return m ? decodeURIComponent(m[2]) : null
 }
-const setCookie = (name, value, days = 365) => {
+const setCookie = (name, value, days = name === 'beacon_screen' ? 3650 : 365) => {
   const exp = new Date(Date.now() + days * 864e5).toUTCString()
   document.cookie = `${name}=${encodeURIComponent(value)};path=/;expires=${exp};SameSite=Lax`
 }
