@@ -11,7 +11,7 @@ Self-hosted worship team display. Shows musician cards (name, photo, mic and IEM
 **Requirements:** [Node.js 22+](https://nodejs.org)
 
 ```bash
-git clone https://github.com/Kdubs6991/beacon.git
+git clone https://github.com/Kdubs6991/beacon
 cd beacon
 npm run setup
 npm start
@@ -108,4 +108,4 @@ node server/seed-test.js --reset  # remove all seed data
 
 ## License
 
-MIT
+Free to use for personal and church use. See [LICENSE](./LICENSE) for details.

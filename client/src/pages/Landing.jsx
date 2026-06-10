@@ -259,7 +259,7 @@ export default function Landing() {
                 Updates are distributed through the GitHub repository. When a new version is available, pull the latest code
                 and restart the server — no auto-updates, no breaking changes pushed without your knowledge.
               </p>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.localRepoLink}>
+              <a href="https://github.com/Kdubs6991/beacon" target="_blank" rel="noopener noreferrer" className={styles.localRepoLink}>
                 View repository on GitHub →
               </a>
             </div>
