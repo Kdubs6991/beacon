@@ -237,6 +237,57 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Local hosting ── */}
+      <section className={styles.localSection}>
+        <div className={styles.container}>
+          <div className={styles.localCard}>
+            <div className={styles.localIcon}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" rx="2" width="20" height="8" />
+                <rect x="2" y="14" rx="2" width="20" height="8" />
+                <line x1="6" y1="6" x2="6.01" y2="6" />
+                <line x1="6" y1="18" x2="6.01" y2="18" />
+              </svg>
+            </div>
+            <div className={styles.localBody}>
+              <h2 className={styles.localTitle}>Designed for local hosting</h2>
+              <p className={styles.localDesc}>
+                Beacon runs on your own hardware — a laptop, a Raspberry Pi, a VPS, or any machine with Node.js installed.
+                There's no cloud service, no account required, and your data never leaves your network unless you choose to expose it.
+              </p>
+              <p className={styles.localDesc}>
+                Updates are distributed through the GitHub repository. When a new version is available, pull the latest code
+                and restart the server — no auto-updates, no breaking changes pushed without your knowledge.
+              </p>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.localRepoLink}>
+                View repository on GitHub →
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Joke pricing ── */}
+      <section className={styles.pricingSection}>
+        <div className={styles.container}>
+          <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
+          <p className={styles.sectionSub}>We spent a long time on this.</p>
+          <div className={styles.pricingCard}>
+            <div className={styles.pricingTier}>Free</div>
+            <div className={styles.pricingAmount}>$0<span className={styles.pricingPer}> / forever</span></div>
+            <p className={styles.pricingTagline}>No catch. No credit card. No subscription. No upsell email at 3am.</p>
+            <ul className={styles.pricingFeatures}>
+              {['Every feature', 'Unlimited screens', 'Unlimited team members', 'Unlimited automations', 'Hosted on your own hardware', 'You own your data'].map(f => (
+                <li key={f} className={styles.pricingFeature}><span className={styles.pricingCheck}>✓</span>{f}</li>
+              ))}
+            </ul>
+            <Link to={signInHref} className={styles.ctaPrimary} style={{ display: 'block', textAlign: 'center', marginTop: '24px' }}>
+              {signInLabel} →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA banner ── */}
       <section className={styles.ctaBanner}>
         <div className={styles.container}>
