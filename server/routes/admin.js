@@ -5,33 +5,37 @@ const { randomBytes } = require('node:crypto')
 const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const db = require('../db')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
 const { sendInviteEmail, sendPasswordResetEmail } = require('../utils/mailer')
+const { USE_R2, s3, R2_BUCKET, R2_PUBLIC_URL } = require('../storage')
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'photos')
-fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+if (!USE_R2) fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+
+const photoFileFilter = (req, file, cb) => {
+  if (file.mimetype === 'image/heic' || file.mimetype === 'image/heif') {
+    return cb(new Error('HEIC/HEIF photos are not supported by browsers. Please convert to JPG or PNG first.'))
+  }
+  if (!file.mimetype.startsWith('image/')) return cb(new Error('Image files only'))
+  cb(null, true)
+}
 
 const photoUpload = multer({
   limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'image/heic' || file.mimetype === 'image/heif') {
-      return cb(new Error('HEIC/HEIF photos are not supported by browsers. Please convert to JPG or PNG first.'))
-    }
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('Image files only'))
-    }
-    cb(null, true)
-  },
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-    filename: (req, file, cb) => {
-      const ext = file.mimetype === 'image/webp' ? '.webp'
-                : file.mimetype === 'image/png'  ? '.png'
-                : '.jpg'
-      cb(null, `${randomBytes(12).toString('hex')}${ext}`)
-    },
-  }),
+  fileFilter: photoFileFilter,
+  storage: USE_R2
+    ? multer.memoryStorage()
+    : multer.diskStorage({
+        destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+        filename: (req, file, cb) => {
+          const ext = file.mimetype === 'image/webp' ? '.webp'
+                    : file.mimetype === 'image/png'  ? '.png'
+                    : '.jpg'
+          cb(null, `${randomBytes(12).toString('hex')}${ext}`)
+        },
+      }),
 })
 
 router.use(requireAuth)
@@ -352,11 +356,26 @@ router.post('/photos/upload', (req, res) => {
   photoUpload.fields([
     { name: 'square',   maxCount: 1 },
     { name: 'portrait', maxCount: 1 },
-  ])(req, res, (err) => {
+  ])(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message })
     const sq = req.files?.square?.[0]
     const pt = req.files?.portrait?.[0]
     if (!sq || !pt) return res.status(400).json({ error: 'Both square and portrait files are required' })
+
+    if (USE_R2) {
+      const getExt = (mime) => mime === 'image/webp' ? 'webp' : mime === 'image/png' ? 'png' : 'jpg'
+      const sqKey = `photos/${randomBytes(12).toString('hex')}.${getExt(sq.mimetype)}`
+      const ptKey = `photos/${randomBytes(12).toString('hex')}.${getExt(pt.mimetype)}`
+      await Promise.all([
+        s3.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: sqKey, Body: sq.buffer, ContentType: sq.mimetype })),
+        s3.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: ptKey, Body: pt.buffer, ContentType: pt.mimetype })),
+      ])
+      return res.json({
+        square:   `${R2_PUBLIC_URL}/${sqKey}`,
+        portrait: `${R2_PUBLIC_URL}/${ptKey}`,
+      })
+    }
+
     res.json({
       square:   `/uploads/photos/${sq.filename}`,
       portrait: `/uploads/photos/${pt.filename}`,
@@ -366,7 +385,14 @@ router.post('/photos/upload', (req, res) => {
 
 router.delete('/photos/file', async (req, res) => {
   const { url } = req.body
-  if (!url || !url.startsWith('/uploads/photos/')) return res.json({ ok: true })
+  if (!url) return res.json({ ok: true })
+  if (USE_R2) {
+    if (!url.startsWith(R2_PUBLIC_URL + '/')) return res.json({ ok: true })
+    const key = url.slice(R2_PUBLIC_URL.length + 1)
+    await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key })).catch(() => {})
+    return res.json({ ok: true })
+  }
+  if (!url.startsWith('/uploads/photos/')) return res.json({ ok: true })
   const filename = path.basename(url)
   const filepath = path.join(UPLOADS_DIR, filename)
   fs.unlink(filepath, () => res.json({ ok: true }))

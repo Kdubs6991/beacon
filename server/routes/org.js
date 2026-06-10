@@ -3,19 +3,24 @@ const router = express.Router()
 const multer = require('multer')
 const fs = require('fs')
 const path = require('path')
+const { randomBytes } = require('node:crypto')
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const db = require('../db')
 const { generateAccessCode } = require('../db')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
+const { USE_R2, s3, R2_BUCKET, R2_PUBLIC_URL } = require('../storage')
 
 const LOGOS_DIR = path.join(__dirname, '../uploads/logos')
-fs.mkdirSync(LOGOS_DIR, { recursive: true })
+if (!USE_R2) fs.mkdirSync(LOGOS_DIR, { recursive: true })
 
 const logoUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
-  storage: multer.diskStorage({
-    destination: LOGOS_DIR,
-    filename: (req, file, cb) => cb(null, `org-${req.session.orgId}-${Date.now()}${path.extname(file.originalname)}`),
-  }),
+  storage: USE_R2
+    ? multer.memoryStorage()
+    : multer.diskStorage({
+        destination: LOGOS_DIR,
+        filename: (req, file, cb) => cb(null, `org-${req.session.orgId}-${Date.now()}${path.extname(file.originalname)}`),
+      }),
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true)
     else cb(new Error('Image files only'))
@@ -52,23 +57,47 @@ router.put('/', async (req, res) => {
   res.json(org)
 })
 
-router.post('/logo', logoUpload.single('logo'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
-  const org = await db.getOne('SELECT logo_url FROM organizations WHERE id = ?', [req.session.orgId])
-  if (org?.logo_url) {
-    const oldPath = path.join(__dirname, '..', org.logo_url.replace(/^\//, ''))
-    fs.unlink(oldPath, () => {})
-  }
-  const logoUrl = `/uploads/logos/${req.file.filename}`
-  await db.execute('UPDATE organizations SET logo_url = ? WHERE id = ?', [logoUrl, req.session.orgId])
-  res.json({ logo_url: logoUrl })
+router.post('/logo', (req, res) => {
+  logoUpload.single('logo')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message })
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
+    const org = await db.getOne('SELECT logo_url FROM organizations WHERE id = ?', [req.session.orgId])
+
+    let logoUrl
+    if (USE_R2) {
+      if (org?.logo_url?.startsWith(R2_PUBLIC_URL + '/')) {
+        const oldKey = org.logo_url.slice(R2_PUBLIC_URL.length + 1)
+        await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: oldKey })).catch(() => {})
+      }
+      const ext = path.extname(req.file.originalname) || '.jpg'
+      const key = `logos/org-${req.session.orgId}-${randomBytes(8).toString('hex')}${ext}`
+      await s3.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, Body: req.file.buffer, ContentType: req.file.mimetype }))
+      logoUrl = `${R2_PUBLIC_URL}/${key}`
+    } else {
+      if (org?.logo_url) {
+        const oldPath = path.join(__dirname, '..', org.logo_url.replace(/^\//, ''))
+        fs.unlink(oldPath, () => {})
+      }
+      logoUrl = `/uploads/logos/${req.file.filename}`
+    }
+
+    await db.execute('UPDATE organizations SET logo_url = ? WHERE id = ?', [logoUrl, req.session.orgId])
+    res.json({ logo_url: logoUrl })
+  })
 })
 
 router.delete('/logo', async (req, res) => {
   const org = await db.getOne('SELECT logo_url FROM organizations WHERE id = ?', [req.session.orgId])
   if (org?.logo_url) {
-    const filePath = path.join(__dirname, '..', org.logo_url.replace(/^\//, ''))
-    fs.unlink(filePath, () => {})
+    if (USE_R2) {
+      if (org.logo_url.startsWith(R2_PUBLIC_URL + '/')) {
+        const key = org.logo_url.slice(R2_PUBLIC_URL.length + 1)
+        await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key })).catch(() => {})
+      }
+    } else {
+      const filePath = path.join(__dirname, '..', org.logo_url.replace(/^\//, ''))
+      fs.unlink(filePath, () => {})
+    }
     await db.execute('UPDATE organizations SET logo_url = NULL WHERE id = ?', [req.session.orgId])
   }
   res.json({ ok: true })
