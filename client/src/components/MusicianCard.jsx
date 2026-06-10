@@ -1,17 +1,14 @@
+import { useState } from 'react'
 import styles from './MusicianCard.module.css'
 
 function Avatar({ name, photo, size = 'md' }) {
+  const [imgError, setImgError] = useState(false)
   const cls = size === 'lg' ? styles.avatarLg : styles.avatar
   const initCls = size === 'lg' ? styles.avatarInitialsLg : styles.avatarInitials
-  if (photo) {
-    return <img className={cls} src={photo} alt={name} />
+  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+  if (photo && !imgError) {
+    return <img className={cls} src={photo} alt={name} onError={() => setImgError(true)} />
   }
-  const initials = name
-    .split(' ')
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
   return <div className={initCls}>{initials}</div>
 }
 
@@ -44,11 +41,12 @@ function FullCard({ name, position, photo, mic, iem }) {
 
 // ── Photo-only card: large headshot, position badge overlay at bottom ─────────
 function PhotoCard({ name, photo, position }) {
+  const [imgError, setImgError] = useState(false)
   const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   return (
     <div className={styles.cardPhoto}>
-      {photo
-        ? <img className={styles.avatarLg} src={photo} alt={name} />
+      {photo && !imgError
+        ? <img className={styles.avatarLg} src={photo} alt={name} onError={() => setImgError(true)} />
         : <div className={styles.avatarInitialsFull}>{initials}</div>
       }
       {position && (

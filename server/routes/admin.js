@@ -15,7 +15,13 @@ fs.mkdirSync(UPLOADS_DIR, { recursive: true })
 const photoUpload = multer({
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    cb(null, file.mimetype.startsWith('image/'))
+    if (file.mimetype === 'image/heic' || file.mimetype === 'image/heif') {
+      return cb(new Error('HEIC/HEIF photos are not supported by browsers. Please convert to JPG or PNG first.'))
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Image files only'))
+    }
+    cb(null, true)
   },
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOADS_DIR),
@@ -342,16 +348,19 @@ router.delete('/position-types/:id', requireAuth, async (req, res) => {
 })
 
 // --- Photo upload ---
-router.post('/photos/upload', photoUpload.fields([
-  { name: 'square',   maxCount: 1 },
-  { name: 'portrait', maxCount: 1 },
-]), (req, res) => {
-  const sq = req.files?.square?.[0]
-  const pt = req.files?.portrait?.[0]
-  if (!sq || !pt) return res.status(400).json({ error: 'Both square and portrait files are required' })
-  res.json({
-    square:   `/uploads/photos/${sq.filename}`,
-    portrait: `/uploads/photos/${pt.filename}`,
+router.post('/photos/upload', (req, res) => {
+  photoUpload.fields([
+    { name: 'square',   maxCount: 1 },
+    { name: 'portrait', maxCount: 1 },
+  ])(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message })
+    const sq = req.files?.square?.[0]
+    const pt = req.files?.portrait?.[0]
+    if (!sq || !pt) return res.status(400).json({ error: 'Both square and portrait files are required' })
+    res.json({
+      square:   `/uploads/photos/${sq.filename}`,
+      portrait: `/uploads/photos/${pt.filename}`,
+    })
   })
 })
 

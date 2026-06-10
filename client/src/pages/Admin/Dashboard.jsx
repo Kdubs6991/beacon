@@ -339,10 +339,11 @@ function PeopleCard({ people, pcoConnected }) {
 }
 
 function MiniAvatar({ name, photo }) {
-  if (photo) {
-    return <img src={photo} alt={name} className={styles.miniAvatar} />
-  }
+  const [imgError, setImgError] = useState(false)
   const initials = name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? '?'
+  if (photo && !imgError) {
+    return <img src={photo} alt={name} className={styles.miniAvatar} onError={() => setImgError(true)} />
+  }
   return <div className={`${styles.miniAvatar} ${styles.miniAvatarInitials}`}>{initials}</div>
 }
 
