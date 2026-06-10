@@ -258,6 +258,7 @@ export default function Landing() {
               <p className={styles.localDesc}>
                 Updates are distributed through the GitHub repository. When a new version is available, pull the latest code
                 and restart the server — no auto-updates, no breaking changes pushed without your knowledge.
+                We recommend checking for updates <strong>once a month</strong>, or clicking <strong>Watch → Custom → Releases</strong> on GitHub to get an email whenever a new version is out.
               </p>
               <a href="https://github.com/Kdubs6991/beacon" target="_blank" rel="noopener noreferrer" className={styles.localRepoLink}>
                 View repository on GitHub →

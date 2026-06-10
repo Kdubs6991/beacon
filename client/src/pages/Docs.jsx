@@ -235,7 +235,7 @@ export default function Docs() {
           {/* ── Overview ── */}
           <Section id="overview" title="Overview">
             <p>Beacon is a self-hosted app that shows a TV/kiosk-friendly card grid of your worship team's microphone and IEM assignments for a service. Think of it as a digital version of the laminated assignment sheet your sound engineer normally posts backstage.</p>
-            <p>It integrates with <strong>Planning Center Online</strong> to pull your team roster automatically, and also works fully <strong>without PCO</strong> using a manual workflow where you predefine your team. Either way, it can refresh itself on a schedule so displays are always showing the right team before anyone arrives.</p>
+            <p>You define your team roster directly in Beacon using <strong>Manual service types</strong> — add your people, assign positions, write automation rules, and let a schedule push assignments to your screens automatically. Planning Center Online integration is planned for a future release.</p>
             <p>The server runs anywhere Node.js runs — a laptop, a Raspberry Pi, a VPS. Any browser on any device can reach the display screens. For public access without port forwarding, run it behind a <strong>Cloudflare Tunnel</strong>.</p>
           </Section>
 
@@ -257,17 +257,13 @@ export default function Docs() {
             <p>The recommended setup order:</p>
             <ol className={styles.ol}>
               <li><strong>Create a Location</strong> — a campus or venue. Everything else belongs to a location.</li>
-              <li><strong>Add Service Types</strong> on the Services page — choose PCO mode (pulls your team from Planning Center automatically) or Manual mode (you define a fixed team roster in Beacon).</li>
+              <li><strong>Add Service Types</strong> on the Services page — use Manual mode to define a fixed team roster directly in Beacon.</li>
               <li><strong>Create Screens</strong> — each screen gets a permanent URL you point a TV or kiosk browser at.</li>
-              <li><strong>Add People</strong> — your worship team members. Can be added manually or synced from PCO.</li>
+              <li><strong>Add People</strong> — your worship team members, added manually.</li>
               <li><strong>Define Labels</strong> — your mic and IEM inventory (e.g. "Vox 1", "Keys DI", "IEM 3"). Also define <strong>Positions</strong> (e.g. Singer, Worship Leader) on the Labels page — these are the role names your automation rules and Manual teams use.</li>
-              <li><strong>Set up Automation Rules</strong> — write rules that tell Beacon how to assign mic and IEM labels based on a person's name or position. The same rules work for both PCO and Manual service types, so you only write them once.</li>
-              <li><strong>Connect Planning Center</strong> (PCO mode only) — go to Admin → Integrations to link your PCO account so the app can pull team rosters automatically.</li>
+              <li><strong>Set up Automation Rules</strong> — write rules that tell Beacon how to assign mic and IEM labels based on a person's name or position.</li>
               <li><strong>Set a Schedule</strong> — on the Services page, add a schedule to each service type. Pick a day and time and Beacon will auto-push assignments to your screens before you even arrive.</li>
             </ol>
-            <Callout type="info">
-              You can test everything in <strong>mock mode</strong> (<code>USE_MOCK_DATA=true</code> in <code>server/.env</code>) without needing a PCO connection. The display will show a set of sample musicians so you can see how it looks.
-            </Callout>
             <Callout type="info">
               To change between <strong>light and dark mode</strong>, click your name in the bottom-left corner of the sidebar to open <strong>Settings → Appearance</strong>. Your preference is saved in the browser and persists across sessions.
             </Callout>
@@ -470,21 +466,15 @@ export default function Docs() {
             <SubSection id="service-types" title="Service Types">
               <p>A <strong>service type</strong> is a recurring kind of service at a campus. Each service type has a <strong>mode</strong> that determines where its team roster comes from:</p>
               <ul className={styles.ul}>
-                <li><strong>PCO</strong> — the team is pulled automatically from a Planning Center plan that matches today's date. Requires a PCO connection and a PCO service type ID.</li>
-                <li><strong>Manual</strong> — you define a fixed team roster in the app. No PCO connection needed. Good for services that aren't in Planning Center, or as a simpler alternative when you don't need PCO sync.</li>
+                <li><strong>Manual</strong> — you define a fixed team roster in the app. Add your people, assign positions, and let Beacon handle assignments automatically via your automation rules.</li>
+                <li><strong>PCO</strong> — Planning Center Online sync. <em>Not available in this version — coming in a future release.</em></li>
               </ul>
-              <p>The mode badge on each service type card (blue for PCO, green for Manual) shows which mode is active.</p>
+              <p>The mode badge on each service type card shows which mode is active.</p>
             </SubSection>
 
             <SubSection id="service-pco-mode" title="PCO Mode">
-              <p>In PCO mode, Beacon connects to Planning Center to fetch the team for a matching plan. You need to provide the <strong>Planning Center service type ID</strong> so Beacon knows which calendar to look at.</p>
-              <p><strong>How to find it:</strong> Log in to Planning Center, go to Services → your service type. Look at the URL:</p>
-              <div className={styles.codeBlock}>
-                https://services.planningcenteronline.com/service_types/<strong>1234567</strong>
-              </div>
-              <p>The number at the end is your PCO ID. Paste it into the "Planning Center ID" field when editing the service type.</p>
               <Callout type="warning">
-                Without the PCO ID, PCO-mode schedules will fail silently — the scheduler runs but won't know where to look. The display keeps showing whatever was last pushed.
+                PCO mode is <strong>not available in this version</strong> of Beacon. The option exists in the UI but will not sync. Use Manual mode instead. PCO integration is planned for a future release.
               </Callout>
             </SubSection>
 
@@ -507,7 +497,7 @@ export default function Docs() {
               <p><strong>How to set one up:</strong> Click <em>Add Schedule</em> on a service type card, pick a day of the week and time, and choose which screens should receive the update.</p>
               <p>When the schedule fires:</p>
               <ol className={styles.ol}>
-                <li>Beacon loads the team (from PCO or from your manual roster).</li>
+                <li>Beacon loads the team from your manual roster.</li>
                 <li>Runs automation rules to assign mic and IEM labels.</li>
                 <li>Pushes assignments to all selected screens that are currently active (heartbeat within 90 seconds).</li>
               </ol>
@@ -624,12 +614,7 @@ export default function Docs() {
 
           {/* ── People ── */}
           <Section id="people" title="People">
-            <p>The People page is where your worship team roster lives. People can be:</p>
-            <ul className={styles.ul}>
-              <li><strong>PCO-linked</strong> — imported from Planning Center. Name and photo sync from PCO. Any edits you make in Beacon (name, photo, category, email) are <em>local overrides</em> — they don't affect PCO and won't be clobbered on the next sync.</li>
-              <li><strong>Manual</strong> — added by hand, for team members not in Planning Center (volunteers, guests, one-off musicians, etc.).</li>
-            </ul>
-            <p>PCO-linked people are marked with a <strong>PCO</strong> badge. They cannot be deleted from within Beacon — they're removed automatically the next time that person no longer appears in any PCO plan.</p>
+            <p>The People page is where your worship team roster lives. Add team members manually with their name, photo, position, and category. Each person can have a custom photo uploaded directly in Beacon.</p>
 
             <SubSection id="people-views" title="Grid &amp; List Views">
               <p>Use the <strong>view toggle</strong> (top-right of the toolbar) to switch between:</p>
@@ -641,7 +626,7 @@ export default function Docs() {
             </SubSection>
 
             <SubSection id="people-photos" title="Photos &amp; Crop">
-              <p>Every person can have a custom photo. For PCO-linked people this replaces their PCO profile picture on display cards without touching their PCO account.</p>
+              <p>Every person can have a custom photo uploaded directly in Beacon.</p>
               <p><strong>How the upload works:</strong></p>
               <ol className={styles.ol}>
                 <li>Click <strong>Upload Photo</strong> on the person's edit form.</li>
@@ -825,21 +810,31 @@ export default function Docs() {
             <Callout type="warning">
               Node.js 22 or higher is required — Beacon uses the built-in <code>node:sqlite</code> module which was introduced in Node 22. Earlier versions will fail to start.
             </Callout>
-            <ol className={styles.ol}>
-              <li>Install Node.js 22+ (<code>nvm</code> recommended: <code>nvm install 22</code>).</li>
-              <li>Clone the repo and run <code>npm run install:all</code>.</li>
-              <li>Create <code>server/.env</code> from <code>server/.env.example</code> and fill in your values.</li>
-              <li>Build the client: <code>cd client && npm run build</code>.</li>
-              <li>Set <code>NODE_ENV=production</code> in your <code>.env</code> — the Express server serves the built client automatically.</li>
-              <li>Start with PM2: <code>pm2 start server/index.js --name beacon</code>.</li>
-            </ol>
+            <p><strong>Fresh install — three commands:</strong></p>
+            <div className={styles.codeBlock}>{`git clone https://github.com/Kdubs6991/beacon
+cd beacon
+npm run setup
+npm start`}</div>
+            <p>Open <code>http://localhost:3001</code> and complete the setup wizard. No configuration file is required — a session secret is auto-generated on first run.</p>
             <Callout type="info">
-              To auto-start on boot: <code>pm2 startup</code> then <code>pm2 save</code>.
+              To auto-start on boot: install PM2 (<code>npm install -g pm2</code>), then run <code>pm2 start server/index.js --name beacon && pm2 save && pm2 startup</code>.
             </Callout>
-            <p><strong>For HTTPS / remote access</strong> without port forwarding: install <code>cloudflared</code> and create a tunnel pointing to <code>localhost:3001</code>. Update <code>PCO_REDIRECT_URI</code> in <code>.env</code> to your public tunnel URL if you're using PCO OAuth.</p>
+            <p><strong>For HTTPS / remote access</strong> without port forwarding: install <code>cloudflared</code> and create a tunnel pointing to <code>localhost:3001</code>.</p>
             <Callout type="info">
               On a local network with a fixed IP, you can point TVs directly at <code>http://192.168.x.x:3001/display/...</code> — no tunnel needed if all screens are on the same network as the server.
             </Callout>
+
+            <SubSection id="hosting-updates" title="Staying Up to Date">
+              <p>Beacon does not auto-update. New versions are published to the <a href="https://github.com/Kdubs6991/beacon" target="_blank" rel="noopener noreferrer">GitHub repository</a> and you pull them manually when you're ready.</p>
+              <p><strong>Recommended: check for updates once a month.</strong> To update:</p>
+              <div className={styles.codeBlock}>{`git pull
+npm run build
+npm start`}</div>
+              <p>The <code>git pull</code> fetches the latest code, <code>npm run build</code> rebuilds the frontend with any changes, and <code>npm start</code> restarts the server. Your database and settings are not affected — they live in <code>server/beacon.db</code> which is never touched by a pull.</p>
+              <Callout type="tip">
+                To get notified automatically: go to the <a href="https://github.com/Kdubs6991/beacon" target="_blank" rel="noopener noreferrer">GitHub repository</a>, click <strong>Watch → Custom → Releases</strong>. GitHub will email you whenever a new version is published.
+              </Callout>
+            </SubSection>
           </Section>
         </main>
       </div>
