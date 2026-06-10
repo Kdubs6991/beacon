@@ -245,7 +245,7 @@ export default function Setup() {
               type="text"
               value={adminName}
               onChange={e => setAdminName(e.target.value)}
-              placeholder="Kaleb Wrigley"
+              placeholder="John Doe"
               required
             />
           </label>
