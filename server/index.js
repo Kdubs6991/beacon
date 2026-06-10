@@ -3,6 +3,24 @@ const express = require('express')
 const cors = require('cors')
 const session = require('express-session')
 const path = require('path')
+const fs = require('fs')
+const crypto = require('crypto')
+
+// Auto-generate SESSION_SECRET on first run if not set
+if (!process.env.SESSION_SECRET) {
+  const generated = crypto.randomBytes(32).toString('hex')
+  process.env.SESSION_SECRET = generated
+  const envPath = path.join(__dirname, '.env')
+  try {
+    const existing = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : ''
+    if (!existing.includes('SESSION_SECRET=')) {
+      fs.appendFileSync(envPath, `\nSESSION_SECRET=${generated}\n`)
+      console.log('[beacon] Generated SESSION_SECRET and saved to server/.env')
+    }
+  } catch (_) {
+    // Read-only filesystem — secret is in memory only for this session
+  }
+}
 
 const db = require('./db')
 const { hashPassword } = require('./utils/password')
@@ -18,14 +36,19 @@ const setupRoutes = require('./routes/setup')
 const app = express()
 const PORT = process.env.PORT || 3001
 
+// Serve the built client if it exists (production / local install)
+// Otherwise fall through to dev CORS (Vite runs separately on :5173)
+const clientDist = path.join(__dirname, '../client/dist')
+const hasBuiltClient = fs.existsSync(clientDist)
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : true,
+  origin: hasBuiltClient ? false : true,
   credentials: true,
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev-secret',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 }
@@ -44,8 +67,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', mock: process.env.USE_MOCK_DATA === 'true' })
 })
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')))
+if (hasBuiltClient) {
+  app.use(express.static(clientDist))
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'))
   })
@@ -75,9 +98,10 @@ app.listen(PORT, () => {
       if (net.family === 'IPv4' && !net.internal) networkIPs.push(net.address)
     }
   }
-  console.log(`Server running on http://localhost:${PORT}`)
-  networkIPs.forEach(ip => console.log(`  Network:  http://${ip}:${PORT}`))
-  console.log(`Mock mode: ${process.env.USE_MOCK_DATA === 'true' ? 'ON' : 'OFF'}`)
+  console.log(`\nBeacon running on http://localhost:${PORT}`)
+  networkIPs.forEach(ip => console.log(`  Network:   http://${ip}:${PORT}`))
+  if (!hasBuiltClient) console.log(`  Dev mode:  frontend on http://localhost:5173`)
+  console.log()
   seedAdmin()
   startScheduler()
 })

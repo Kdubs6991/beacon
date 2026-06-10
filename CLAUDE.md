@@ -470,12 +470,53 @@ overlay.
 - `backup_version` field: currently `2`; export shape is self-contained (no
   install-specific IDs survive the restore — all remapped)
 
+### Landing page & public pages
+- `client/src/pages/Landing.jsx` + `Landing.module.css` — public marketing page at `/`
+  - Sticky nav with auth-aware CTA (shows "Dashboard" when signed in)
+  - Hero with live clock mockup (1s interval); mock musician cards reference
+    `/mock-1.jpg` through `/mock-4.jpg` with initials fallback
+  - Feature stripes — full-width gradient rows (no container), SVG icons (no emojis),
+    each stripe uses `linear-gradient(to right, color 0%, transparent 60%)`
+  - "How it works" 3-step section
+  - "Designed for local hosting" card — explains self-hosted model + GitHub update flow;
+    repo link placeholder to be updated when repo is finalized
+  - Joke pricing table — $0/forever, all features checked
+  - Developer card (Kaleb Wrigley) — photo at `/kaleb.jpg` with "KW" initials fallback,
+    bio, GitHub/LinkedIn/email links, support subsection (Venmo/PayPal/Cash App) with
+    brand-color hover only (non-pushy)
+  - Footer with Docs / Display login / Admin panel / Contact links
+- `client/src/pages/Contact.jsx` + `Contact.module.css` — public contact page at `/contact`
+  - Back button (bordered pill, top-left below nav), hero, 3-column cards (Email, GitHub, LinkedIn)
+  - Footer matches landing page
+- `PublicNav.jsx` — brand "Beacon" text links to `/` (landing page)
+- `App.jsx` — `/` now renders `<Landing>`, `/contact` renders `<Contact>`
+
+### Local deployment readiness
+- `package.json` (root) — renamed to `beacon`, added `start`, `build`, `setup` scripts:
+  - `npm run setup` — installs all deps + builds client (one command for new installs)
+  - `npm start` — runs `node server/index.js` (no NODE_ENV needed)
+  - `npm run build` — builds client only
+- `server/index.js` — removed NODE_ENV dependency:
+  - Auto-detects `client/dist` with `fs.existsSync` — serves built client if present,
+    falls through to open CORS if not (dev mode)
+  - Auto-generates `SESSION_SECRET` with `crypto.randomBytes(32)` on first run,
+    appends to `server/.env`; zero config required to get started
+- `server/.env.example` — simplified; all fields are optional (SESSION_SECRET auto-generated,
+  SMTP configurable in UI, admin seed account optional)
+- `README.md` — complete rewrite: quick start is 3 commands, updating is 3 commands,
+  network access explained, env vars table, dev instructions
+
 ### Backlog
 - PCO OAuth connect flow (Integrations page) — PCO_CLIENT_ID/SECRET not yet
   configured
 - PCO plan → upcoming services display (Services card on Dashboard shows
   "coming soon")
 - People page: PCO sync management UI
+- Landing page repo link — placeholder `github.com` in local hosting section;
+  update when final repo URL is ready
+- Mock musician photos — `/mock-1.jpg` through `/mock-4.jpg` in `client/public/`;
+  cards show initials until provided
+- Developer photo — `/kaleb.jpg` in `client/public/`; shows "KW" initials until provided
 
 ---
 
@@ -577,28 +618,36 @@ overlay.
 
 ## Environment Variables (server/.env)
 
+All optional — `SESSION_SECRET` is auto-generated on first run if not set.
+
 ```
 PORT=3001
-SESSION_SECRET=<long random string>
+SESSION_SECRET=          # auto-generated if blank
 
-# SMTP email — optional, can also be configured in Admin → Organization
+# Optional: pre-seed admin account on first start
+ADMIN_EMAIL=
+ADMIN_NAME=
+ADMIN_PASSWORD=
+
+# SMTP email — optional, configurable in Admin → Organization UI instead
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=yourchurch@gmail.com
+SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
 
-# Planning Center OAuth — fill in when PCO integration is ready
-PCO_CLIENT_ID=<from PCO developer console>
-PCO_CLIENT_SECRET=<from PCO developer console>
+# Planning Center OAuth — not yet active
+PCO_CLIENT_ID=
+PCO_CLIENT_SECRET=
 PCO_REDIRECT_URI=http://localhost:3001/api/auth/pco/callback
-USE_MOCK_DATA=false
 ```
 
 ---
 
-## Git
+## Git / Branch Strategy
 
-- Branch: `dev`
 - Remote: `git@github.com:Kdubs6991/beacon.git`
-- Push to `dev` branch after each significant feature group
+- `dev` — active development; push here after each feature group
+- `main` — stable local releases; merge dev → main when ready to ship
+- `saas` — future SaaS/cloud branch; create off main when that work begins
+- **Never force-push main**

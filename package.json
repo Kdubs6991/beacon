@@ -1,11 +1,15 @@
 {
-  "name": "worship-display",
+  "name": "beacon",
   "version": "1.0.0",
+  "description": "Self-hosted worship team display",
   "scripts": {
+    "start": "node server/index.js",
+    "build": "cd client && npm run build",
+    "setup": "npm install && cd server && npm install && cd ../client && npm install && cd .. && npm run build",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev",
-    "install:all": "cd server && npm install && cd ../client && npm install"
+    "dev:client": "cd client && npm run dev"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
