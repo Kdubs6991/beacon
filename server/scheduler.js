@@ -1,0 +1,507 @@
+const cron = require('node-cron')
+const db = require('./db')
+
+const activeTasks = new Map()
+
+function startScheduler() {
+  const schedules = db.prepare(`
+    SELECT s.*, st.name as service_type_name, st.pco_service_type_id
+    FROM schedules s
+    JOIN service_types st ON s.service_type_id = st.id
+    WHERE s.enabled = 1
+  `).all()
+
+  for (const schedule of schedules) {
+    registerSchedule(schedule)
+  }
+
+  console.log(`Scheduler started with ${schedules.length} active schedule(s)`)
+}
+
+function registerSchedule(schedule) {
+  if (activeTasks.has(schedule.id)) {
+    activeTasks.get(schedule.id).stop()
+  }
+
+  if (!cron.validate(schedule.cron_expr)) {
+    console.warn(`Invalid cron expression for schedule ${schedule.id}: ${schedule.cron_expr}`)
+    return
+  }
+
+  const task = cron.schedule(schedule.cron_expr, () => runSchedule(schedule.id))
+  activeTasks.set(schedule.id, task)
+  console.log(`Registered schedule ${schedule.id} (${schedule.service_type_name}): ${schedule.cron_expr}`)
+}
+
+function unregisterSchedule(scheduleId) {
+  if (activeTasks.has(scheduleId)) {
+    activeTasks.get(scheduleId).stop()
+    activeTasks.delete(scheduleId)
+  }
+}
+
+// ── Label resolver (same logic as run-automation route) ──────────────────────
+
+function resolveLabel(actionValue, type, labels, usedIds) {
+  if (actionValue === 'next_available' || actionValue.startsWith('next_available:')) {
+    const groupName = actionValue.startsWith('next_available:')
+      ? actionValue.slice('next_available:'.length)
+      : null
+    const available = labels.filter(l =>
+      l.type === type &&
+      !usedIds.has(l.id) &&
+      (!groupName || l.group_name === groupName)
+    )
+    if (!available.length) return null
+    usedIds.add(available[0].id)
+    return available[0]
+  }
+  const label = labels.find(l => l.id === Number(actionValue) && l.type === type)
+  if (!label || usedIds.has(label.id)) return null
+  usedIds.add(label.id)
+  return label
+}
+
+// ── Get today's date string in a given timezone ───────────────────────────────
+
+function todayInTz(tz) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date())
+  } catch {
+    return new Date().toISOString().split('T')[0]
+  }
+}
+
+// ── Main schedule runner ─────────────────────────────────────────────────────
+
+async function runSchedule(scheduleId) {
+  // Load schedule with all related data needed for the pipeline
+  const schedule = db.prepare(`
+    SELECT s.*,
+           st.name               AS service_type_name,
+           st.pco_service_type_id,
+           st.mode               AS service_type_mode,
+           c.org_id,
+           o.timezone
+    FROM schedules s
+    JOIN service_types st ON s.service_type_id = st.id
+    JOIN campuses     c  ON st.campus_id = c.id
+    JOIN organizations o ON c.org_id    = o.id
+    WHERE s.id = ?
+  `).get(scheduleId)
+
+  if (!schedule) return
+
+  const { org_id: orgId, timezone, service_type_name, pco_service_type_id, service_type_mode } = schedule
+  const mode = service_type_mode ?? 'pco'
+
+  const stamp = `[schedule ${scheduleId} · ${service_type_name}]`
+  console.log(`${stamp} triggered`)
+
+  // ── Validate PCO prerequisites (skipped in manual mode) ──────────────────
+
+  if (mode !== 'manual') {
+    if (!pco_service_type_id) {
+      console.log(`${stamp} no PCO service type ID — nothing to sync`)
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+      return
+    }
+    const pcoToken = db.prepare('SELECT id FROM pco_tokens LIMIT 1').get()
+    if (!pcoToken) {
+      console.log(`${stamp} PCO not connected — skipping`)
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+      return
+    }
+  }
+
+  // ── Determine target screens ──────────────────────────────────────────────
+
+  let targetScreenIds = []
+  try { targetScreenIds = schedule.screen_ids ? JSON.parse(schedule.screen_ids) : [] } catch {}
+
+  if (!targetScreenIds.length) {
+    console.log(`${stamp} no target screens configured — skipping`)
+    db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+    return
+  }
+
+  // Filter to only screens that are currently active (heartbeat within 90s)
+  const activeScreenIds = targetScreenIds.filter(id => {
+    const row = db.prepare(
+      "SELECT id FROM screens WHERE id = ? AND last_heartbeat > datetime('now', '-90 seconds')"
+    ).get(id)
+    return !!row
+  })
+
+  if (!activeScreenIds.length) {
+    console.log(`${stamp} none of the ${targetScreenIds.length} target screen(s) are active — skipping`)
+    db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+    return
+  }
+
+  // ── Manual mode: push stored roster directly ─────────────────────────────
+
+  if (mode === 'manual') {
+    try {
+      const tz = timezone || 'America/Chicago'
+      const today = todayInTz(tz)
+
+      const manualRows = db.prepare(`
+        SELECT ma.*,
+               COALESCE(p.name_override, p.name) AS person_name,
+               COALESCE(p.photo_override, p.photo_url) AS person_photo
+        FROM manual_assignments ma
+        LEFT JOIN people p ON ma.person_id = p.id
+        WHERE ma.service_type_id = ?
+        ORDER BY ma.slot
+      `).all(schedule.service_type_id)
+
+      const rules      = db.prepare('SELECT * FROM automation_rules WHERE org_id = ? ORDER BY priority').all(orgId)
+      const labels     = db.prepare('SELECT * FROM labels WHERE org_id = ? ORDER BY type, sort_order').all(orgId)
+      const usedMicIds = new Set()
+      const usedIemIds = new Set()
+
+      const assignments = []
+      for (const row of manualRows) {
+        const name         = row.person_name ?? ''
+        const teamPosition = row.position    ?? ''
+
+        let mic = null
+        let iem = null
+
+        for (const rule of rules) {
+          const fieldValue = rule.condition_field === 'name' ? name : teamPosition
+          const condVal    = rule.condition_value ?? ''
+          let ruleMatches = false
+          if (rule.condition_op === 'is')       ruleMatches = fieldValue.toLowerCase() === condVal.toLowerCase()
+          else if (rule.condition_op === 'contains') ruleMatches = fieldValue.toLowerCase().includes(condVal.toLowerCase())
+          if (!ruleMatches) continue
+          if (rule.action_type === 'mic' && !mic) mic = resolveLabel(rule.action_value, 'mic', labels, usedMicIds)
+          else if (rule.action_type === 'iem' && !iem) iem = resolveLabel(rule.action_value, 'iem', labels, usedIemIds)
+        }
+
+        console.log(`${stamp}   include "${name}" (${teamPosition || 'no position'}) → mic: ${mic?.name ?? 'none'}, iem: ${iem?.name ?? 'none'}`)
+        assignments.push({
+          slot:        assignments.length,
+          personId:    row.person_id,
+          personName:  row.person_name,
+          personPhoto: row.person_photo,
+          position:    teamPosition,
+          micLabel:    mic?.name ?? null,
+          iemLabel:    iem?.name ?? null,
+        })
+      }
+
+      const insertAssignment = db.prepare(`
+        INSERT INTO active_assignments
+          (screen_id, person_id, person_name, person_photo, slot, position, mic_label, iem_label, event_name, event_date, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `)
+
+      for (const screenId of activeScreenIds) {
+        db.transaction(() => {
+          db.prepare('DELETE FROM active_assignments WHERE screen_id = ?').run(screenId)
+          for (const a of assignments) {
+            insertAssignment.run(
+              screenId, a.personId, a.personName, a.personPhoto,
+              a.slot, a.position, a.micLabel, a.iemLabel,
+              service_type_name, today
+            )
+          }
+        })()
+        console.log(`${stamp}   pushed ${assignments.length} manual musicians to screen ${screenId}`)
+      }
+
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+      console.log(`${stamp} done (manual) — ${assignments.length} musicians on ${activeScreenIds.length} screen(s)`)
+    } catch (err) {
+      console.error(`[schedule ${scheduleId}] manual mode failed:`, err.message)
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+    }
+    return
+  }
+
+  // ── PCO: find today's plan ────────────────────────────────────────────────
+
+  try {
+    const { pcoGet } = require('./pco-client')
+    const tz = timezone || 'America/Chicago'
+    const today = todayInTz(tz)
+
+    console.log(`${stamp} looking for PCO plans on ${today} (tz: ${tz})`)
+
+    const plansRes = await pcoGet(
+      `/services/v2/service_types/${pco_service_type_id}/plans?per_page=15&order=sort_date`
+    )
+
+    const todayPlan = (plansRes.data ?? []).find(p => {
+      const sortDate = p.attributes?.sort_date
+      if (!sortDate) return false
+      const planDay = todayInTz(tz).length > 0
+        ? new Intl.DateTimeFormat('en-CA', {
+            timeZone: tz,
+            year: 'numeric', month: '2-digit', day: '2-digit',
+          }).format(new Date(sortDate))
+        : sortDate.split('T')[0]
+      return planDay === today
+    })
+
+    if (!todayPlan) {
+      console.log(`${stamp} no plan found for today (${today}) — nothing to push`)
+      db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+      return
+    }
+
+    const planTitle = todayPlan.attributes?.title ?? service_type_name
+    console.log(`${stamp} found plan ${todayPlan.id} "${planTitle}"`)
+
+    // ── PCO: fetch team members ───────────────────────────────────────────
+
+    const teamRes = await pcoGet(
+      `/services/v2/service_types/${pco_service_type_id}/plans/${todayPlan.id}/team_members?per_page=100&include=person`
+    )
+
+    const members  = teamRes.data     ?? []
+    const included = teamRes.included ?? []
+
+    // Map PCO person ID → included person object (for photo lookup)
+    const pcoPersonById = {}
+    for (const p of included) {
+      if (p.type === 'Person') pcoPersonById[p.id] = p
+    }
+
+    // ── Automation rules + labels ─────────────────────────────────────────
+
+    const rules  = db.prepare('SELECT * FROM automation_rules WHERE org_id = ? ORDER BY priority').all(orgId)
+    const labels = db.prepare('SELECT * FROM labels WHERE org_id = ? ORDER BY type, sort_order').all(orgId)
+
+    // ── Process each team member ──────────────────────────────────────────
+
+    const usedMicIds = new Set()
+    const usedIemIds = new Set()
+    const assignments = []
+    let nextSlot = 0
+
+    for (const member of members) {
+      const name         = member.attributes?.name               ?? ''
+      const teamPosition = member.attributes?.team_position_name ?? ''
+      const status       = member.attributes?.status
+
+      // Skip people who declined
+      if (status === 'D') continue
+
+      // Run automation rules — match on name OR position
+      let mic = null
+      let iem = null
+      let matched = false
+
+      for (const rule of rules) {
+        const fieldValue = rule.condition_field === 'name' ? name : teamPosition
+        const condVal    = rule.condition_value ?? ''
+
+        let ruleMatches = false
+        if (rule.condition_op === 'is') {
+          ruleMatches = fieldValue.toLowerCase() === condVal.toLowerCase()
+        } else if (rule.condition_op === 'contains') {
+          ruleMatches = fieldValue.toLowerCase().includes(condVal.toLowerCase())
+        }
+
+        if (!ruleMatches) continue
+        matched = true
+
+        if (rule.action_type === 'mic' && !mic) {
+          mic = resolveLabel(rule.action_value, 'mic', labels, usedMicIds)
+        } else if (rule.action_type === 'iem' && !iem) {
+          iem = resolveLabel(rule.action_value, 'iem', labels, usedIemIds)
+        }
+      }
+
+      // If no rule matched this person, skip them (instruments, non-worship roles, etc.)
+      if (!matched) {
+        console.log(`${stamp}   skip "${name}" (${teamPosition}) — no rule matched`)
+        continue
+      }
+
+      // ── Match to Beacon person by PCO ID ─────────────────────────────
+
+      const pcoPId      = member.relationships?.person?.data?.id ?? null
+      let   personId    = null
+      let   personName  = name
+      let   personPhoto = member.attributes?.photo_thumbnail ?? null
+
+      if (pcoPId) {
+        // Prefer photo from included person object if available
+        const pcoPerson = pcoPersonById[pcoPId]
+        if (pcoPerson?.attributes?.photo_thumbnail) {
+          personPhoto = pcoPerson.attributes.photo_thumbnail
+        }
+
+        // Look up in Beacon people by pco_person_id
+        const beaconPerson = db.prepare(
+          'SELECT * FROM people WHERE pco_person_id = ? AND org_id = ?'
+        ).get(pcoPId, orgId)
+
+        if (beaconPerson) {
+          personId    = beaconPerson.id
+          personName  = beaconPerson.name_override  ?? beaconPerson.name
+          personPhoto = beaconPerson.photo_override ?? beaconPerson.photo_url ?? personPhoto
+        }
+      }
+
+      console.log(`${stamp}   include "${personName}" (${teamPosition}) → mic: ${mic?.name ?? 'none'}, iem: ${iem?.name ?? 'none'}`)
+
+      assignments.push({
+        slot:      nextSlot++,
+        personId,
+        personName,
+        personPhoto,
+        position:  teamPosition,
+        micLabel:  mic?.name ?? null,
+        iemLabel:  iem?.name ?? null,
+      })
+    }
+
+    // ── Push to active screens ────────────────────────────────────────────
+
+    const eventDate = today
+    const eventName = service_type_name
+
+    const insertAssignment = db.prepare(`
+      INSERT INTO active_assignments
+        (screen_id, person_id, person_name, person_photo, slot, position, mic_label, iem_label, event_name, event_date, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `)
+
+    for (const screenId of activeScreenIds) {
+      db.transaction(() => {
+        db.prepare('DELETE FROM active_assignments WHERE screen_id = ?').run(screenId)
+        for (const a of assignments) {
+          insertAssignment.run(
+            screenId, a.personId, a.personName, a.personPhoto,
+            a.slot, a.position, a.micLabel, a.iemLabel,
+            eventName, eventDate
+          )
+        }
+      })()
+      console.log(`${stamp}   pushed ${assignments.length} musicians to screen ${screenId}`)
+    }
+
+    db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+    console.log(`${stamp} done — ${assignments.length} musicians on ${activeScreenIds.length} screen(s)`)
+
+  } catch (err) {
+    console.error(`[schedule ${scheduleId}] failed:`, err.message)
+    db.prepare("UPDATE schedules SET last_run = datetime('now') WHERE id = ?").run(scheduleId)
+  }
+}
+
+// ── On-demand push (no schedule required, no heartbeat filter) ───────────────
+
+async function pushToScreens(serviceTypeId, screenIds) {
+  const serviceType = db.prepare(`
+    SELECT st.*, c.org_id, o.timezone
+    FROM service_types st
+    JOIN campuses     c ON st.campus_id = c.id
+    JOIN organizations o ON c.org_id   = o.id
+    WHERE st.id = ?
+  `).get(serviceTypeId)
+
+  if (!serviceType) throw new Error('Service type not found')
+
+  const { org_id: orgId, timezone, name: serviceName, mode, pco_service_type_id } = serviceType
+  const tz    = timezone || 'America/Chicago'
+  const today = todayInTz(tz)
+  const rules  = db.prepare('SELECT * FROM automation_rules WHERE org_id = ? ORDER BY priority').all(orgId)
+  const labels = db.prepare('SELECT * FROM labels WHERE org_id = ? ORDER BY type, sort_order').all(orgId)
+  const assignments = []
+
+  if ((mode ?? 'pco') === 'manual') {
+    const usedMicIds = new Set()
+    const usedIemIds = new Set()
+    const rows = db.prepare(`
+      SELECT ma.*,
+             COALESCE(p.name_override, p.name)             AS person_name,
+             COALESCE(p.photo_override, p.photo_url)       AS person_photo
+      FROM manual_assignments ma
+      LEFT JOIN people p ON ma.person_id = p.id
+      WHERE ma.service_type_id = ?
+      ORDER BY ma.slot
+    `).all(serviceTypeId)
+
+    for (const row of rows) {
+      const name = row.person_name ?? ''
+      const pos  = row.position    ?? ''
+      let mic = null, iem = null
+      for (const rule of rules) {
+        const val = rule.condition_field === 'name' ? name : pos
+        const cv  = rule.condition_value ?? ''
+        const hit = rule.condition_op === 'is' ? val.toLowerCase() === cv.toLowerCase()
+                  : val.toLowerCase().includes(cv.toLowerCase())
+        if (!hit) continue
+        if (rule.action_type === 'mic' && !mic) mic = resolveLabel(rule.action_value, 'mic', labels, usedMicIds)
+        else if (rule.action_type === 'iem' && !iem) iem = resolveLabel(rule.action_value, 'iem', labels, usedIemIds)
+      }
+      assignments.push({ slot: assignments.length, personId: row.person_id, personName: row.person_name, personPhoto: row.person_photo, position: pos, micLabel: mic?.name ?? null, iemLabel: iem?.name ?? null })
+    }
+  } else {
+    const pcoToken = db.prepare('SELECT id FROM pco_tokens LIMIT 1').get()
+    if (!pcoToken) throw new Error('Planning Center is not connected. Go to Integrations to connect it.')
+    if (!pco_service_type_id) throw new Error('This service type has no Planning Center ID configured.')
+
+    const { pcoGet } = require('./pco-client')
+    const plansRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans?per_page=15&order=sort_date`)
+    const todayPlan = (plansRes.data ?? []).find(p => {
+      const sd = p.attributes?.sort_date
+      return sd && new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(sd)) === today
+    })
+    if (!todayPlan) throw new Error(`No plan found for today (${today}) in Planning Center.`)
+
+    const teamRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans/${todayPlan.id}/team_members?per_page=100&include=person`)
+    const pcoPersonById = {}
+    for (const p of teamRes.included ?? []) { if (p.type === 'Person') pcoPersonById[p.id] = p }
+
+    const usedMicIds = new Set()
+    const usedIemIds = new Set()
+    for (const member of teamRes.data ?? []) {
+      if (member.attributes?.status === 'D') continue
+      const name = member.attributes?.name ?? ''
+      const pos  = member.attributes?.team_position_name ?? ''
+      let mic = null, iem = null, matched = false
+      for (const rule of rules) {
+        const val = rule.condition_field === 'name' ? name : pos
+        const cv  = rule.condition_value ?? ''
+        const hit = rule.condition_op === 'is' ? val.toLowerCase() === cv.toLowerCase() : val.toLowerCase().includes(cv.toLowerCase())
+        if (!hit) continue
+        matched = true
+        if (rule.action_type === 'mic' && !mic) mic = resolveLabel(rule.action_value, 'mic', labels, usedMicIds)
+        else if (rule.action_type === 'iem' && !iem) iem = resolveLabel(rule.action_value, 'iem', labels, usedIemIds)
+      }
+      if (!matched) continue
+      const pcoPId = member.relationships?.person?.data?.id ?? null
+      let personId = null, personName = name, personPhoto = pcoPersonById[pcoPId]?.attributes?.photo_thumbnail ?? member.attributes?.photo_thumbnail ?? null
+      if (pcoPId) {
+        const bp = db.prepare('SELECT * FROM people WHERE pco_person_id = ? AND org_id = ?').get(pcoPId, orgId)
+        if (bp) { personId = bp.id; personName = bp.name_override ?? bp.name; personPhoto = bp.photo_override ?? bp.photo_url ?? personPhoto }
+      }
+      assignments.push({ slot: assignments.length, personId, personName, personPhoto, position: pos, micLabel: mic?.name ?? null, iemLabel: iem?.name ?? null })
+    }
+  }
+
+  const insert = db.prepare(`
+    INSERT INTO active_assignments
+      (screen_id, person_id, person_name, person_photo, slot, position, mic_label, iem_label, event_name, event_date, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `)
+  for (const screenId of screenIds) {
+    db.transaction(() => {
+      db.prepare('DELETE FROM active_assignments WHERE screen_id = ?').run(screenId)
+      for (const a of assignments) insert.run(screenId, a.personId, a.personName, a.personPhoto, a.slot, a.position, a.micLabel, a.iemLabel, serviceName, today)
+    })()
+  }
+  return { pushed: assignments.length, screens: screenIds.length }
+}
+
+module.exports = { startScheduler, registerSchedule, unregisterSchedule, runSchedule, pushToScreens }

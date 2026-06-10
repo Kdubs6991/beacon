@@ -1,0 +1,550 @@
+/* ── Page header ─────────────────────────────────────────── */
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-pri);
+}
+
+.customizeLink {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+.customizeLink:hover { color: var(--accent); }
+
+/* ── Card grid ───────────────────────────────────────────── */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Skip the awkward 3-col state (992–1327px) where the 4th card drops alone */
+@media (min-width: 992px) and (max-width: 1327px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Card shell ──────────────────────────────────────────── */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px 11px;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.12s;
+  width: 100%;
+}
+.cardHeader:hover {
+  background: var(--bg-card-hover);
+}
+
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardIcon {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.cardTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cardChevron {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  transition: transform 0.12s;
+}
+.cardHeader:hover .cardChevron {
+  transform: translateX(2px);
+  color: var(--accent);
+}
+
+.cardBody {
+  padding: 14px 16px 16px;
+  flex: 1;
+}
+
+/* ── Empty / loading ─────────────────────────────────────── */
+
+.stateMsg {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+.emptyMsg {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+  padding: 4px 0;
+}
+
+/* ── Summary chips ───────────────────────────────────────── */
+
+.cardSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.summaryChip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-sec);
+  border: 1px solid var(--border);
+}
+
+.summaryChipActive {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.summaryMeta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Shared list ─────────────────────────────────────────── */
+
+.itemList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.itemBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.itemName {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-pri);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemSub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── TV icon with live dot ───────────────────────────────── */
+
+.tvWrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.tvDot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 1.5px solid var(--bg-card);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 5px rgba(34, 197, 94, 0);
+  }
+}
+
+/* ── Screens card items ──────────────────────────────────── */
+
+.screenItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.screenItem:last-child { border-bottom: none; }
+
+.locationTag {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.livePill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 999px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+
+/* ── Services card items ─────────────────────────────────── */
+
+.serviceItem {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.serviceItem:last-child { border-bottom: none; }
+
+.serviceTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dateChip {
+  font-size: 0.72rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── People card items ───────────────────────────────────── */
+
+.personItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.personItem:last-child { border-bottom: none; }
+
+.miniAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.miniAvatarInitials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.moreRow {
+  padding: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  list-style: none;
+}
+
+/* ── Tab toggle ──────────────────────────────────────────── */
+
+.tabRow {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  width: fit-content;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+.tabBtn:hover { color: var(--text-sec); }
+.tabBtnActive {
+  background: var(--bg-card-hover);
+  color: var(--text-pri);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ── PCO not connected ───────────────────────────────────── */
+
+.notConnected {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.notConnectedDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.notConnectedTitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-pri);
+  margin: 0 0 4px;
+}
+
+.notConnectedHint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Label items ─────────────────────────────────────────── */
+
+.labelItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.labelItem:last-child { border-bottom: none; }
+
+.labelDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.labelDotMic { background: var(--mic-color); }
+.labelDotIem { background: var(--iem-color); }
+.labelDotPosition { background: #a78bfa; }
+
+.labelTypeTag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+/* ── Schedule card items ─────────────────────────────────── */
+
+.scheduleItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.scheduleItem:last-child { border-bottom: none; }
+
+.scheduleStatus {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.scheduleStatusOn {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.scheduleStatusOff {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ── Template card items ─────────────────────────────────── */
+
+.templateItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.templateItem:last-child { border-bottom: none; }
+
+.screenCountTag {
+  font-size: 0.72rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Quick push card items ───────────────────────────────── */
+
+.qaItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.qaItem:last-child { border-bottom: none; }
+
+.btnPush {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  min-width: 48px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.btnPush:hover:not(:disabled) {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+.btnPush:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnPushSuccess {
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.pushResult {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+.pushResultOk   { background: rgba(34, 197, 94, 0.1);  color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.25); }
+.pushResultWarn { background: rgba(251,191, 36, 0.1);  color: #fbbf24; border: 1px solid rgba(251,191, 36, 0.25); }
+.pushResultErr  { background: rgba(239,  68, 68, 0.08); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+/* ── Recent activity card items ──────────────────────────── */
+
+.activityItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.activityItem:last-child { border-bottom: none; }
+
+.activityTime {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Touch devices: larger tap targets ─────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .tabBtn { padding: 8px 14px; }
+  .btnPush { padding: 8px 16px; }
+  .itemRow { padding: 12px 0; }
+  .activityItem { padding: 12px 0; }
+}

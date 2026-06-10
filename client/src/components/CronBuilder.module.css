@@ -1,0 +1,83 @@
+.builder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.days {
+  display: flex;
+  gap: 4px;
+}
+
+.dayBtn {
+  width: 38px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-page);
+  color: var(--text-sec);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+
+.dayBtn:hover { border-color: var(--accent); color: var(--text-pri); }
+
+.dayActive {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.timeInputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.select {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-pri);
+  font-size: 0.85rem;
+  padding: 5px 8px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+
+.select:focus { border-color: var(--accent); }
+
+.preview {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 500;
+  padding: 6px 10px;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.nodays {
+  color: var(--text-muted);
+}

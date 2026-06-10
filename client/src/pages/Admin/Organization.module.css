@@ -1,0 +1,680 @@
+.page {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin-bottom: 6px;
+}
+
+.sectionDesc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.formField {
+  margin-bottom: 16px;
+}
+
+.addressRow {
+  display: flex;
+  gap: 10px;
+}
+.addressCity { flex: 1 1 auto; min-width: 0; }
+.addressState { flex: 0 0 64px; }
+.addressZip { flex: 0 0 88px; }
+
+.formLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+
+.formLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.formLabelRow .formLabel {
+  margin-bottom: 0;
+}
+
+.required {
+  color: var(--accent);
+}
+
+.formInput {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+}
+.formInput:focus {
+  border-color: var(--accent);
+}
+.readOnly {
+  color: var(--text-sec);
+  cursor: default;
+}
+.codeFont {
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+}
+
+.copyRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.copyRow .formInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.copyBtn {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s;
+}
+.copyBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.regenBtn {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-sm);
+  color: #f87171;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.regenBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.65);
+}
+.regenBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.warning {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.formError {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.btnPrimary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.btnPrimary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.successMsg {
+  font-size: 0.82rem;
+  color: #4ade80;
+}
+
+.metaInfo {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.error {
+  color: #f87171;
+}
+
+/* ── Export / Backup ── */
+.exportBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+}
+.exportBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Restore from backup ── */
+.restoreDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+.restoreTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  margin: 0 0 4px;
+}
+.restoreDesc {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  margin: 0 0 14px;
+}
+.restoreError {
+  font-size: 0.85rem;
+  color: #f87171;
+  margin: 8px 0 0;
+}
+.importLabel {
+  display: inline-block;
+  cursor: pointer;
+}
+.importInput {
+  display: none;
+}
+.importBtn {
+  display: inline-block;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+}
+.importBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.importPreview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 4px;
+  background: var(--bg-card);
+}
+.importPreviewHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.importPreviewOrg {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-pri);
+}
+.importPreviewDate {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.importPreviewCounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.importPreviewStat {
+  background: var(--bg-page, #0f1117);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.importPreviewNum {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  line-height: 1;
+}
+.importPreviewLbl {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.importWarning {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.83rem;
+  color: #f87171;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.importActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.importConfirmBtn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.importConfirmBtn:hover:not(:disabled) { background: #dc2626; }
+.importConfirmBtn:disabled { opacity: 0.6; cursor: default; }
+.importCancelBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 9px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+.importCancelBtn:hover:not(:disabled) { border-color: var(--text-sec); }
+.importCancelBtn:disabled { opacity: 0.5; cursor: default; }
+.importSuccessBox {
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.06);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+.importSuccessTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 0 0 4px;
+}
+.importSuccessDesc {
+  font-size: 0.83rem;
+  color: var(--text-sec);
+  margin: 0 0 12px;
+}
+
+/* ── Invite tokens ── */
+.inviteRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.inviteInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-pri);
+  font-size: 0.82rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  outline: none;
+}
+
+.inviteList {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inviteItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
+
+.inviteItemEmail {
+  font-size: 0.82rem;
+  color: var(--text-pri);
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.inviteItemRole {
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: capitalize;
+  margin-right: 8px;
+}
+
+.inviteItemExpiry {
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.inviteRevokeBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: color 0.12s;
+}
+.inviteRevokeBtn:hover { color: #f87171; }
+
+/* ── Logo upload ── */
+.logoRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.logoPreview {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-page);
+  padding: 8px;
+  box-sizing: border-box;
+}
+.logoPlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.logoActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.logoUploadLabel {
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+}
+.logoUploading {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.logoRemoveBtn {
+  background: none;
+  border: 1px solid rgba(239,68,68,0.4);
+  border-radius: var(--radius-sm);
+  color: #f87171;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.logoRemoveBtn:hover:not(:disabled) { background: rgba(239,68,68,0.1); }
+.logoRemoveBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Select (timezone) ── */
+.formSelect {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.formSelect:focus { border-color: var(--accent); }
+
+/* ── Ghost button ── */
+.btnGhost {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+}
+.btnGhost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btnGhost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Email / SMTP section ── */
+.smtpHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.smtpHeader .sectionTitle { margin-bottom: 4px; }
+.smtpHeader .sectionDesc { margin-bottom: 0; }
+
+.smtpBadge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-top: 2px;
+}
+.smtpBadgeOn {
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+.smtpBadgeOff {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.smtpNotice {
+  margin: 12px 0 16px;
+  padding: 10px 14px;
+  background: rgba(251, 191, 36, 0.07);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  line-height: 1.5;
+}
+
+.smtpDocsLink {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.smtpDocsLink:hover { text-decoration: underline; }
+
+.smtpViewGrid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-top: 12px;
+}
+.smtpViewLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 9px 12px;
+  background: var(--bg-card-hover);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+.smtpViewValue {
+  font-size: 0.85rem;
+  color: var(--text-pri);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.smtpViewLabel:last-of-type,
+.smtpViewValue:last-of-type { border-bottom: none; }
+
+.smtpMasked {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  letter-spacing: 0.05em;
+}
+.smtpEmpty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.82rem;
+}
+
+.smtpViewActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.smtpTestError {
+  font-size: 0.82rem;
+  color: #f87171;
+}
+
+.smtpSetupNote {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.smtpTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 10px;
+}
+
+.smtpHint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.smtpOptional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}

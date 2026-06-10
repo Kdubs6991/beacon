@@ -1,0 +1,458 @@
+/* ── Section nav ─────────────────────────────────────────── */
+
+.sectionNav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-page);
+  margin: -28px -32px 28px;
+  padding: 10px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.sectionNavBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+.sectionNavBtn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-pri);
+}
+
+/* ── Page container ──────────────────────────────────────── */
+
+.page {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Card section ────────────────────────────────────────── */
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px 24px;
+  scroll-margin-top: 60px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin: 0 0 18px;
+}
+
+.sectionHeader .sectionTitle {
+  flex: 1;
+  margin: 0;
+}
+
+.sectionDesc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: -10px 0 18px;
+  line-height: 1.5;
+}
+
+/* ── Role badge ──────────────────────────────────────────── */
+
+.roleBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.roleBadgeAdmin {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: var(--accent);
+}
+
+/* ── Edit link ───────────────────────────────────────────── */
+
+.editLink {
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.editLink:hover { opacity: 0.75; }
+
+/* ── Form ────────────────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formField {
+  margin-bottom: 16px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+
+.hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.formInput {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-pri);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+}
+.formInput:focus { border-color: var(--accent); }
+
+.formError {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+
+.btnPrimary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.btnPrimary:hover:not(:disabled) { opacity: 0.88; }
+.btnPrimary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btnDanger {
+  background: none;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btnDanger:hover {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: #f87171;
+}
+
+.successMsg {
+  font-size: 0.82rem;
+  color: #4ade80;
+}
+
+.btnSuccess {
+  background: #16a34a;
+}
+
+.errMsg {
+  font-size: 0.82rem;
+  color: #f87171;
+}
+
+/* ── Theme picker ────────────────────────────────────────── */
+
+.themeRow {
+  display: flex;
+  gap: 10px;
+}
+
+.themeCard {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-sec);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.themeCard:hover { border-color: var(--accent); color: var(--text-pri); }
+
+.themeCardActive {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Connections ─────────────────────────────────────────── */
+
+.connectionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.connDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connDotOn  { background: #22c55e; }
+.connDotOff { background: #f59e0b; }
+
+.connBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.connName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-pri);
+}
+
+.connStatus {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.connAction {
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.connAction:hover { opacity: 0.75; }
+
+/* ── Org info grid ───────────────────────────────────────── */
+
+.orgGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.orgRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.orgRow:last-child { border-bottom: none; }
+
+.orgLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.orgValue {
+  font-size: 0.875rem;
+  color: var(--text-pri);
+  flex: 1;
+}
+
+.orgValueMono {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.82rem;
+  color: var(--text-sec);
+}
+
+/* ── Sign out row ────────────────────────────────────────── */
+
+.signOutRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 16px;
+}
+
+.signOutHint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* ── Misc ────────────────────────────────────────────────── */
+
+.muted {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Dashboard layout section ────────────────────────────── */
+
+.dashList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0;
+  touch-action: none;
+}
+
+.dashRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  user-select: none;
+  transition: opacity 0.12s, border-color 0.12s, background 0.12s;
+}
+.dashRow:active { cursor: grabbing; }
+
+.dashRowDragging {
+  opacity: 0.4;
+}
+
+.dashRowOver {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-page));
+}
+
+.dragHandle {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dashRowInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashRowLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-pri);
+}
+
+.dashRowDesc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dashToggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 7px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.dashToggle:hover { color: var(--text-sec); border-color: var(--text-muted); }
+.dashToggleOn {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .sectionNav {
+    margin: -28px -20px 24px;
+    padding: 10px 20px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .themeRow {
+    flex-wrap: wrap;
+  }
+}
