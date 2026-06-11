@@ -3,19 +3,17 @@ const router = express.Router()
 const multer = require('multer')
 const fs = require('fs')
 const path = require('path')
-const { randomBytes } = require('node:crypto')
-const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const db = require('../db')
 const { generateAccessCode } = require('../db')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
-const { USE_R2, s3, R2_BUCKET, R2_PUBLIC_URL } = require('../storage')
+const { USE_CLOUDINARY, cloudinary, uploadToCloudinary, getCloudinaryPublicId } = require('../storage')
 
 const LOGOS_DIR = path.join(__dirname, '../uploads/logos')
-if (!USE_R2) fs.mkdirSync(LOGOS_DIR, { recursive: true })
+if (!USE_CLOUDINARY) fs.mkdirSync(LOGOS_DIR, { recursive: true })
 
 const logoUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
-  storage: USE_R2
+  storage: USE_CLOUDINARY
     ? multer.memoryStorage()
     : multer.diskStorage({
         destination: LOGOS_DIR,
@@ -64,15 +62,13 @@ router.post('/logo', (req, res) => {
     const org = await db.getOne('SELECT logo_url FROM organizations WHERE id = ?', [req.session.orgId])
 
     let logoUrl
-    if (USE_R2) {
-      if (org?.logo_url?.startsWith(R2_PUBLIC_URL + '/')) {
-        const oldKey = org.logo_url.slice(R2_PUBLIC_URL.length + 1)
-        await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: oldKey })).catch(() => {})
+    if (USE_CLOUDINARY) {
+      if (org?.logo_url) {
+        const publicId = getCloudinaryPublicId(org.logo_url)
+        if (publicId) await cloudinary.uploader.destroy(publicId).catch(() => {})
       }
-      const ext = path.extname(req.file.originalname) || '.jpg'
-      const key = `logos/org-${req.session.orgId}-${randomBytes(8).toString('hex')}${ext}`
-      await s3.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, Body: req.file.buffer, ContentType: req.file.mimetype }))
-      logoUrl = `${R2_PUBLIC_URL}/${key}`
+      const result = await uploadToCloudinary(req.file.buffer, { folder: 'beacon/logos', resource_type: 'image' })
+      logoUrl = result.secure_url
     } else {
       if (org?.logo_url) {
         const oldPath = path.join(__dirname, '..', org.logo_url.replace(/^\//, ''))
@@ -89,11 +85,9 @@ router.post('/logo', (req, res) => {
 router.delete('/logo', async (req, res) => {
   const org = await db.getOne('SELECT logo_url FROM organizations WHERE id = ?', [req.session.orgId])
   if (org?.logo_url) {
-    if (USE_R2) {
-      if (org.logo_url.startsWith(R2_PUBLIC_URL + '/')) {
-        const key = org.logo_url.slice(R2_PUBLIC_URL.length + 1)
-        await s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key })).catch(() => {})
-      }
+    if (USE_CLOUDINARY) {
+      const publicId = getCloudinaryPublicId(org.logo_url)
+      if (publicId) await cloudinary.uploader.destroy(publicId).catch(() => {})
     } else {
       const filePath = path.join(__dirname, '..', org.logo_url.replace(/^\//, ''))
       fs.unlink(filePath, () => {})

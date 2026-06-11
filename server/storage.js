@@ -1,28 +1,38 @@
-const USE_R2 = !!(
-  process.env.R2_ACCOUNT_ID &&
-  process.env.R2_ACCESS_KEY_ID &&
-  process.env.R2_SECRET_ACCESS_KEY
+const USE_CLOUDINARY = !!(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
 )
 
-let s3 = null
-if (USE_R2) {
-  const { S3Client } = require('@aws-sdk/client-s3')
-  s3 = new S3Client({
-    region: 'auto',
-    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: process.env.R2_ACCESS_KEY_ID,
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-    },
+let cloudinary = null
+
+if (USE_CLOUDINARY) {
+  cloudinary = require('cloudinary').v2
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
   })
-  console.log('[storage] R2 enabled — uploads going to Cloudflare R2')
+  console.log('[storage] Cloudinary enabled')
 } else {
-  console.log('[storage] R2 not configured — uploads going to local disk')
+  console.log('[storage] Cloudinary not configured — uploads going to local disk')
 }
 
-module.exports = {
-  USE_R2,
-  s3,
-  R2_BUCKET: process.env.R2_BUCKET_NAME || 'beacon-uploads',
-  R2_PUBLIC_URL: (process.env.R2_PUBLIC_URL || '').replace(/\/$/, ''),
+function uploadToCloudinary(buffer, options = {}) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) reject(error)
+      else resolve(result)
+    })
+    stream.end(buffer)
+  })
 }
+
+// Extracts the public_id from a Cloudinary URL so we can delete the file later.
+// e.g. https://res.cloudinary.com/mycloud/image/upload/v123/beacon/photos/abc.jpg → beacon/photos/abc
+function getCloudinaryPublicId(url) {
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/)
+  return match ? match[1] : null
+}
+
+module.exports = { USE_CLOUDINARY, cloudinary, uploadToCloudinary, getCloudinaryPublicId }
