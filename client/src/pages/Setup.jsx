@@ -52,12 +52,9 @@ export default function Setup() {
   useEffect(() => {
     fetch('/api/setup/status')
       .then(r => r.json())
-      .then(data => {
-        if (data.complete) navigate('/org', { replace: true })
-        else setChecking(false)
-      })
+      .then(() => setChecking(false))
       .catch(() => setChecking(false))
-  }, [navigate])
+  }, [])
 
   function handleOrgNameChange(e) {
     const val = e.target.value
