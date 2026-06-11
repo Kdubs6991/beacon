@@ -75,6 +75,14 @@ if (hasBuiltClient) {
   })
 }
 
+// Global error handler — catches unhandled errors in any route
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[beacon] Unhandled error:', err)
+  if (res.headersSent) return
+  res.status(500).json({ error: 'An unexpected error occurred. Please try again.' })
+})
+
 async function seedAdmin() {
   const email = process.env.ADMIN_EMAIL
   const password = process.env.ADMIN_PASSWORD

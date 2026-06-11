@@ -416,6 +416,17 @@ router.post('/people', async (req, res) => {
   )
   res.json(await db.getOne('SELECT * FROM people WHERE id = ?', [r.lastInsertId]))
 })
+async function cleanupPhoto(url) {
+  if (!url) return
+  if (USE_CLOUDINARY) {
+    const publicId = getCloudinaryPublicId(url)
+    if (publicId) await cloudinary.uploader.destroy(publicId).catch(() => {})
+  } else if (url.startsWith('/uploads/photos/')) {
+    const filepath = path.join(UPLOADS_DIR, path.basename(url))
+    fs.unlink(filepath, () => {})
+  }
+}
+
 router.put('/people/:id', async (req, res) => {
   const orgId = req.session.orgId
   const { name, photo_url, photo_url_portrait, category, email, pco_person_id, position } = req.body
@@ -423,15 +434,23 @@ router.put('/people/:id', async (req, res) => {
   if (!existing) return res.status(404).json({ error: 'Person not found' })
 
   if (existing.pco_person_id) {
+    const oldSq = existing.photo_override
+    const oldPt = existing.photo_override_portrait
     await db.execute(
       'UPDATE people SET name_override = ?, photo_override = ?, photo_override_portrait = ?, email_override = ?, category_override = ?, position_override = ? WHERE id = ? AND org_id = ?',
       [name ?? null, photo_url ?? null, photo_url_portrait ?? null, email ?? null, serializeCategory(category), position ?? null, req.params.id, orgId]
     )
+    if (oldSq && oldSq !== photo_url) await cleanupPhoto(oldSq)
+    if (oldPt && oldPt !== photo_url_portrait) await cleanupPhoto(oldPt)
   } else {
+    const oldSq = existing.photo_url
+    const oldPt = existing.photo_url_portrait
     await db.execute(
       'UPDATE people SET name = ?, photo_url = ?, photo_url_portrait = ?, category = ?, email = ?, pco_person_id = ?, position = ? WHERE id = ? AND org_id = ?',
       [name, photo_url ?? null, photo_url_portrait ?? null, serializeCategory(category), email ?? null, pco_person_id ?? null, position ?? null, req.params.id, orgId]
     )
+    if (oldSq && oldSq !== photo_url) await cleanupPhoto(oldSq)
+    if (oldPt && oldPt !== photo_url_portrait) await cleanupPhoto(oldPt)
   }
   res.json(await db.getOne('SELECT * FROM people WHERE id = ?', [req.params.id]))
 })
@@ -442,6 +461,10 @@ router.delete('/people/:id', async (req, res) => {
   if (existing.pco_person_id) {
     return res.status(400).json({ error: 'Cannot delete a person synced from Planning Center' })
   }
+  await Promise.all([
+    cleanupPhoto(existing.photo_url),
+    cleanupPhoto(existing.photo_url_portrait),
+  ])
   await db.execute('DELETE FROM people WHERE id = ? AND org_id = ?', [req.params.id, orgId])
   res.json({ ok: true })
 })

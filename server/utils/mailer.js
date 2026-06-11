@@ -1,21 +1,21 @@
 const nodemailer = require('nodemailer')
 const db = require('../db')
 
-function getSmtpConfig() {
-  function s(key) { return db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value }
-  const host = s('smtp_host') || process.env.SMTP_HOST
+async function getSmtpConfig() {
+  async function s(key) { return (await db.getOne('SELECT value FROM settings WHERE key = ?', [key]))?.value }
+  const host = (await s('smtp_host')) || process.env.SMTP_HOST
   if (!host) return null
   return {
     host,
-    port: parseInt(s('smtp_port') || process.env.SMTP_PORT || '587'),
-    user: s('smtp_user') || process.env.SMTP_USER,
-    pass: s('smtp_pass') || process.env.SMTP_PASS,
-    from: s('smtp_from') || process.env.SMTP_FROM,
+    port: parseInt((await s('smtp_port')) || process.env.SMTP_PORT || '587'),
+    user: (await s('smtp_user')) || process.env.SMTP_USER,
+    pass: (await s('smtp_pass')) || process.env.SMTP_PASS,
+    from: (await s('smtp_from')) || process.env.SMTP_FROM,
   }
 }
 
-function getTransporter() {
-  const c = getSmtpConfig()
+async function getTransporter() {
+  const c = await getSmtpConfig()
   if (!c || !c.user || !c.pass) return null
   return nodemailer.createTransport({
     host: c.host,
@@ -25,9 +25,14 @@ function getTransporter() {
   })
 }
 
-function fromAddress() {
-  const c = getSmtpConfig()
+async function fromAddress() {
+  const c = await getSmtpConfig()
   return c?.from || c?.user || process.env.SMTP_FROM || process.env.SMTP_USER
+}
+
+async function isSmtpConfigured() {
+  const c = await getSmtpConfig()
+  return !!(c?.host && c?.user && c?.pass)
 }
 
 function emailWrapper({ preheader, headerLabel, body, footerText }) {
@@ -82,7 +87,7 @@ function emailWrapper({ preheader, headerLabel, body, footerText }) {
 }
 
 async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
-  const t = getTransporter()
+  const t = await getTransporter()
   const roleLabel = role === 'admin' ? 'Admin' : 'Team Member'
 
   if (!t) {
@@ -123,7 +128,7 @@ async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
   })
 
   await t.sendMail({
-    from: fromAddress(),
+    from: await fromAddress(),
     to,
     subject: `You've been invited to join ${orgName} on Beacon`,
     text: [
@@ -141,7 +146,7 @@ async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
 }
 
 async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
-  const t = getTransporter()
+  const t = await getTransporter()
 
   if (!t) {
     console.log(`[PASSWORD RESET] SMTP not configured — reset link for ${to}: ${resetUrl}`)
@@ -187,7 +192,7 @@ async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
   })
 
   await t.sendMail({
-    from: fromAddress(),
+    from: await fromAddress(),
     to,
     subject: `Reset your Beacon password`,
     text: [
@@ -204,4 +209,4 @@ async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
   return { sent: true }
 }
 
-module.exports = { sendInviteEmail, sendPasswordResetEmail }
+module.exports = { sendInviteEmail, sendPasswordResetEmail, isSmtpConfigured }

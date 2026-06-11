@@ -1,7 +1,16 @@
 const express = require('express')
 const router = express.Router()
 const { randomBytes } = require('node:crypto')
+const rateLimit = require('express-rate-limit')
 const db = require('../db')
+
+const orgAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please wait 15 minutes and try again.' },
+})
 
 // ── Scan-to-login session store (in-memory, 10min TTL) ────────────────────────
 const displaySessions = new Map()
@@ -14,7 +23,7 @@ setInterval(() => {
 
 // ── Public auth endpoints for cookie-based display login ──────────────────────
 
-router.post('/auth/org', async (req, res) => {
+router.post('/auth/org', orgAuthLimiter, async (req, res) => {
   const { slug, access_code } = req.body
   if (!slug || !access_code) {
     return res.status(400).json({ error: 'slug and access_code are required' })

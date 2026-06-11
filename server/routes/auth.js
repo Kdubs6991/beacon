@@ -1,10 +1,27 @@
 const express = require('express')
 const router = express.Router()
 const { randomBytes } = require('node:crypto')
+const rateLimit = require('express-rate-limit')
 const db = require('../db')
 const { hashPassword, verifyPassword } = require('../utils/password')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
-const { sendPasswordResetEmail } = require('../utils/mailer')
+const { sendPasswordResetEmail, isSmtpConfigured } = require('../utils/mailer')
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please wait 15 minutes and try again.' },
+})
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many password reset requests. Please wait an hour and try again.' },
+})
 
 // ── User auth ─────────────────────────────────────────────────────────────────
 
@@ -51,7 +68,7 @@ router.post('/register', async (req, res) => {
   res.status(201).json({ user })
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' })
@@ -153,9 +170,16 @@ router.put('/dashboard-config', requireAuth, async (req, res) => {
 
 // ── Password reset ────────────────────────────────────────────────────────────
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   const { email } = req.body
   if (!email) return res.status(400).json({ error: 'email is required' })
+
+  const smtpReady = await isSmtpConfigured()
+  if (!smtpReady) {
+    return res.status(503).json({
+      error: 'Email is not configured for this organization. Contact your admin to set up SMTP in the Email settings.',
+    })
+  }
 
   const user = await db.getOne('SELECT * FROM users WHERE email = ?', [email.toLowerCase()])
   if (!user) return res.json({ ok: true })
@@ -175,6 +199,7 @@ router.post('/forgot-password', async (req, res) => {
     await sendPasswordResetEmail({ to: user.email, orgName: org?.name ?? 'Beacon', resetUrl })
   } catch (err) {
     console.error('[PASSWORD RESET] Email error:', err.message)
+    return res.status(500).json({ error: 'Failed to send reset email. Check your SMTP settings and try again.' })
   }
 
   res.json({ ok: true })
