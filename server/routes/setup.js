@@ -9,11 +9,6 @@ router.get('/status', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const row = await db.getOne("SELECT value FROM settings WHERE key = 'setup_complete'")
-  if (row?.value === 'true') {
-    return res.status(403).json({ error: 'Setup is already complete' })
-  }
-
   const {
     orgName, orgSlug, addressStreet, addressCity, addressState, addressZip,
     website, phone, timezone, adminName, adminEmail, adminPassword,
@@ -32,55 +27,84 @@ router.post('/', async (req, res) => {
   const slug = orgSlug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '')
   if (!slug) return res.status(400).json({ error: 'Invalid organization code — use letters, numbers, and hyphens only' })
 
-  const defaultOrg = await db.getOne('SELECT id FROM organizations LIMIT 1')
-  const slugConflict = await db.getOne('SELECT id FROM organizations WHERE slug = ?', [slug])
-  if (slugConflict && slugConflict.id !== defaultOrg?.id) {
-    return res.status(409).json({ error: 'That organization code is already in use' })
-  }
-
-  await db.execute(
-    `UPDATE organizations
-     SET name = ?, slug = ?, address_street = ?, address_city = ?, address_state = ?,
-         address_zip = ?, website = ?, phone = ?, timezone = ?
-     WHERE id = ?`,
-    [
-      orgName.trim(), slug,
-      addressStreet?.trim() || null, addressCity?.trim() || null,
-      addressState?.trim() || null, addressZip?.trim() || null,
-      website?.trim() || null, phone?.trim() || null,
-      timezone || 'America/Chicago',
-      defaultOrg.id,
-    ]
-  )
-
   const email = adminEmail.trim().toLowerCase()
-  const existing = await db.getOne('SELECT id, org_id FROM users WHERE email = ?', [email])
+  const setupRow = await db.getOne("SELECT value FROM settings WHERE key = 'setup_complete'")
+  const isFirstSetup = setupRow?.value !== 'true'
 
-  let user
-  if (existing) {
+  let orgId
+
+  if (isFirstSetup) {
+    // First-time setup: configure the seed org
+    const seedOrg = await db.getOne('SELECT id FROM organizations LIMIT 1')
+    const slugConflict = await db.getOne('SELECT id FROM organizations WHERE slug = ? AND id != ?', [slug, seedOrg.id])
+    if (slugConflict) return res.status(409).json({ error: 'That organization code is already in use' })
+
     await db.execute(
-      'UPDATE users SET name = ?, password_hash = ?, role = ?, org_id = ? WHERE id = ?',
-      [adminName.trim(), hashPassword(adminPassword), 'admin', defaultOrg.id, existing.id]
+      `UPDATE organizations
+       SET name = ?, slug = ?, address_street = ?, address_city = ?, address_state = ?,
+           address_zip = ?, website = ?, phone = ?, timezone = ?
+       WHERE id = ?`,
+      [
+        orgName.trim(), slug,
+        addressStreet?.trim() || null, addressCity?.trim() || null,
+        addressState?.trim() || null, addressZip?.trim() || null,
+        website?.trim() || null, phone?.trim() || null,
+        timezone || 'America/Chicago', seedOrg.id,
+      ]
     )
-    user = await db.getOne('SELECT id, name, email, role, org_id FROM users WHERE id = ?', [existing.id])
+    orgId = seedOrg.id
+
+    const existing = await db.getOne('SELECT id FROM users WHERE email = ?', [email])
+    if (existing) {
+      await db.execute(
+        'UPDATE users SET name = ?, password_hash = ?, role = ?, org_id = ? WHERE id = ?',
+        [adminName.trim(), hashPassword(adminPassword), 'admin', orgId, existing.id]
+      )
+    } else {
+      await db.execute(
+        'INSERT INTO users (org_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+        [orgId, adminName.trim(), email, hashPassword(adminPassword), 'admin']
+      )
+    }
   } else {
+    // Additional org: create a brand new org
+    const slugConflict = await db.getOne('SELECT id FROM organizations WHERE slug = ?', [slug])
+    if (slugConflict) return res.status(409).json({ error: 'That organization code is already in use' })
+
+    const emailTaken = await db.getOne('SELECT id FROM users WHERE email = ?', [email])
+    if (emailTaken) return res.status(409).json({ error: 'That email is already registered. Use a different email for this organization\'s admin account.' })
+
+    const { generateAccessCode } = require('../db')
     const r = await db.execute(
-      'INSERT INTO users (org_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?) RETURNING id',
-      [defaultOrg.id, adminName.trim(), email, hashPassword(adminPassword), 'admin']
+      `INSERT INTO organizations (name, slug, access_code, address_street, address_city, address_state,
+       address_zip, website, phone, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+      [
+        orgName.trim(), slug, generateAccessCode(),
+        addressStreet?.trim() || null, addressCity?.trim() || null,
+        addressState?.trim() || null, addressZip?.trim() || null,
+        website?.trim() || null, phone?.trim() || null,
+        timezone || 'America/Chicago',
+      ]
     )
-    user = await db.getOne('SELECT id, name, email, role, org_id FROM users WHERE id = ?', [r.lastInsertId])
+    orgId = r.lastInsertId
+
+    await db.execute(
+      'INSERT INTO users (org_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+      [orgId, adminName.trim(), email, hashPassword(adminPassword), 'admin']
+    )
   }
 
   await db.execute(
     "INSERT INTO settings (key, value) VALUES ('setup_complete', 'true') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
   )
 
+  const user = await db.getOne('SELECT id, name, email, role, org_id FROM users WHERE email = ? AND org_id = ?', [email, orgId])
   req.session.userId = user.id
   req.session.role = user.role
-  req.session.orgId = user.org_id
+  req.session.orgId = orgId
   req.session.userLoginAt = new Date().toISOString()
 
-  const org = await db.getOne('SELECT id, name, slug FROM organizations WHERE id = ?', [defaultOrg.id])
+  const org = await db.getOne('SELECT id, name, slug FROM organizations WHERE id = ?', [orgId])
   res.json({ user, org })
 })
 

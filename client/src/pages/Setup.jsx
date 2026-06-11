@@ -52,7 +52,7 @@ export default function Setup() {
   useEffect(() => {
     fetch('/api/setup/status')
       .then(r => r.json())
-      .then(data => setChecking(data.complete ? 'done' : false))
+      .then(() => setChecking(false))
       .catch(() => setChecking(false))
   }, [])
 
@@ -101,19 +101,6 @@ export default function Setup() {
     } finally {
       setSaving(false)
     }
-  }
-
-  if (checking === 'done') {
-    return (
-      <div className={styles.page}>
-        <div className={styles.card} style={{ textAlign: 'center', padding: '48px 32px' }}>
-          <div className={styles.splashBrand}>Beacon</div>
-          <p style={{ margin: '16px 0 8px', fontSize: '1.1rem', fontWeight: 600 }}>This instance is already set up</p>
-          <p style={{ color: 'var(--text-sec)', marginBottom: '24px' }}>Sign in to your organization to access the admin panel.</p>
-          <a href="/org" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Go to org login →</a>
-        </div>
-      </div>
-    )
   }
 
   if (checking) {

@@ -15,19 +15,11 @@ const setCookie = (name, value, days = name === 'beacon_screen' ? 3650 : 365) =>
 
 export default function OrgLogin() {
   const navigate = useNavigate()
-  const [setupComplete, setSetupComplete] = useState(true)
 
   // Already signed into an org — skip this page
   useEffect(() => {
     if (getCookie('beacon_org')) navigate('/login', { replace: true })
   }, [navigate])
-
-  useEffect(() => {
-    fetch('/api/setup/status')
-      .then(r => r.json())
-      .then(d => setSetupComplete(d.complete))
-      .catch(() => {})
-  }, [])
 
   const [orgSlug, setOrgSlug] = useState('')
   const [orgCode, setOrgCode] = useState('')
@@ -238,11 +230,9 @@ export default function OrgLogin() {
         <div className={styles.footer}>
           <Link to="/display?setup=1" className={styles.footerLink}>Set up this device as a display screen →</Link>
         </div>
-        {!setupComplete && (
-          <div className={styles.footer}>
-            <Link to="/setup" className={styles.footerLink}>Create an organization</Link>
-          </div>
-        )}
+        <div className={styles.footer}>
+          <Link to="/setup" className={styles.footerLink}>Create an organization</Link>
+        </div>
       </div>
     </div>
     </>
