@@ -362,9 +362,11 @@ router.post('/photos/upload', (req, res) => {
     if (!sq || !pt) return res.status(400).json({ error: 'Both square and portrait files are required' })
 
     if (USE_CLOUDINARY) {
+      const orgRow = await db.getOne('SELECT slug FROM organizations WHERE id = ?', [req.session.orgId])
+      const folder = `beacon/${orgRow.slug}/photos`
       const [sqResult, ptResult] = await Promise.all([
-        uploadToCloudinary(sq.buffer, { folder: 'beacon/photos', resource_type: 'image' }),
-        uploadToCloudinary(pt.buffer, { folder: 'beacon/photos', resource_type: 'image' }),
+        uploadToCloudinary(sq.buffer, { folder, resource_type: 'image' }),
+        uploadToCloudinary(pt.buffer, { folder, resource_type: 'image' }),
       ])
       return res.json({
         square:   sqResult.secure_url,

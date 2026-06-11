@@ -59,7 +59,7 @@ router.post('/logo', (req, res) => {
   logoUpload.single('logo')(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message })
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
-    const org = await db.getOne('SELECT logo_url FROM organizations WHERE id = ?', [req.session.orgId])
+    const org = await db.getOne('SELECT logo_url, slug FROM organizations WHERE id = ?', [req.session.orgId])
 
     let logoUrl
     if (USE_CLOUDINARY) {
@@ -67,7 +67,7 @@ router.post('/logo', (req, res) => {
         const publicId = getCloudinaryPublicId(org.logo_url)
         if (publicId) await cloudinary.uploader.destroy(publicId).catch(() => {})
       }
-      const result = await uploadToCloudinary(req.file.buffer, { folder: 'beacon/logos', resource_type: 'image' })
+      const result = await uploadToCloudinary(req.file.buffer, { folder: `beacon/${org.slug}/logos`, resource_type: 'image' })
       logoUrl = result.secure_url
     } else {
       if (org?.logo_url) {
