@@ -23,10 +23,13 @@ const displayRoutes = require('./routes/display')
 const orgRoutes = require('./routes/org')
 const setupRoutes = require('./routes/setup')
 
+const compression = require('compression')
+
 const app = express()
 const PORT = process.env.PORT || 3001
 
 app.set('trust proxy', 1)
+app.use(compression())
 
 const clientDist = path.join(__dirname, '../client/dist')
 const hasBuiltClient = fs.existsSync(clientDist)

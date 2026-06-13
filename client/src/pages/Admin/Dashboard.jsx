@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import AdminLayout from './_Layout'
 import InfoPopover from '../../components/InfoPopover'
+import { cloudinaryThumb } from '../../utils/cloudinary'
 import styles from './Dashboard.module.css'
 
 const API = import.meta.env.VITE_API_URL ?? ''
@@ -342,7 +343,7 @@ function MiniAvatar({ name, photo }) {
   const [imgError, setImgError] = useState(false)
   const initials = name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? '?'
   if (photo && !imgError) {
-    return <img src={photo} alt={name} className={styles.miniAvatar} onError={() => setImgError(true)} />
+    return <img src={cloudinaryThumb(photo, 80)} alt={name} className={styles.miniAvatar} onError={() => setImgError(true)} />
   }
   return <div className={`${styles.miniAvatar} ${styles.miniAvatarInitials}`}>{initials}</div>
 }

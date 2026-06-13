@@ -4,6 +4,7 @@ import AdminLayout from './_Layout'
 import Modal from '../../components/Modal'
 import InfoPopover from '../../components/InfoPopover'
 import { useAuth } from '../../context/AuthContext'
+import { cloudinaryThumb } from '../../utils/cloudinary'
 import styles from './People.module.css'
 
 function api(path, opts = {}) {
@@ -99,7 +100,7 @@ function CardPhoto({ photo, name }) {
   const [err, setErr] = useState(false)
   useEffect(() => setErr(false), [photo])
   if (photo && !err) {
-    return <img src={photo} alt="" className={styles.cardPhotoImg} onError={() => setErr(true)} />
+    return <img src={cloudinaryThumb(photo, 300)} alt="" className={styles.cardPhotoImg} onError={() => setErr(true)} />
   }
   return <div className={styles.cardPhotoInitials}>{initials(name)}</div>
 }
@@ -109,7 +110,7 @@ function Avatar({ photo, name }) {
   const [err, setErr] = useState(false)
   useEffect(() => setErr(false), [photo])
   if (photo && !err) {
-    return <img src={photo} alt="" className={styles.avatar} onError={() => setErr(true)} />
+    return <img src={cloudinaryThumb(photo, 120)} alt="" className={styles.avatar} onError={() => setErr(true)} />
   }
   return <div className={styles.avatarInitials}>{initials(name)}</div>
 }
@@ -119,7 +120,7 @@ function AvatarLg({ photo, name }) {
   const [err, setErr] = useState(false)
   useEffect(() => setErr(false), [photo])
   if (photo && !err) {
-    return <img src={photo} alt="" className={styles.avatarLg} onError={() => setErr(true)} />
+    return <img src={cloudinaryThumb(photo, 300)} alt="" className={styles.avatarLg} onError={() => setErr(true)} />
   }
   return <div className={styles.avatarInitialsLg}>{initials(name)}</div>
 }
