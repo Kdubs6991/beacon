@@ -21,28 +21,28 @@ const DISPLAY_THEMES = {
     '--bg-header': 'rgba(9, 3, 20, 0.96)',
     '--border': '#1a083a',
     '--accent': '#a855f7', '--accent-dim': '#2e1065',
-    '--mic-color': '#f472b6', '--iem-color': '#a78bfa',
+    '--mic-color': '#4ade80', '--iem-color': '#22d3ee',
   },
   red: {
     '--bg-page': '#0c0202', '--bg-card': '#170505', '--bg-card-hover': '#220808',
     '--bg-header': 'rgba(16, 3, 3, 0.96)',
     '--border': '#2d0808',
     '--accent': '#ef4444', '--accent-dim': '#3b0909',
-    '--mic-color': '#fb923c', '--iem-color': '#f472b6',
+    '--mic-color': '#4ade80', '--iem-color': '#22d3ee',
   },
   yellow: {
     '--bg-page': '#0c0a01', '--bg-card': '#171302', '--bg-card-hover': '#221c03',
     '--bg-header': 'rgba(15, 12, 1, 0.96)',
     '--border': '#2e2403',
     '--accent': '#fbbf24', '--accent-dim': '#3b2d00',
-    '--mic-color': '#fbbf24', '--iem-color': '#fb923c',
+    '--mic-color': '#4ade80', '--iem-color': '#22d3ee',
   },
   black: {
     '--bg-page': '#0a0a0a', '--bg-card': '#141414', '--bg-card-hover': '#1e1e1e',
     '--bg-header': 'rgba(6, 6, 6, 0.97)',
     '--border': 'rgba(255,255,255,0.08)',
     '--accent': '#94a3b8', '--accent-dim': '#334155',
-    '--mic-color': '#f1f5f9', '--iem-color': '#94a3b8',
+    '--mic-color': '#4ade80', '--iem-color': '#22d3ee',
   },
   white: {
     '--bg-page': '#f0f4f8', '--bg-card': '#ffffff', '--bg-card-hover': '#f1f5f9',
@@ -188,6 +188,16 @@ function DisplayView({ screenToken }) {
 
 export default function Display() {
   const { token } = useParams()
+
+  // Always force dark mode on display screens regardless of user account preference
+  useEffect(() => {
+    const prev = document.documentElement.getAttribute('data-theme')
+    document.documentElement.removeAttribute('data-theme')
+    return () => {
+      if (prev) document.documentElement.setAttribute('data-theme', prev)
+    }
+  }, [])
+
   if (token) return <DisplayView screenToken={token} />
   return <CookieDisplay />
 }
