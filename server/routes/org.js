@@ -67,7 +67,7 @@ router.post('/logo', (req, res) => {
         const publicId = getCloudinaryPublicId(org.logo_url)
         if (publicId) await cloudinary.uploader.destroy(publicId).catch(() => {})
       }
-      const result = await uploadToCloudinary(req.file.buffer, { folder: `beacon/${org.slug}/logos`, resource_type: 'image' })
+      const result = await uploadToCloudinary(req.file.buffer, { folder: `beacon/${org.slug}/logo`, resource_type: 'image' })
       logoUrl = result.secure_url
     } else {
       if (org?.logo_url) {

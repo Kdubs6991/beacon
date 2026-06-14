@@ -363,7 +363,10 @@ router.post('/photos/upload', (req, res) => {
 
     if (USE_CLOUDINARY) {
       const orgRow = await db.getOne('SELECT slug FROM organizations WHERE id = ?', [req.session.orgId])
-      const folder = `beacon/${orgRow.slug}/photos`
+      const personId = req.body.personId
+      const folder = personId
+        ? `beacon/${orgRow.slug}/photos/${personId}`
+        : `beacon/${orgRow.slug}/photos`
       const [sqResult, ptResult] = await Promise.all([
         uploadToCloudinary(sq.buffer, { folder, resource_type: 'image' }),
         uploadToCloudinary(pt.buffer, { folder, resource_type: 'image' }),
@@ -414,7 +417,36 @@ router.post('/people', async (req, res) => {
     'INSERT INTO people (org_id, name, pco_person_id, photo_url, photo_url_portrait, category, email, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id',
     [orgId, name, pco_person_id ?? null, photo_url ?? null, photo_url_portrait ?? null, serializeCategory(category), email ?? null, position ?? null]
   )
-  res.json(await db.getOne('SELECT * FROM people WHERE id = ?', [r.lastInsertId]))
+  const newId = r.lastInsertId
+
+  // For new people, photos were uploaded without a person folder — rename them now that we have the ID
+  if (USE_CLOUDINARY && newId && (photo_url || photo_url_portrait)) {
+    const orgRow = await db.getOne('SELECT slug FROM organizations WHERE id = ?', [orgId])
+    const targetFolder = `beacon/${orgRow.slug}/photos/${newId}`
+    let finalSq = photo_url
+    let finalPt = photo_url_portrait
+
+    async function moveToPersonFolder(url) {
+      if (!url || !url.includes('res.cloudinary.com')) return url
+      const oldId = getCloudinaryPublicId(url)
+      if (!oldId || oldId.startsWith(targetFolder)) return url
+      const filename = oldId.split('/').pop()
+      const result = await cloudinary.uploader.rename(oldId, `${targetFolder}/${filename}`).catch(() => null)
+      return result?.secure_url ?? url
+    }
+
+    finalSq = await moveToPersonFolder(photo_url)
+    finalPt = await moveToPersonFolder(photo_url_portrait)
+
+    if (finalSq !== photo_url || finalPt !== photo_url_portrait) {
+      await db.execute(
+        'UPDATE people SET photo_url = ?, photo_url_portrait = ? WHERE id = ?',
+        [finalSq || null, finalPt || null, newId]
+      )
+    }
+  }
+
+  res.json(await db.getOne('SELECT * FROM people WHERE id = ?', [newId]))
 })
 async function cleanupPhoto(url) {
   if (!url) return

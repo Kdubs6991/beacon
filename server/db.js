@@ -261,6 +261,33 @@ const db = {
       );
     `)
 
+    // Indexes — safe to run on existing databases, IF NOT EXISTS is a no-op when already present
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_people_org_id             ON people(org_id);
+      CREATE INDEX IF NOT EXISTS idx_people_pco_person_id      ON people(pco_person_id);
+      CREATE INDEX IF NOT EXISTS idx_labels_org_id             ON labels(org_id);
+      CREATE INDEX IF NOT EXISTS idx_screens_org_id            ON screens(org_id);
+      CREATE INDEX IF NOT EXISTS idx_campuses_org_id           ON campuses(org_id);
+      CREATE INDEX IF NOT EXISTS idx_automation_rules_org_id   ON automation_rules(org_id);
+      CREATE INDEX IF NOT EXISTS idx_templates_org_id          ON templates(org_id);
+      CREATE INDEX IF NOT EXISTS idx_position_types_org_id     ON position_types(org_id);
+      CREATE INDEX IF NOT EXISTS idx_users_org_id              ON users(org_id);
+      CREATE INDEX IF NOT EXISTS idx_invite_tokens_org_id      ON invite_tokens(org_id);
+      CREATE INDEX IF NOT EXISTS idx_schedules_svc_type        ON schedules(service_type_id);
+      CREATE INDEX IF NOT EXISTS idx_manual_assignments_svc    ON manual_assignments(service_type_id);
+      CREATE INDEX IF NOT EXISTS idx_manual_assignments_person ON manual_assignments(person_id);
+      CREATE INDEX IF NOT EXISTS idx_active_assignments_screen ON active_assignments(screen_id);
+      CREATE INDEX IF NOT EXISTS idx_active_assignments_person ON active_assignments(person_id);
+      CREATE INDEX IF NOT EXISTS idx_photo_overrides_person    ON photo_overrides(person_id);
+      CREATE INDEX IF NOT EXISTS idx_svc_types_campus          ON service_types(campus_id);
+    `)
+
+    // Data integrity constraint — prevents duplicate slots on the same screen
+    await pool.query(`
+      ALTER TABLE active_assignments
+        ADD CONSTRAINT IF NOT EXISTS uq_active_assignments_screen_slot UNIQUE (screen_id, slot)
+    `).catch(() => {})
+
     // Ensure a default org exists
     const orgCount = await db.getOne('SELECT COUNT(*) AS n FROM organizations')
     if (parseInt(orgCount.n) === 0) {

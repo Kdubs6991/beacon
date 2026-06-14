@@ -126,7 +126,7 @@ function AvatarLg({ photo, name }) {
 }
 
 // ── Dual-overlay crop modal ───────────────────────────────────────────────────
-function PhotoCropModal({ onDone, onCancel }) {
+function PhotoCropModal({ onDone, onCancel, personId }) {
   const [imageSrc, setImageSrc]      = useState(null)
   const [fileError, setFileError]    = useState(null)
   const [crop, setCrop]              = useState({ x: 0, y: 0 })
@@ -186,6 +186,7 @@ function PhotoCropModal({ onDone, onCancel }) {
       const form = new FormData()
       form.append('square',   squareBlob,   'photo-square.webp')
       form.append('portrait', portraitBlob, 'photo-portrait.webp')
+      if (personId) form.append('personId', String(personId))
       const res  = await fetch('/api/admin/photos/upload', { method: 'POST', credentials: 'include', body: form })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Upload failed')
@@ -326,7 +327,7 @@ function PersonModal({ initial, onSave, onClose }) {
   }
 
   if (showCrop) {
-    return <PhotoCropModal onDone={({ square, portrait }) => { setPhotoUrl(square); setPhotoPortrait(portrait); setShowCrop(false) }} onCancel={() => setShowCrop(false)} />
+    return <PhotoCropModal personId={initial?.id} onDone={({ square, portrait }) => { setPhotoUrl(square); setPhotoPortrait(portrait); setShowCrop(false) }} onCancel={() => setShowCrop(false)} />
   }
 
   return (
