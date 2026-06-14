@@ -126,14 +126,14 @@ function AvatarLg({ photo, name }) {
 }
 
 // ── Dual-overlay crop modal ───────────────────────────────────────────────────
-function PhotoCropModal({ onDone, onCancel, personId }) {
+function PhotoCropModal({ onDone, onCancel }) {
   const [imageSrc, setImageSrc]      = useState(null)
   const [fileError, setFileError]    = useState(null)
   const [crop, setCrop]              = useState({ x: 0, y: 0 })
   const [zoom, setZoom]              = useState(1)
   const [portraitPx, setPortraitPx] = useState(null)
   const [cropBounds, setCropBounds]  = useState(null)
-  const [uploading, setUploading]    = useState(false)
+  const [processing, setProcessing]  = useState(false)
   const [uploadErr, setUploadErr]    = useState(null)
   const containerRef = useRef(null)
 
@@ -175,7 +175,7 @@ function PhotoCropModal({ onDone, onCancel, personId }) {
   async function handleSave() {
     if (!portraitPx) return
     setUploadErr(null)
-    setUploading(true)
+    setProcessing(true)
     try {
       const portraitBlob = await extractCrop(imageSrc, portraitPx, 600, 800)
       const squarePx = {
@@ -183,18 +183,11 @@ function PhotoCropModal({ onDone, onCancel, personId }) {
         width: portraitPx.width, height: portraitPx.width,
       }
       const squareBlob = await extractCrop(imageSrc, squarePx, 600, 600)
-      const form = new FormData()
-      form.append('square',   squareBlob,   'photo-square.webp')
-      form.append('portrait', portraitBlob, 'photo-portrait.webp')
-      if (personId) form.append('personId', String(personId))
-      const res  = await fetch('/api/admin/photos/upload', { method: 'POST', credentials: 'include', body: form })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
-      onDone({ square: data.square, portrait: data.portrait })
+      onDone({ squareBlob, portraitBlob })
     } catch (err) {
       setUploadErr(err.message)
     } finally {
-      setUploading(false)
+      setProcessing(false)
     }
   }
 
@@ -205,8 +198,8 @@ function PhotoCropModal({ onDone, onCancel, personId }) {
       footer={
         <>
           <button className={styles.btnGhost} onClick={onCancel}>Cancel</button>
-          <button className={styles.btnPrimary} onClick={handleSave} disabled={!imageSrc || !portraitPx || uploading}>
-            {uploading ? 'Uploading…' : 'Crop & Save'}
+          <button className={styles.btnPrimary} onClick={handleSave} disabled={!imageSrc || !portraitPx || processing}>
+            {processing ? 'Processing…' : 'Crop & Save'}
           </button>
         </>
       }
@@ -288,6 +281,8 @@ function PersonModal({ initial, onSave, onClose }) {
   const [error,    setError]    = useState(null)
   const [showCrop, setShowCrop] = useState(false)
   const [positionTypes, setPositionTypes] = useState([])
+  const [pendingBlobs, setPendingBlobs] = useState(null)
+  const pendingPreviewRef = useRef([])
 
   useEffect(() => {
     fetch('/api/admin/position-types', { credentials: 'include' })
@@ -295,6 +290,21 @@ function PersonModal({ initial, onSave, onClose }) {
       .then(data => setPositionTypes(Array.isArray(data) ? data : []))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    return () => { pendingPreviewRef.current.forEach(u => URL.revokeObjectURL(u)) }
+  }, [])
+
+  function handlePhotoBlobs({ squareBlob, portraitBlob }) {
+    pendingPreviewRef.current.forEach(u => URL.revokeObjectURL(u))
+    const sq = URL.createObjectURL(squareBlob)
+    const pt = URL.createObjectURL(portraitBlob)
+    pendingPreviewRef.current = [sq, pt]
+    setPendingBlobs({ squareBlob, portraitBlob })
+    setPhotoUrl(sq)
+    setPhotoPortrait(pt)
+    setShowCrop(false)
+  }
 
   function toggleCategory(cat) {
     setCategories(prev =>
@@ -309,25 +319,51 @@ function PersonModal({ initial, onSave, onClose }) {
     setSaving(true)
     setError(null)
     try {
-      const body = {
-        name:               name.trim(),
-        email:              email.trim()    || null,
-        position:           position.trim() || null,
-        category:           categories,
-        photo_url:          photoUrl        || null,
-        photo_url_portrait: photoPortrait   || null,
-        pco_person_id:      pcoId.trim()   || null,
+      const baseBody = {
+        name:          name.trim(),
+        email:         email.trim()    || null,
+        position:      position.trim() || null,
+        category:      categories,
+        pco_person_id: pcoId.trim()   || null,
       }
-      const method = initial ? 'PUT' : 'POST'
-      const path   = initial ? `/people/${initial.id}` : '/people'
-      const saved  = await api(path, { method, body: JSON.stringify(body) })
+      let sq = photoUrl?.startsWith('blob:')      ? null : (photoUrl      || null)
+      let pt = photoPortrait?.startsWith('blob:') ? null : (photoPortrait || null)
+
+      if (!pendingBlobs) {
+        const saved = await api(
+          initial ? `/people/${initial.id}` : '/people',
+          { method: initial ? 'PUT' : 'POST', body: JSON.stringify({ ...baseBody, photo_url: sq, photo_url_portrait: pt }) }
+        )
+        onSave(saved)
+        return
+      }
+
+      // Pending blobs: need person ID before uploading so photos land in the right Cloudinary folder
+      let personId = initial?.id
+      if (!personId) {
+        const draft = await api('/people', { method: 'POST', body: JSON.stringify(baseBody) })
+        personId = draft.id
+      }
+
+      const form = new FormData()
+      form.append('square',   pendingBlobs.squareBlob,   'photo-square.webp')
+      form.append('portrait', pendingBlobs.portraitBlob, 'photo-portrait.webp')
+      form.append('personId', String(personId))
+      const up = await fetch('/api/admin/photos/upload', { method: 'POST', credentials: 'include', body: form })
+      const upData = await up.json()
+      if (!up.ok) throw new Error(upData.error || 'Upload failed')
+
+      const saved = await api(`/people/${personId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...baseBody, photo_url: upData.square, photo_url_portrait: upData.portrait }),
+      })
       onSave(saved)
     } catch (err) { setError(err.message) }
     finally { setSaving(false) }
   }
 
   if (showCrop) {
-    return <PhotoCropModal personId={initial?.id} onDone={({ square, portrait }) => { setPhotoUrl(square); setPhotoPortrait(portrait); setShowCrop(false) }} onCancel={() => setShowCrop(false)} />
+    return <PhotoCropModal onDone={handlePhotoBlobs} onCancel={() => setShowCrop(false)} />
   }
 
   return (
@@ -354,7 +390,7 @@ function PersonModal({ initial, onSave, onClose }) {
 
       <div className={styles.formField}>
         <label className={styles.formLabel}>Name <span className={styles.req}>*</span></label>
-        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} />
+        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} maxLength={60} />
       </div>
 
       <div className={styles.formField}>
@@ -405,7 +441,13 @@ function PersonModal({ initial, onSave, onClose }) {
             </div>
             <div className={styles.photoPreviewActions}>
               <button type="button" className={styles.btnGhost} onClick={() => setShowCrop(true)}>Change Photo</button>
-              <button type="button" className={styles.btnDanger} onClick={() => { setPhotoUrl(''); setPhotoPortrait('') }}>Remove</button>
+              <button type="button" className={styles.btnDanger} onClick={() => {
+                pendingPreviewRef.current.forEach(u => URL.revokeObjectURL(u))
+                pendingPreviewRef.current = []
+                setPendingBlobs(null)
+                setPhotoUrl('')
+                setPhotoPortrait('')
+              }}>Remove</button>
             </div>
           </div>
         ) : (

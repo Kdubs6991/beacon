@@ -413,40 +413,12 @@ router.post('/people', async (req, res) => {
   const orgId = req.session.orgId
   const { name, pco_person_id, photo_url, photo_url_portrait, category, email, position } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
+  if (name.trim().length > 60) return res.status(400).json({ error: 'Name must be 60 characters or fewer' })
   const r = await db.execute(
     'INSERT INTO people (org_id, name, pco_person_id, photo_url, photo_url_portrait, category, email, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id',
     [orgId, name, pco_person_id ?? null, photo_url ?? null, photo_url_portrait ?? null, serializeCategory(category), email ?? null, position ?? null]
   )
-  const newId = r.lastInsertId
-
-  // For new people, photos were uploaded without a person folder — rename them now that we have the ID
-  if (USE_CLOUDINARY && newId && (photo_url || photo_url_portrait)) {
-    const orgRow = await db.getOne('SELECT slug FROM organizations WHERE id = ?', [orgId])
-    const targetFolder = `beacon/${orgRow.slug}/photos/${newId}`
-    let finalSq = photo_url
-    let finalPt = photo_url_portrait
-
-    async function moveToPersonFolder(url) {
-      if (!url || !url.includes('res.cloudinary.com')) return url
-      const oldId = getCloudinaryPublicId(url)
-      if (!oldId || oldId.startsWith(targetFolder)) return url
-      const filename = oldId.split('/').pop()
-      const result = await cloudinary.uploader.rename(oldId, `${targetFolder}/${filename}`).catch(() => null)
-      return result?.secure_url ?? url
-    }
-
-    finalSq = await moveToPersonFolder(photo_url)
-    finalPt = await moveToPersonFolder(photo_url_portrait)
-
-    if (finalSq !== photo_url || finalPt !== photo_url_portrait) {
-      await db.execute(
-        'UPDATE people SET photo_url = ?, photo_url_portrait = ? WHERE id = ?',
-        [finalSq || null, finalPt || null, newId]
-      )
-    }
-  }
-
-  res.json(await db.getOne('SELECT * FROM people WHERE id = ?', [newId]))
+  res.json(await db.getOne('SELECT * FROM people WHERE id = ?', [r.lastInsertId]))
 })
 async function cleanupPhoto(url) {
   if (!url) return
@@ -464,6 +436,7 @@ router.put('/people/:id', async (req, res) => {
   const { name, photo_url, photo_url_portrait, category, email, pco_person_id, position } = req.body
   const existing = await db.getOne('SELECT * FROM people WHERE id = ? AND org_id = ?', [req.params.id, orgId])
   if (!existing) return res.status(404).json({ error: 'Person not found' })
+  if (name && name.trim().length > 60) return res.status(400).json({ error: 'Name must be 60 characters or fewer' })
 
   if (existing.pco_person_id) {
     const oldSq = existing.photo_override
