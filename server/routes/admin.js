@@ -11,6 +11,13 @@ const { sendInviteEmail, sendPasswordResetEmail } = require('../utils/mailer')
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'photos')
 
+function cleanupPhoto(url) {
+  if (!url || !url.startsWith('/uploads/photos/')) return
+  const filename = path.basename(url)
+  const filepath = path.join(UPLOADS_DIR, filename)
+  fs.unlink(filepath, () => {})
+}
+
 const photoUpload = multer({
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
@@ -357,6 +364,7 @@ router.post('/people', (req, res) => {
   const orgId = req.session.orgId
   const { name, pco_person_id, photo_url, photo_url_portrait, category, email, position } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
+  if (name.trim().length > 60) return res.status(400).json({ error: 'Name must be 60 characters or fewer' })
   const r = db.prepare(
     'INSERT INTO people (org_id, name, pco_person_id, photo_url, photo_url_portrait, category, email, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(orgId, name, pco_person_id ?? null, photo_url ?? null, photo_url_portrait ?? null, serializeCategory(category), email ?? null, position ?? null)
@@ -365,14 +373,20 @@ router.post('/people', (req, res) => {
 router.put('/people/:id', (req, res) => {
   const orgId = req.session.orgId
   const { name, photo_url, photo_url_portrait, category, email, pco_person_id, position } = req.body
+  if (!name) return res.status(400).json({ error: 'name required' })
+  if (name.trim().length > 60) return res.status(400).json({ error: 'Name must be 60 characters or fewer' })
   const existing = db.prepare('SELECT * FROM people WHERE id = ? AND org_id = ?').get(req.params.id, orgId)
   if (!existing) return res.status(404).json({ error: 'Person not found' })
 
   if (existing.pco_person_id) {
+    if (existing.photo_override !== (photo_url ?? null)) cleanupPhoto(existing.photo_override)
+    if (existing.photo_override_portrait !== (photo_url_portrait ?? null)) cleanupPhoto(existing.photo_override_portrait)
     db.prepare(
       'UPDATE people SET name_override = ?, photo_override = ?, photo_override_portrait = ?, email_override = ?, category_override = ?, position_override = ? WHERE id = ? AND org_id = ?'
     ).run(name ?? null, photo_url ?? null, photo_url_portrait ?? null, email ?? null, serializeCategory(category), position ?? null, req.params.id, orgId)
   } else {
+    if (existing.photo_url !== (photo_url ?? null)) cleanupPhoto(existing.photo_url)
+    if (existing.photo_url_portrait !== (photo_url_portrait ?? null)) cleanupPhoto(existing.photo_url_portrait)
     db.prepare(
       'UPDATE people SET name = ?, photo_url = ?, photo_url_portrait = ?, category = ?, email = ?, pco_person_id = ?, position = ? WHERE id = ? AND org_id = ?'
     ).run(name, photo_url ?? null, photo_url_portrait ?? null, serializeCategory(category), email ?? null, pco_person_id ?? null, position ?? null, req.params.id, orgId)
@@ -387,6 +401,8 @@ router.delete('/people/:id', (req, res) => {
   if (existing.pco_person_id) {
     return res.status(400).json({ error: 'Cannot delete a person synced from Planning Center' })
   }
+  cleanupPhoto(existing.photo_url)
+  cleanupPhoto(existing.photo_url_portrait)
   db.prepare('DELETE FROM people WHERE id = ? AND org_id = ?').run(req.params.id, orgId)
   res.json({ ok: true })
 })

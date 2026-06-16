@@ -1,10 +1,14 @@
 const express = require('express')
 const router = express.Router()
+const rateLimit = require('express-rate-limit')
 const { randomBytes } = require('node:crypto')
 const db = require('../db')
 const { hashPassword, verifyPassword } = require('../utils/password')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
 const { sendPasswordResetEmail } = require('../utils/mailer')
+
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false })
+const forgotPasswordLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false })
 
 // ── User auth ─────────────────────────────────────────────────────────────────
 
@@ -45,7 +49,7 @@ router.post('/register', (req, res) => {
   res.status(201).json({ user })
 })
 
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter, (req, res) => {
   const { email, password } = req.body
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' })
@@ -120,7 +124,7 @@ router.put('/dashboard-config', requireAuth, (req, res) => {
 
 // ── Password reset ────────────────────────────────────────────────────────────
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   const { email } = req.body
   if (!email) return res.status(400).json({ error: 'email is required' })
 
