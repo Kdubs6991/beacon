@@ -5,9 +5,11 @@ const activeTasks = new Map()
 
 async function startScheduler() {
   const schedules = await db.getAll(`
-    SELECT s.*, st.name as service_type_name, st.pco_service_type_id
+    SELECT s.*, st.name as service_type_name, st.pco_service_type_id, o.timezone
     FROM schedules s
     JOIN service_types st ON s.service_type_id = st.id
+    JOIN campuses     c  ON st.campus_id = c.id
+    JOIN organizations o ON c.org_id    = o.id
     WHERE s.enabled = 1
   `)
 
@@ -28,9 +30,10 @@ function registerSchedule(schedule) {
     return
   }
 
-  const task = cron.schedule(schedule.cron_expr, () => runSchedule(schedule.id))
+  const tz = schedule.timezone || 'America/Chicago'
+  const task = cron.schedule(schedule.cron_expr, () => runSchedule(schedule.id), { timezone: tz })
   activeTasks.set(schedule.id, task)
-  console.log(`Registered schedule ${schedule.id} (${schedule.service_type_name}): ${schedule.cron_expr}`)
+  console.log(`Registered schedule ${schedule.id} (${schedule.service_type_name}): ${schedule.cron_expr} [tz: ${tz}]`)
 }
 
 function unregisterSchedule(scheduleId) {

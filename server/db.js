@@ -91,11 +91,12 @@ const db = {
         id               SERIAL PRIMARY KEY,
         org_id           INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
         name             TEXT NOT NULL,
-        email            TEXT NOT NULL UNIQUE,
+        email            TEXT NOT NULL,
         password_hash    TEXT NOT NULL,
         role             TEXT NOT NULL DEFAULT 'team_member' CHECK(role IN ('admin','team_member')),
         dashboard_config TEXT,
-        created_at       TIMESTAMPTZ DEFAULT NOW()
+        created_at       TIMESTAMPTZ DEFAULT NOW(),
+        CONSTRAINT users_email_org_unique UNIQUE (org_id, email)
       );
 
       CREATE TABLE IF NOT EXISTS settings (
@@ -287,6 +288,11 @@ const db = {
       ALTER TABLE active_assignments
         ADD CONSTRAINT IF NOT EXISTS uq_active_assignments_screen_slot UNIQUE (screen_id, slot)
     `).catch(() => {})
+
+    // Migrate: replace global email uniqueness with per-org uniqueness
+    // Existing databases have users_email_key; drop it and add the composite constraint
+    await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`).catch(() => {})
+    await pool.query(`ALTER TABLE users ADD CONSTRAINT users_email_org_unique UNIQUE (org_id, email)`).catch(() => {})
 
     // Ensure a default org exists
     const orgCount = await db.getOne('SELECT COUNT(*) AS n FROM organizations')

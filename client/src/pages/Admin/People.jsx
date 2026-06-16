@@ -134,7 +134,7 @@ function PhotoCropModal({ onDone, onCancel }) {
   const [portraitPx, setPortraitPx] = useState(null)
   const [cropBounds, setCropBounds]  = useState(null)
   const [processing, setProcessing]  = useState(false)
-  const [uploadErr, setUploadErr]    = useState(null)
+  const [cropErr, setCropErr]    = useState(null)
   const containerRef = useRef(null)
 
   const measureCropArea = useCallback(() => {
@@ -180,7 +180,7 @@ function PhotoCropModal({ onDone, onCancel }) {
 
   async function handleSave() {
     if (!portraitPx) return
-    setUploadErr(null)
+    setCropErr(null)
     setProcessing(true)
     try {
       const portraitBlob = await extractCrop(imageSrc, portraitPx, 600, 800)
@@ -191,7 +191,7 @@ function PhotoCropModal({ onDone, onCancel }) {
       const squareBlob = await extractCrop(imageSrc, squarePx, 600, 600)
       onDone({ squareBlob, portraitBlob })
     } catch (err) {
-      setUploadErr(err.message)
+      setCropErr(err.message)
     } finally {
       setProcessing(false)
     }
@@ -210,7 +210,7 @@ function PhotoCropModal({ onDone, onCancel }) {
         </>
       }
     >
-      {uploadErr && <p className={styles.formError}>{uploadErr}</p>}
+      {cropErr && <p className={styles.formError}>{cropErr}</p>}
 
       {!imageSrc ? (
         <label className={styles.dropzone}>

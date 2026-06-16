@@ -33,11 +33,6 @@ router.post('/register', async (req, res) => {
   if (password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters' })
   }
-  const existing = await db.getOne('SELECT id FROM users WHERE email = ?', [email.toLowerCase()])
-  if (existing) {
-    return res.status(409).json({ error: 'An account with that email already exists' })
-  }
-
   let org, role = 'team_member'
   if (inviteToken) {
     const invite = await db.getOne(
@@ -52,6 +47,11 @@ router.post('/register', async (req, res) => {
     org = await db.getOne('SELECT id FROM organizations LIMIT 1')
   }
 
+  const existing = await db.getOne('SELECT id FROM users WHERE email = ? AND org_id = ?', [email.toLowerCase(), org.id])
+  if (existing) {
+    return res.status(409).json({ error: 'An account with that email already exists' })
+  }
+
   const hash = hashPassword(password)
   const r = await db.execute(
     'INSERT INTO users (org_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?) RETURNING id',
@@ -61,11 +61,17 @@ router.post('/register', async (req, res) => {
     'SELECT id, name, email, role, org_id, created_at FROM users WHERE id = ?',
     [r.lastInsertId]
   )
-  req.session.userId = user.id
-  req.session.role = user.role
-  req.session.orgId = user.org_id
-  req.session.userLoginAt = new Date().toISOString()
-  res.status(201).json({ user })
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).json({ error: 'Session error' })
+    req.session.userId = user.id
+    req.session.role = user.role
+    req.session.orgId = user.org_id
+    req.session.userLoginAt = new Date().toISOString()
+    req.session.save((saveErr) => {
+      if (saveErr) return res.status(500).json({ error: 'Session error' })
+      res.status(201).json({ user })
+    })
+  })
 })
 
 router.post('/login', loginLimiter, async (req, res) => {
@@ -77,11 +83,17 @@ router.post('/login', loginLimiter, async (req, res) => {
   if (!user || !verifyPassword(password, user.password_hash)) {
     return res.status(401).json({ error: 'Invalid email or password' })
   }
-  req.session.userId = user.id
-  req.session.role = user.role
-  req.session.orgId = user.org_id
-  req.session.userLoginAt = new Date().toISOString()
-  res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } })
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).json({ error: 'Session error' })
+    req.session.userId = user.id
+    req.session.role = user.role
+    req.session.orgId = user.org_id
+    req.session.userLoginAt = new Date().toISOString()
+    req.session.save((saveErr) => {
+      if (saveErr) return res.status(500).json({ error: 'Session error' })
+      res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } })
+    })
+  })
 })
 
 // Clears user login but preserves org session so the user lands on /login not /org

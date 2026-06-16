@@ -331,7 +331,7 @@ export default function Docs() {
 
           {/* ── Organization ── */}
           <Section id="organization" title="Organization">
-            <p>The <strong>Organization</strong> page (Admin → Organization) holds your top-level settings. Beacon is designed for a single organization per installation — there's no multi-tenant setup. The <strong>org slug</strong> is a short URL-safe identifier for your organization (e.g. <code>first-church</code>) and is embedded in display screen login URLs.</p>
+            <p>The <strong>Organization</strong> page (Admin → Organization) holds your top-level settings. A single Beacon installation can support multiple independent organizations — each with their own users, screens, and settings. The <strong>org slug</strong> is a short URL-safe identifier for your organization (e.g. <code>first-church</code>) and is embedded in display screen login URLs.</p>
             <p>You can also set your organization's <strong>timezone</strong> here. This ensures that schedule next-run times and other time-sensitive information display correctly for your location rather than defaulting to the server's system clock.</p>
 
             <SubSection id="display-login" title="Display Login">
@@ -632,7 +632,7 @@ export default function Docs() {
                 <li>Click <strong>Upload Photo</strong> on the person's edit form.</li>
                 <li>Drop or select an image (up to 15 MB, any common image format).</li>
                 <li>A crop editor appears with a <strong>portrait frame (3:4)</strong> as the primary crop and a <strong>dashed square overlay (1:1)</strong> showing the secondary crop simultaneously.</li>
-                <li>Drag and zoom to frame both crops at once, then click <strong>Save Crops</strong>.</li>
+                <li>Drag and zoom to frame both crops at once, then click <strong>Crop &amp; Save</strong>.</li>
               </ol>
               <p>Two versions are saved and used in different places:</p>
               <ul className={styles.ul}>

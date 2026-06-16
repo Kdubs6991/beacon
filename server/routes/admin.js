@@ -457,7 +457,11 @@ router.put('/people/:id', async (req, res) => {
     if (oldSq && oldSq !== photo_url) await cleanupPhoto(oldSq)
     if (oldPt && oldPt !== photo_url_portrait) await cleanupPhoto(oldPt)
   }
-  res.json(await db.getOne('SELECT * FROM people WHERE id = ?', [req.params.id]))
+  const updated = await db.getOne('SELECT * FROM people WHERE id = ?', [req.params.id])
+  // Keep cached photo in active_assignments in sync so live screens show the new photo without a full push
+  const effectivePhoto = updated.photo_override ?? updated.photo_url ?? null
+  await db.execute('UPDATE active_assignments SET person_photo = ? WHERE person_id = ?', [effectivePhoto, req.params.id])
+  res.json(updated)
 })
 router.delete('/people/:id', async (req, res) => {
   const orgId = req.session.orgId

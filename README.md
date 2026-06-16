@@ -78,15 +78,6 @@ Runs the Express server on `:3001` and Vite on `:5173` with hot reload.
 - Display: http://localhost:5173/display
 - API: http://localhost:3001
 
-### Test data
-
-To populate the database with a realistic worship team:
-
-```bash
-node server/seed-test.js          # seed 8 people, labels, rules, a template and screen
-node server/seed-test.js --reset  # remove all seed data
-```
-
 ---
 
 ## What it does
@@ -98,10 +89,11 @@ node server/seed-test.js --reset  # remove all seed data
 - **On-demand push** — push to screens instantly from the admin panel
 - **Any screen** — each display is a permanent browser URL; no app installs on TVs
 - **Active screen detection** — heartbeat-based live/offline status for every screen
+- **Multi-org** — a single installation can host multiple independent organizations
 
 ## Tech stack
 
-- **Backend:** Node.js 22+, Express, SQLite via `node:sqlite` built-in
+- **Backend:** Node.js 18+, Express, PostgreSQL (`pg`), Cloudinary (photo storage)
 - **Frontend:** React 18, Vite, CSS Modules
 - **Auth:** Session-based (admin) + cookie-based (display screens)
 - **Scheduling:** node-cron

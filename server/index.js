@@ -8,7 +8,12 @@ const fs = require('fs')
 const crypto = require('crypto')
 
 if (!process.env.SESSION_SECRET) {
-  console.warn('[beacon] WARNING: SESSION_SECRET is not set. Sessions will not persist across restarts.')
+  console.warn(
+    '[beacon] WARNING: SESSION_SECRET is not set.\n' +
+    '  A random secret has been generated for this run — every restart will invalidate all active sessions.\n' +
+    '  To fix: add SESSION_SECRET as a permanent environment variable in Railway (Settings → Variables)\n' +
+    '  and NEVER change it once set in production. Changing it logs out every user immediately.'
+  )
   process.env.SESSION_SECRET = crypto.randomBytes(32).toString('hex')
 }
 
