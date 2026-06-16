@@ -74,6 +74,11 @@ if (hasBuiltClient) {
   })
 }
 
+app.use((err, req, res, next) => {
+  console.error('[server error]', err.message)
+  res.status(500).json({ error: 'Internal server error' })
+})
+
 function seedAdmin() {
   const email = process.env.ADMIN_EMAIL
   const password = process.env.ADMIN_PASSWORD

@@ -31,7 +31,8 @@ export default function PublicNav() {
       .catch(() => {})
   }, [])
 
-  function handleSignOutOrg() {
+  async function handleSignOutOrg() {
+    try { await fetch('/api/auth/logout-org', { method: 'POST', credentials: 'include' }) } catch {}
     clearCookie('beacon_org')
     clearCookie('beacon_screen')
     navigate('/org')

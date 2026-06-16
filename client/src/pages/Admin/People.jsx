@@ -164,6 +164,8 @@ function PhotoCropModal({ onDone, onCancel }) {
   async function handleFile(file) {
     setFileError(null)
     if (!file) return
+    const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.hei[cf]$/i.test(file.name)
+    if (isHeic) { setFileError("HEIC photos aren't supported. On iPhone, go to Settings → Camera → Formats → Most Compatible to shoot in JPG instead."); return }
     if (!file.type.startsWith('image/')) { setFileError('Please select an image file.'); return }
     if (file.size > MAX_FILE_BYTES) { setFileError('Image must be 15 MB or smaller.'); return }
     setImageSrc(await readFileAsDataUrl(file))
@@ -352,7 +354,7 @@ function PersonModal({ initial, onSave, onClose }) {
 
       <div className={styles.formField}>
         <label className={styles.formLabel}>Name <span className={styles.req}>*</span></label>
-        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} />
+        <input className={styles.formInput} value={name} onChange={e => setName(e.target.value)} maxLength={60} />
       </div>
 
       <div className={styles.formField}>
