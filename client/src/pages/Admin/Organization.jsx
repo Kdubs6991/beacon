@@ -18,9 +18,81 @@ const TIMEZONES = [
   ['Australia/Sydney',      'Australia Eastern Time (AEST)'],
 ]
 
+const SMTP_PROVIDERS = [
+  {
+    key: 'gmail',
+    label: 'Gmail',
+    host: 'smtp.gmail.com', port: '587',
+    userLabel: 'Gmail address', userPlaceholder: 'yourchurch@gmail.com',
+    passLabel: 'App Password', passPlaceholder: '16-character app password',
+    passHint: 'Use a Gmail App Password — not your regular Google password. Go to Google Account → Security → 2-Step Verification → App passwords.',
+  },
+  {
+    key: 'outlook',
+    label: 'Outlook / Microsoft 365',
+    host: 'smtp.office365.com', port: '587',
+    userLabel: 'Microsoft account email', userPlaceholder: 'yourchurch@outlook.com',
+    passLabel: 'Password', passPlaceholder: 'Your Microsoft password',
+    passHint: 'Your Microsoft account password. If 2FA is enabled, create an app password in Microsoft account security settings.',
+  },
+  {
+    key: 'yahoo',
+    label: 'Yahoo Mail',
+    host: 'smtp.mail.yahoo.com', port: '587',
+    userLabel: 'Yahoo email address', userPlaceholder: 'yourchurch@yahoo.com',
+    passLabel: 'App Password', passPlaceholder: 'App password',
+    passHint: 'Use a Yahoo App Password — not your regular Yahoo password. Generate one in Yahoo Account Security settings.',
+  },
+  {
+    key: 'icloud',
+    label: 'iCloud Mail',
+    host: 'smtp.mail.me.com', port: '587',
+    userLabel: 'iCloud email address', userPlaceholder: 'yourname@icloud.com',
+    passLabel: 'App-Specific Password', passPlaceholder: 'xxxx-xxxx-xxxx-xxxx',
+    passHint: 'Create an app-specific password at appleid.apple.com — do not use your Apple ID password.',
+  },
+  {
+    key: 'zoho',
+    label: 'Zoho Mail',
+    host: 'smtp.zoho.com', port: '587',
+    userLabel: 'Zoho email address', userPlaceholder: 'yourchurch@zohomail.com',
+    passLabel: 'Password', passPlaceholder: 'Your Zoho password',
+    passHint: 'Your Zoho Mail account password.',
+  },
+  {
+    key: 'resend',
+    label: 'Resend',
+    host: 'smtp.resend.com', port: '587',
+    userLabel: 'Username', userPlaceholder: 'resend', fixedUser: 'resend',
+    passLabel: 'API Key', passPlaceholder: 're_xxxxxxxxxxxx',
+    passHint: 'Use your Resend API key as the password. The username must be the word "resend".',
+  },
+  {
+    key: 'sendgrid',
+    label: 'SendGrid',
+    host: 'smtp.sendgrid.net', port: '587',
+    userLabel: 'Username', userPlaceholder: 'apikey', fixedUser: 'apikey',
+    passLabel: 'API Key', passPlaceholder: 'SG.xxxxxxxxxxxx',
+    passHint: 'Use your SendGrid API key as the password. The username must be the word "apikey".',
+  },
+  {
+    key: 'other',
+    label: 'Other',
+    host: '', port: '587',
+    userLabel: 'Username', userPlaceholder: '',
+    passLabel: 'Password', passPlaceholder: 'Your password',
+    passHint: '',
+  },
+]
+
+function detectProvider(host) {
+  return SMTP_PROVIDERS.find(p => p.key !== 'other' && p.host === host) ?? SMTP_PROVIDERS.find(p => p.key === 'other')
+}
+
 function EmailConfigSection() {
   const [config, setConfig] = useState(null)
   const [editing, setEditing] = useState(false)
+  const [provider, setProvider] = useState(SMTP_PROVIDERS[0])
   const [host, setHost] = useState('')
   const [port, setPort] = useState('587')
   const [user, setUser] = useState('')
@@ -39,11 +111,23 @@ function EmailConfigSection() {
   }, [])
 
   function populateEdit(data) {
+    const p = detectProvider(data.host || '')
+    setProvider(p)
     setHost(data.host || '')
     setPort(data.port || '587')
     setUser(data.user || '')
     setPass('')
     setFrom(data.from || '')
+  }
+
+  function handleProviderChange(key) {
+    const p = SMTP_PROVIDERS.find(p => p.key === key)
+    setProvider(p)
+    if (p.key !== 'other') {
+      setHost(p.host)
+      setPort(p.port)
+    }
+    if (p.fixedUser) setUser(p.fixedUser)
   }
 
   function startEdit() { populateEdit(config); setEditing(true); setError(null); setSuccess(false); setTestResult(null) }
@@ -82,6 +166,7 @@ function EmailConfigSection() {
   }
 
   const isConfigured = config?.host && config?.user && config?.passSet
+  const viewProvider = config?.host ? detectProvider(config.host) : null
 
   return (
     <div className={styles.section}>
@@ -97,14 +182,18 @@ function EmailConfigSection() {
 
       {!isConfigured && !editing && (
         <div className={styles.smtpNotice}>
-          <strong>Email is not set up yet.</strong> Without it, password reset emails and invite links won't be sent automatically — admins will need to share links manually instead.{' '}
-          <a href="/docs#email-setup" target="_blank" rel="noopener noreferrer" className={styles.smtpDocsLink}>How to set up Gmail →</a>
+          <strong>Email is not set up yet.</strong> Without it, password reset emails and invite links won't be sent automatically — admins will need to share links manually instead.
         </div>
       )}
 
       {!editing && config && (
         <>
           <div className={styles.smtpViewGrid}>
+            <span className={styles.smtpViewLabel}>Provider</span>
+            <span className={styles.smtpViewValue}>
+              {viewProvider?.key !== 'other' ? viewProvider?.label : (config.host || <em className={styles.smtpEmpty}>Not set</em>)}
+            </span>
+
             <span className={styles.smtpViewLabel}>SMTP Host</span>
             <span className={styles.smtpViewValue}>{config.host || <em className={styles.smtpEmpty}>Not set</em>}</span>
 
@@ -140,40 +229,64 @@ function EmailConfigSection() {
 
       {editing && (
         <form onSubmit={handleSave} className={styles.form}>
-          <div className={styles.smtpSetupNote}>
-            Need help? <a href="/docs#email-setup" target="_blank" rel="noopener noreferrer" className={styles.smtpDocsLink}>Step-by-step Gmail App Password guide →</a>
+          <div className={styles.formField}>
+            <label className={styles.formLabel}>Email provider</label>
+            <select className={styles.formInput} value={provider.key} onChange={e => handleProviderChange(e.target.value)}>
+              {SMTP_PROVIDERS.map(p => (
+                <option key={p.key} value={p.key}>{p.label}</option>
+              ))}
+            </select>
           </div>
+
           <div className={styles.smtpTwoCol}>
             <div className={styles.formField}>
               <label className={styles.formLabel}>SMTP Host</label>
-              <input className={styles.formInput} value={host} onChange={e => setHost(e.target.value)} placeholder="smtp.gmail.com" />
+              {provider.key === 'other'
+                ? <input className={styles.formInput} value={host} onChange={e => setHost(e.target.value)} placeholder="mail.yourdomain.com" />
+                : <input className={styles.formInput} value={provider.host} readOnly style={{ opacity: 0.5, cursor: 'default' }} />
+              }
             </div>
             <div className={styles.formField}>
               <label className={styles.formLabel}>Port</label>
-              <input className={styles.formInput} value={port} onChange={e => setPort(e.target.value)} placeholder="587" />
+              {provider.key === 'other'
+                ? <input className={styles.formInput} value={port} onChange={e => setPort(e.target.value)} placeholder="587" />
+                : <input className={styles.formInput} value={provider.port} readOnly style={{ opacity: 0.5, cursor: 'default' }} />
+              }
             </div>
           </div>
+
           <div className={styles.formField}>
-            <label className={styles.formLabel}>Username (your Gmail address)</label>
-            <input className={styles.formInput} type="email" value={user} onChange={e => setUser(e.target.value)} placeholder="yourchurch@gmail.com" />
+            <label className={styles.formLabel}>{provider.userLabel}</label>
+            <input
+              className={styles.formInput}
+              type={provider.fixedUser ? 'text' : 'email'}
+              value={user}
+              onChange={e => setUser(e.target.value)}
+              placeholder={provider.userPlaceholder}
+              readOnly={!!provider.fixedUser}
+              style={provider.fixedUser ? { opacity: 0.5, cursor: 'default' } : undefined}
+            />
           </div>
+
           <div className={styles.formField}>
-            <label className={styles.formLabel}>App Password</label>
+            <label className={styles.formLabel}>{provider.passLabel}</label>
             <input
               className={styles.formInput}
               type="password"
               value={pass}
               onChange={e => setPass(e.target.value)}
-              placeholder={config?.passSet ? 'Leave blank to keep current password' : 'Paste your 16-character app password'}
+              placeholder={config?.passSet ? 'Leave blank to keep current' : provider.passPlaceholder}
               autoComplete="new-password"
             />
-            <p className={styles.smtpHint}>Use a Gmail App Password, not your regular Google password. <a href="/docs#email-setup" target="_blank" rel="noopener noreferrer" className={styles.smtpDocsLink}>How to create one →</a></p>
+            {provider.passHint && <p className={styles.smtpHint}>{provider.passHint}</p>}
           </div>
+
           <div className={styles.formField}>
             <label className={styles.formLabel}>From address <span className={styles.smtpOptional}>(optional)</span></label>
-            <input className={styles.formInput} type="email" value={from} onChange={e => setFrom(e.target.value)} placeholder="Beacon <yourchurch@gmail.com>" />
+            <input className={styles.formInput} value={from} onChange={e => setFrom(e.target.value)} placeholder={`Beacon <${user || 'you@example.com'}>`} />
             <p className={styles.smtpHint}>Defaults to your username if left blank.</p>
           </div>
+
           {error && <p className={styles.formError}>{error}</p>}
           <div className={styles.formActions}>
             <button className={styles.btnPrimary} type="submit" disabled={saving}>
