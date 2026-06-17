@@ -205,9 +205,10 @@ export default function Organization() {
   const [profileError, setProfileError] = useState(null)
   const [profileSuccess, setProfileSuccess] = useState(false)
 
-  const [logoUploading, setLogoUploading] = useState(false)
-  const [logoRemoving,  setLogoRemoving]  = useState(false)
-  const [logoError,     setLogoError]     = useState(null)
+  const [logoUploading,  setLogoUploading]  = useState(false)
+  const [logoRemoving,   setLogoRemoving]   = useState(false)
+  const [logoError,      setLogoError]      = useState(null)
+  const [logoImgBroken,  setLogoImgBroken]  = useState(false)
 
   const [codeRegenLoading, setCodeRegenLoading] = useState(false)
   const [codeRegenError, setCodeRegenError] = useState(null)
@@ -302,6 +303,7 @@ export default function Organization() {
       const res = await fetch('/api/org/logo', { method: 'POST', credentials: 'include', body: fd })
       const data = await res.json()
       if (!res.ok) { setLogoError(data.error || 'Upload failed'); return }
+      setLogoImgBroken(false)
       setOrg(prev => ({ ...prev, logo_url: data.logo_url }))
     } catch {
       setLogoError('Upload failed. Please try again.')
@@ -540,8 +542,18 @@ export default function Organization() {
           <h2 className={styles.sectionTitle}>Organization Logo</h2>
           <p className={styles.sectionDesc}>If uploaded, your logo will appear in the display screen header alongside your org name.</p>
           <div className={styles.logoRow}>
-            {org?.logo_url ? (
-              <img src={org.logo_url} alt="Org logo" className={styles.logoPreview} />
+            {org?.logo_url && !logoImgBroken ? (
+              <img
+                key={org.logo_url}
+                src={org.logo_url}
+                alt="Org logo"
+                className={styles.logoPreview}
+                onError={() => setLogoImgBroken(true)}
+              />
+            ) : logoImgBroken ? (
+              <div className={styles.logoPlaceholder} style={{ color: 'var(--error, #e05)' }}>
+                Logo URL broken — upload a new one
+              </div>
             ) : (
               <div className={styles.logoPlaceholder}>No logo</div>
             )}

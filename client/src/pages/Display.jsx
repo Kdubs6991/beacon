@@ -71,6 +71,7 @@ function DisplayView({ screenToken }) {
   const [error, setError] = useState(null)
   const [clock, setClock] = useState(() => new Date())
   const [exitVisible, setExitVisible] = useState(false)
+  const [logoErr, setLogoErr] = useState(false)
   const exitTimerRef = useRef(null)
 
   useEffect(() => {
@@ -143,8 +144,14 @@ function DisplayView({ screenToken }) {
     <div className={styles.page} style={themeVars}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          {showLogo && data.org?.logo_url && (
-            <img src={data.org.logo_url} alt="" className={styles.orgLogo} />
+          {showLogo && data.org?.logo_url && !logoErr && (
+            <img
+              key={data.org.logo_url}
+              src={data.org.logo_url}
+              alt=""
+              className={styles.orgLogo}
+              onError={() => setLogoErr(true)}
+            />
           )}
           {showLogo && data.org?.name && (
             <span className={styles.orgName}>{data.org.name}</span>

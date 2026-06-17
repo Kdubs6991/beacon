@@ -287,7 +287,9 @@ function PersonModal({ initial, onSave, onClose }) {
   const [error,    setError]    = useState(null)
   const [showCrop, setShowCrop] = useState(false)
   const [positionTypes, setPositionTypes] = useState([])
-  const [pendingBlobs, setPendingBlobs] = useState(null)
+  const [pendingBlobs,   setPendingBlobs]   = useState(null)
+  const [sqImgErr,       setSqImgErr]       = useState(false)
+  const [ptImgErr,       setPtImgErr]       = useState(false)
   const pendingPreviewRef = useRef([])
 
   useEffect(() => {
@@ -307,6 +309,8 @@ function PersonModal({ initial, onSave, onClose }) {
     const pt = URL.createObjectURL(portraitBlob)
     pendingPreviewRef.current = [sq, pt]
     setPendingBlobs({ squareBlob, portraitBlob })
+    setSqImgErr(false)
+    setPtImgErr(false)
     setPhotoUrl(sq)
     setPhotoPortrait(pt)
     setShowCrop(false)
@@ -435,12 +439,18 @@ function PersonModal({ initial, onSave, onClose }) {
           <div className={styles.photoPreviewRow}>
             <div className={styles.photoPreviewWrap}>
               <div className={styles.photoPreviewItem}>
-                <img src={photoUrl} alt="Square crop" className={styles.photoPreviewSq} />
+                {sqImgErr
+                  ? <div className={styles.photoPreviewSq} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--text-muted)', background: 'var(--bg-card)' }}>Photo unavailable</div>
+                  : <img key={photoUrl} src={photoUrl} alt="Square crop" className={styles.photoPreviewSq} onError={() => setSqImgErr(true)} />
+                }
                 <span className={styles.photoPreviewCaption}>Square</span>
               </div>
               {photoPortrait && (
                 <div className={styles.photoPreviewItem}>
-                  <img src={photoPortrait} alt="Portrait crop" className={styles.photoPreviewPt} />
+                  {ptImgErr
+                    ? <div className={styles.photoPreviewPt} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--text-muted)', background: 'var(--bg-card)' }}>Photo unavailable</div>
+                    : <img key={photoPortrait} src={photoPortrait} alt="Portrait crop" className={styles.photoPreviewPt} onError={() => setPtImgErr(true)} />
+                  }
                   <span className={styles.photoPreviewCaption}>Portrait</span>
                 </div>
               )}
