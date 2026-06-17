@@ -1,5 +1,14 @@
 const nodemailer = require('nodemailer')
+const dns = require('dns')
 const db = require('../db')
+
+// Railway has no outbound IPv6 routes — resolve SMTP hostnames to IPv4 only
+function lookupIPv4(hostname, _opts, callback) {
+  dns.resolve4(hostname, (err, addresses) => {
+    if (err) return callback(err)
+    callback(null, addresses[0], 4)
+  })
+}
 
 async function getSmtpConfig() {
   async function s(key) { return (await db.getOne('SELECT value FROM settings WHERE key = ?', [key]))?.value }
@@ -25,7 +34,7 @@ async function getTransporter() {
     connectionTimeout: 30_000,
     greetingTimeout: 30_000,
     socketTimeout: 30_000,
-    family: 4, // force IPv4 — Railway does not support IPv6 outbound
+    lookup: lookupIPv4,
   })
 }
 
