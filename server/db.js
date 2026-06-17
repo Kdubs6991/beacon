@@ -286,8 +286,11 @@ const db = {
     // Data integrity constraint — prevents duplicate slots on the same screen
     await pool.query(`
       DO $$ BEGIN
-        ALTER TABLE active_assignments ADD CONSTRAINT uq_active_assignments_screen_slot UNIQUE (screen_id, slot);
-      EXCEPTION WHEN duplicate_object THEN NULL;
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'uq_active_assignments_screen_slot'
+        ) THEN
+          ALTER TABLE active_assignments ADD CONSTRAINT uq_active_assignments_screen_slot UNIQUE (screen_id, slot);
+        END IF;
       END $$;
     `)
 
@@ -295,8 +298,11 @@ const db = {
     await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`)
     await pool.query(`
       DO $$ BEGIN
-        ALTER TABLE users ADD CONSTRAINT users_email_org_unique UNIQUE (org_id, email);
-      EXCEPTION WHEN duplicate_object THEN NULL;
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'users_email_org_unique'
+        ) THEN
+          ALTER TABLE users ADD CONSTRAINT users_email_org_unique UNIQUE (org_id, email);
+        END IF;
       END $$;
     `)
 
