@@ -22,6 +22,9 @@ async function getTransporter() {
     port: c.port,
     secure: c.port === 465,
     auth: { user: c.user, pass: c.pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   })
 }
 

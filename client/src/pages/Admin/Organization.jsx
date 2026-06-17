@@ -157,12 +157,21 @@ function EmailConfigSection() {
   async function handleTest() {
     setTesting(true)
     setTestResult(null)
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 20_000)
     try {
-      const res = await fetch('/api/admin/email-config/test', { method: 'POST', credentials: 'include' })
+      const res = await fetch('/api/admin/email-config/test', { method: 'POST', credentials: 'include', signal: controller.signal })
+      clearTimeout(timer)
       const data = await res.json()
       setTestResult(res.ok ? { ok: true, to: data.to } : { ok: false, error: data.error })
-    } catch { setTestResult({ ok: false, error: 'Connection error.' }) }
-    finally { setTesting(false) }
+    } catch (err) {
+      clearTimeout(timer)
+      if (err.name === 'AbortError') {
+        setTestResult({ ok: false, error: 'Timed out — the SMTP server did not respond. Check your host, port, and credentials.' })
+      } else {
+        setTestResult({ ok: false, error: 'Connection error.' })
+      }
+    } finally { setTesting(false) }
   }
 
   const isConfigured = config?.host && config?.user && config?.passSet
