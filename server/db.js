@@ -285,14 +285,20 @@ const db = {
 
     // Data integrity constraint — prevents duplicate slots on the same screen
     await pool.query(`
-      ALTER TABLE active_assignments
-        ADD CONSTRAINT IF NOT EXISTS uq_active_assignments_screen_slot UNIQUE (screen_id, slot)
-    `).catch(() => {})
+      DO $$ BEGIN
+        ALTER TABLE active_assignments ADD CONSTRAINT uq_active_assignments_screen_slot UNIQUE (screen_id, slot);
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
+    `)
 
     // Migrate: replace global email uniqueness with per-org uniqueness
-    // Existing databases have users_email_key; drop it and add the composite constraint
-    await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`).catch(() => {})
-    await pool.query(`ALTER TABLE users ADD CONSTRAINT users_email_org_unique UNIQUE (org_id, email)`).catch(() => {})
+    await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`)
+    await pool.query(`
+      DO $$ BEGIN
+        ALTER TABLE users ADD CONSTRAINT users_email_org_unique UNIQUE (org_id, email);
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
+    `)
 
     // Ensure a default org exists
     const orgCount = await db.getOne('SELECT COUNT(*) AS n FROM organizations')
