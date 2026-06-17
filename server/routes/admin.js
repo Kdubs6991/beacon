@@ -7,7 +7,7 @@ const fs = require('fs')
 const multer = require('multer')
 const db = require('../db')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
-const { sendInviteEmail, sendPasswordResetEmail } = require('../utils/mailer')
+const { sendInviteEmail, sendPasswordResetEmail, getTransporter } = require('../utils/mailer')
 const { USE_CLOUDINARY, cloudinary, uploadToCloudinary, getCloudinaryPublicId } = require('../storage')
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'photos')
@@ -521,6 +521,12 @@ router.post('/email-config/test', requireAdmin, async (req, res) => {
   const user = await db.getOne('SELECT email, name FROM users WHERE id = ?', [req.session.userId])
   const org = await db.getOne('SELECT name FROM organizations WHERE id = ?', [req.session.orgId])
   try {
+    const t = await getTransporter()
+    if (!t) return res.status(503).json({ error: 'SMTP is not configured. Add your settings and save first.' })
+
+    // Verify connection and auth before attempting to send
+    await t.verify()
+
     const token = randomBytes(32).toString('hex')
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
     await db.execute('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [req.session.userId, token, expiresAt])
@@ -530,6 +536,7 @@ router.post('/email-config/test', requireAdmin, async (req, res) => {
     if (!result.sent) return res.status(503).json({ error: 'SMTP is not configured. Add your settings and save first.' })
     res.json({ ok: true, to: user.email })
   } catch (err) {
+    console.error('[smtp-test] error:', err.code, err.message)
     res.status(500).json({ error: err.message })
   }
 })

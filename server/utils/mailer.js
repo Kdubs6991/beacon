@@ -22,9 +22,9 @@ async function getTransporter() {
     port: c.port,
     secure: c.port === 465,
     auth: { user: c.user, pass: c.pass },
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 15_000,
+    connectionTimeout: 30_000,
+    greetingTimeout: 30_000,
+    socketTimeout: 30_000,
     family: 4, // force IPv4 — Railway does not support IPv6 outbound
   })
 }
@@ -213,4 +213,4 @@ async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
   return { sent: true }
 }
 
-module.exports = { sendInviteEmail, sendPasswordResetEmail, isSmtpConfigured }
+module.exports = { sendInviteEmail, sendPasswordResetEmail, isSmtpConfigured, getTransporter }

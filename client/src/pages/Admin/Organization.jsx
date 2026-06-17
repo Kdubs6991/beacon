@@ -158,7 +158,7 @@ function EmailConfigSection() {
     setTesting(true)
     setTestResult(null)
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 20_000)
+    const timer = setTimeout(() => controller.abort(), 40_000)
     try {
       const res = await fetch('/api/admin/email-config/test', { method: 'POST', credentials: 'include', signal: controller.signal })
       clearTimeout(timer)
