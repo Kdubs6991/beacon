@@ -23,10 +23,6 @@ const db = require('./db')
 const { hashPassword } = require('./utils/password')
 const { startScheduler } = require('./scheduler')
 
-console.log('[smtp] SMTP_HOST:', process.env.SMTP_HOST || '(not set)')
-console.log('[smtp] SMTP_USER:', process.env.SMTP_USER || '(not set)')
-console.log('[smtp] SMTP_PASS:', process.env.SMTP_PASS ? '(set)' : '(not set)')
-console.log('[smtp] SMTP_FROM:', process.env.SMTP_FROM || '(not set)')
 
 const authRoutes = require('./routes/auth')
 const pcoRoutes = require('./routes/pco')

@@ -143,10 +143,11 @@ router.post('/users/invite', requireAdmin, async (req, res) => {
 
   const token = randomBytes(24).toString('hex')
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-  await db.execute(
-    'INSERT INTO invite_tokens (org_id, token, role, email, expires_at) VALUES (?, ?, ?, ?, ?)',
+  const inserted = await db.execute(
+    'INSERT INTO invite_tokens (org_id, token, role, email, expires_at) VALUES (?, ?, ?, ?, ?) RETURNING id',
     [orgId, token, role, email.toLowerCase(), expiresAt]
   )
+  const inviteId = inserted.lastInsertId
 
   const org = await db.getOne('SELECT name FROM organizations WHERE id = ?', [orgId])
   const origin = req.headers.origin || `http://localhost:${process.env.PORT || 3001}`
@@ -154,9 +155,9 @@ router.post('/users/invite', requireAdmin, async (req, res) => {
 
   try {
     const result = await sendInviteEmail({ to: email, orgName: org.name, role, inviteUrl })
-    res.json({ token, expiresAt, email, sent: result.sent, link: result.sent ? undefined : inviteUrl })
+    res.json({ id: inviteId, token, expiresAt, email, sent: result.sent, link: result.sent ? undefined : inviteUrl })
   } catch (err) {
-    res.json({ token, expiresAt, email, sent: false, link: inviteUrl, error: err.message })
+    res.json({ id: inviteId, token, expiresAt, email, sent: false, link: inviteUrl, error: err.message })
   }
 })
 
