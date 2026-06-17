@@ -25,6 +25,7 @@ async function getTransporter() {
     connectionTimeout: 10_000,
     greetingTimeout: 10_000,
     socketTimeout: 15_000,
+    family: 4, // force IPv4 — Railway does not support IPv6 outbound
   })
 }
 

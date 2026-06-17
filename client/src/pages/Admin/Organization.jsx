@@ -766,11 +766,16 @@ export default function Organization() {
               Invite sent to {inviteStatus.email}
             </p>
           )}
-          {inviteStatus && !inviteStatus.error && !inviteStatus.sent && inviteStatus.link && (
+          {inviteStatus && !inviteStatus.sent && inviteStatus.link && (
             <div style={{ marginTop: 10 }}>
               <p className={styles.warning} style={{ marginBottom: 6 }}>
-                Email not configured — share this link manually:
+                {inviteStatus.error
+                  ? `Email failed to send — share this link manually:`
+                  : 'Email not configured — share this link manually:'}
               </p>
+              {inviteStatus.error && (
+                <p className={styles.smtpHint} style={{ marginBottom: 6, color: 'var(--text-muted)' }}>{inviteStatus.error}</p>
+              )}
               <div className={styles.inviteRow}>
                 <input className={styles.inviteInput} type="text" value={inviteStatus.link} readOnly />
                 <button className={styles.copyBtn} type="button" onClick={() => copyToClipboard(inviteStatus.link, setCopiedInvite)}>
@@ -779,7 +784,7 @@ export default function Organization() {
               </div>
             </div>
           )}
-          {inviteStatus?.error && (
+          {inviteStatus?.error && !inviteStatus.link && (
             <p className={styles.formError} style={{ marginTop: 10 }}>{inviteStatus.error}</p>
           )}
 
