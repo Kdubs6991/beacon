@@ -23,7 +23,6 @@ const NAV = [
       { id: 'display-login',  label: 'Display Login' },
       { id: 'qr-code',        label: 'QR Code' },
       { id: 'short-name',     label: 'Short Name' },
-      { id: 'email-setup',    label: 'Email / SMTP Setup' },
       { id: 'backup-export',  label: 'Backup & Restore' },
     ]
   },
@@ -381,44 +380,6 @@ export default function Docs() {
               <p>Leave it blank and your full organization name is used everywhere. The full name is always used on the Organization settings page itself.</p>
             </SubSection>
 
-            <SubSection id="email-setup" title="Email / SMTP Setup">
-              <p>Beacon can send emails for two things: <strong>password reset links</strong> and <strong>team member invite links</strong>. Without email configured, those links are shown in the admin panel instead so you can copy and share them manually — but setting up email makes the experience much smoother.</p>
-              <p>The easiest option for most churches is a <strong>Gmail App Password</strong>. It's free and takes about 5 minutes.</p>
-              <Callout type="warning">
-                Use a dedicated Gmail account for your church or app (e.g. <code>yourchurch.beacon@gmail.com</code>), not your personal account. App Passwords grant full email send access.
-              </Callout>
-              <p><strong>Step 1 — Enable 2-Step Verification on the Gmail account</strong></p>
-              <ol className={styles.ol}>
-                <li>Sign in to the Gmail account you want to send from.</li>
-                <li>Go to <strong>myaccount.google.com → Security</strong>.</li>
-                <li>Under "How you sign in to Google," click <strong>2-Step Verification</strong> and follow the prompts to turn it on.</li>
-              </ol>
-              <p><strong>Step 2 — Create an App Password</strong></p>
-              <ol className={styles.ol}>
-                <li>Go back to <strong>myaccount.google.com → Security</strong>.</li>
-                <li>Search for <strong>App Passwords</strong> in the search bar at the top (it only appears after 2-Step Verification is on).</li>
-                <li>Click <strong>App Passwords</strong>, then click <strong>Select app → Other (custom name)</strong> and type <em>Beacon</em>.</li>
-                <li>Click <strong>Generate</strong>. Google shows a 16-character password like <code>abcd efgh ijkl mnop</code>.</li>
-                <li>Copy it — you won't see it again.</li>
-              </ol>
-              <p><strong>Step 3 — Enter it in Beacon</strong></p>
-              <ol className={styles.ol}>
-                <li>Go to <strong>Admin → Organization → Email / SMTP</strong> and click <strong>Edit</strong>.</li>
-                <li>Fill in the fields:
-                  <ul className={styles.ul}>
-                    <li><strong>SMTP Host:</strong> <code>smtp.gmail.com</code></li>
-                    <li><strong>Port:</strong> <code>587</code></li>
-                    <li><strong>Username:</strong> your full Gmail address</li>
-                    <li><strong>App Password:</strong> paste the 16-character password (spaces are fine)</li>
-                    <li><strong>From address:</strong> optional — leave blank to use your Gmail address</li>
-                  </ul>
-                </li>
-                <li>Click <strong>Save</strong>, then click <strong>Send test email</strong> to confirm it works.</li>
-              </ol>
-              <Callout type="info">
-                If you'd rather configure this via environment variables instead of the admin UI, add <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>, and <code>SMTP_FROM</code> to <code>server/.env</code>. The admin UI takes priority over env vars if both are set.
-              </Callout>
-            </SubSection>
 
             <SubSection id="backup-export" title="Backup &amp; Restore">
               <p>The Organization page has a <strong>Download Backup</strong> button that exports your entire org configuration as a JSON file. The backup includes:</p>
@@ -433,7 +394,7 @@ export default function Docs() {
                 <li>Schedules (cron expression, enabled state, target screen list)</li>
                 <li>Manual service team rosters</li>
               </ul>
-              <p><strong>What's not included:</strong> user accounts, email/SMTP settings, PCO OAuth tokens, and the org access code. These are install-specific and are not touched by a restore.</p>
+              <p><strong>What's not included:</strong> user accounts, PCO OAuth tokens, and the org access code. These are install-specific and are not touched by a restore.</p>
               <p><strong>Restoring a backup</strong> — below the download button, use <strong>Choose backup file…</strong> to upload a <code>.json</code> backup. The app parses the file and shows you a preview (org name, backup date, entity counts) before anything changes. Click <strong>Restore backup</strong> to confirm. The restore:</p>
               <ul className={styles.ul}>
                 <li>Replaces all current org data (campuses, people, labels, screens, templates, rules, schedules, etc.) with the contents of the backup.</li>
@@ -749,7 +710,7 @@ export default function Docs() {
               <p>All data is <strong>shared across the organization</strong> — people, screens, templates, and labels added by one user are visible to every user in the same org, regardless of role.</p>
               <p>Admins can change any account's role from the <strong>Users</strong> page — click the edit icon on any row to open the edit modal, which includes a Role dropdown. Guards prevent removing the last admin account or demoting yourself.</p>
               <p>Use the <strong>search bar</strong> at the top of the Users table to filter by name or email address.</p>
-              <p>Admins can also <strong>send a password reset email</strong> to any user directly from the edit modal — useful if a team member is locked out. If SMTP is configured, an email is sent immediately. If not, the reset link is displayed in the modal so you can share it manually.</p>
+              <p>Admins can also <strong>send a password reset email</strong> to any user directly from the edit modal — useful if a team member is locked out.</p>
             </SubSection>
 
             <SubSection id="invite-links" title="Invite Links">
@@ -762,9 +723,6 @@ export default function Docs() {
                 <li>Automatically assigns the chosen role when the account is created.</li>
               </ul>
               <Callout type="info">
-                If SMTP is not configured, the app won't send an email — instead it shows the raw invite link in the admin panel so you can copy-paste it manually. Configure email in <strong>Admin → Organization → Email / SMTP</strong>, or via environment variables in <code>server/.env</code>. See <a href="/docs#email-setup" target="_blank" rel="noopener noreferrer">Email / SMTP Setup</a> for instructions.
-              </Callout>
-              <Callout type="info">
                 If an invite expires before the recipient uses it, generate a new one. Expired tokens are cleaned up automatically. You can revoke active invites from either the <strong>Organization</strong> page or the <strong>Users</strong> page.
               </Callout>
             </SubSection>
@@ -773,7 +731,7 @@ export default function Docs() {
               <p>Click your name at the bottom of the sidebar to open your <strong>Settings</strong> page. A sticky nav at the top lets you jump to any section:</p>
               <ul className={styles.ul}>
                 <li><strong>Account</strong> — change your display name or email address. Your current role (Admin or Team Member) is shown as a badge. Changes take effect immediately.</li>
-                <li><strong>Security</strong> — change your password. Requires your current password first. New password must be at least 8 characters. If you've forgotten your current password, use the <strong>Forgot password?</strong> link on the sign-in page — a reset link will be emailed to you (or shown in the admin panel if SMTP isn't configured).</li>
+                <li><strong>Security</strong> — change your password. Requires your current password first. New password must be at least 8 characters. If you've forgotten your current password, use the <strong>Forgot password?</strong> link on the sign-in page — a reset link will be emailed to you.</li>
                 <li><strong>Appearance</strong> — switch between <em>Dark</em> and <em>Light</em> theme. Preference is stored in the browser and applies across the whole admin panel.</li>
                 <li><strong>Connections</strong> — shows whether Planning Center is connected. Admins see a <em>Manage →</em> link to the Integrations page and a <em>Connect →</em> link if PCO is disconnected. Team members see the status only.</li>
                 <li><strong>Organization</strong> — a read-only summary of your organization's name, slug, timezone, and address. Admins see an <em>Edit settings →</em> link to the full Organization page.</li>
