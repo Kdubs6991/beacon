@@ -31,5 +31,8 @@ Thumbs.db
 ClaudeReferencePhotos/
 CLAUDE.md
 
+# ── Local project notes ────────────────────────────────────────────────────────
+NOTES.md
+
 # ── Local dev / test scripts ──────────────────────────────────────────────────
 server/seed-test.js
