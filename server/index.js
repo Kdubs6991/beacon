@@ -23,11 +23,7 @@ const db = require('./db')
 const { hashPassword } = require('./utils/password')
 const { startScheduler } = require('./scheduler')
 
-if (process.env.SMTP_HOST) {
-  console.log(`[smtp] Configured: ${process.env.SMTP_HOST}:${process.env.SMTP_PORT || 587} user=${process.env.SMTP_USER || '(none)'}`)
-} else {
-  console.warn('[smtp] WARNING: SMTP_HOST not set — email will not be sent')
-}
+console.log(`[smtp] SMTP_HOST=${process.env.SMTP_HOST || '(not set)'} SMTP_PORT=${process.env.SMTP_PORT || '(not set)'} SMTP_USER=${process.env.SMTP_USER || '(not set)'} SMTP_PASS=${process.env.SMTP_PASS ? '(set)' : '(NOT SET)'} SMTP_FROM=${process.env.SMTP_FROM || '(not set)'}`)
 
 const authRoutes = require('./routes/auth')
 const pcoRoutes = require('./routes/pco')
