@@ -1,4 +1,6 @@
 require('dotenv').config()
+// Railway does not support IPv6 outbound — force IPv4 for all DNS lookups process-wide
+require('dns').setDefaultResultOrder('ipv4first')
 const express = require('express')
 const session = require('express-session')
 const pgSession = require('connect-pg-simple')(session)

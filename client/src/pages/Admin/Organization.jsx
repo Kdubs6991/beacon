@@ -24,8 +24,8 @@ const SMTP_PROVIDERS = [
     label: 'Gmail',
     host: 'smtp.gmail.com',
     ports: [
-      { value: '587', label: '587 — STARTTLS (recommended)' },
-      { value: '465', label: '465 — SSL (try this if 587 times out)' },
+      { value: '587', desc: 'STARTTLS — recommended' },
+      { value: '465', desc: 'SSL — try this if 587 times out' },
     ],
     userLabel: 'Gmail address', userPlaceholder: 'yourchurch@gmail.com',
     passLabel: 'App Password', passPlaceholder: '16-character app password',
@@ -36,7 +36,7 @@ const SMTP_PROVIDERS = [
     label: 'Outlook / Microsoft 365',
     host: 'smtp.office365.com',
     ports: [
-      { value: '587', label: '587 — STARTTLS' },
+      { value: '587', desc: 'STARTTLS' },
     ],
     userLabel: 'Microsoft account email', userPlaceholder: 'yourchurch@outlook.com',
     passLabel: 'Password', passPlaceholder: 'Your Microsoft password',
@@ -47,8 +47,8 @@ const SMTP_PROVIDERS = [
     label: 'Yahoo Mail',
     host: 'smtp.mail.yahoo.com',
     ports: [
-      { value: '465', label: '465 — SSL (recommended)' },
-      { value: '587', label: '587 — STARTTLS' },
+      { value: '465', desc: 'SSL — recommended' },
+      { value: '587', desc: 'STARTTLS' },
     ],
     userLabel: 'Yahoo email address', userPlaceholder: 'yourchurch@yahoo.com',
     passLabel: 'App Password', passPlaceholder: 'App password',
@@ -59,7 +59,7 @@ const SMTP_PROVIDERS = [
     label: 'iCloud Mail',
     host: 'smtp.mail.me.com',
     ports: [
-      { value: '587', label: '587 — STARTTLS' },
+      { value: '587', desc: 'STARTTLS' },
     ],
     userLabel: 'iCloud email address', userPlaceholder: 'yourname@icloud.com',
     passLabel: 'App-Specific Password', passPlaceholder: 'xxxx-xxxx-xxxx-xxxx',
@@ -70,8 +70,8 @@ const SMTP_PROVIDERS = [
     label: 'Zoho Mail',
     host: 'smtp.zoho.com',
     ports: [
-      { value: '587', label: '587 — STARTTLS (recommended)' },
-      { value: '465', label: '465 — SSL' },
+      { value: '587', desc: 'STARTTLS — recommended' },
+      { value: '465', desc: 'SSL' },
     ],
     userLabel: 'Zoho email address', userPlaceholder: 'yourchurch@zohomail.com',
     passLabel: 'Password', passPlaceholder: 'Your Zoho password',
@@ -82,8 +82,8 @@ const SMTP_PROVIDERS = [
     label: 'Resend',
     host: 'smtp.resend.com',
     ports: [
-      { value: '465', label: '465 — SSL (recommended)' },
-      { value: '587', label: '587 — STARTTLS' },
+      { value: '465', desc: 'SSL — recommended' },
+      { value: '587', desc: 'STARTTLS' },
     ],
     userLabel: 'Username', userPlaceholder: 'resend', fixedUser: 'resend',
     passLabel: 'API Key', passPlaceholder: 're_xxxxxxxxxxxx',
@@ -94,9 +94,9 @@ const SMTP_PROVIDERS = [
     label: 'SendGrid',
     host: 'smtp.sendgrid.net',
     ports: [
-      { value: '587', label: '587 — STARTTLS (recommended)' },
-      { value: '465', label: '465 — SSL' },
-      { value: '2525', label: '2525 — Alternative (if 587/465 are blocked)' },
+      { value: '587', desc: 'STARTTLS — recommended' },
+      { value: '465', desc: 'SSL' },
+      { value: '2525', desc: 'Alternative (if 587/465 are blocked)' },
     ],
     userLabel: 'Username', userPlaceholder: 'apikey', fixedUser: 'apikey',
     passLabel: 'API Key', passPlaceholder: 'SG.xxxxxxxxxxxx',
@@ -113,9 +113,9 @@ const SMTP_PROVIDERS = [
   },
 ]
 
-function getPortLabel(provider, portValue) {
+function getPortDesc(provider, portValue) {
   const opt = provider?.ports?.find(p => p.value === portValue)
-  return opt ? opt.label : portValue
+  return opt?.desc ?? null
 }
 
 function detectProvider(host) {
@@ -244,7 +244,14 @@ function EmailConfigSection() {
             <span className={styles.smtpViewValue}>{config.host || <em className={styles.smtpEmpty}>Not set</em>}</span>
 
             <span className={styles.smtpViewLabel}>Port</span>
-            <span className={styles.smtpViewValue}>{getPortLabel(viewProvider, config.port || '587')}</span>
+            <span className={styles.smtpViewValue}>
+              {config.port || '587'}
+              {getPortDesc(viewProvider, config.port || '587') && (
+                <span style={{ color: 'var(--text-muted)', marginLeft: 6, fontSize: '0.875em' }}>
+                  — {getPortDesc(viewProvider, config.port || '587')}
+                </span>
+              )}
+            </span>
 
             <span className={styles.smtpViewLabel}>Username</span>
             <span className={styles.smtpViewValue}>{config.user || <em className={styles.smtpEmpty}>Not set</em>}</span>
@@ -295,9 +302,14 @@ function EmailConfigSection() {
             <div className={styles.formField}>
               <label className={styles.formLabel}>Port</label>
               {provider.ports
-                ? <select className={styles.formInput} value={port} onChange={e => setPort(e.target.value)}>
-                    {provider.ports.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
+                ? <>
+                    <select className={styles.formInput} value={port} onChange={e => setPort(e.target.value)}>
+                      {provider.ports.map(o => <option key={o.value} value={o.value}>{o.value}</option>)}
+                    </select>
+                    {getPortDesc(provider, port) && (
+                      <p className={styles.smtpHint}>{getPortDesc(provider, port)}</p>
+                    )}
+                  </>
                 : <input className={styles.formInput} value={port} onChange={e => setPort(e.target.value)} placeholder="587" />
               }
             </div>
