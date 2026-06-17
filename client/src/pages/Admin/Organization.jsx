@@ -22,7 +22,11 @@ const SMTP_PROVIDERS = [
   {
     key: 'gmail',
     label: 'Gmail',
-    host: 'smtp.gmail.com', port: '587',
+    host: 'smtp.gmail.com',
+    ports: [
+      { value: '587', label: '587 — STARTTLS (recommended)' },
+      { value: '465', label: '465 — SSL (try this if 587 times out)' },
+    ],
     userLabel: 'Gmail address', userPlaceholder: 'yourchurch@gmail.com',
     passLabel: 'App Password', passPlaceholder: '16-character app password',
     passHint: 'Use a Gmail App Password — not your regular Google password. Go to Google Account → Security → 2-Step Verification → App passwords.',
@@ -30,7 +34,10 @@ const SMTP_PROVIDERS = [
   {
     key: 'outlook',
     label: 'Outlook / Microsoft 365',
-    host: 'smtp.office365.com', port: '587',
+    host: 'smtp.office365.com',
+    ports: [
+      { value: '587', label: '587 — STARTTLS' },
+    ],
     userLabel: 'Microsoft account email', userPlaceholder: 'yourchurch@outlook.com',
     passLabel: 'Password', passPlaceholder: 'Your Microsoft password',
     passHint: 'Your Microsoft account password. If 2FA is enabled, create an app password in Microsoft account security settings.',
@@ -38,7 +45,11 @@ const SMTP_PROVIDERS = [
   {
     key: 'yahoo',
     label: 'Yahoo Mail',
-    host: 'smtp.mail.yahoo.com', port: '587',
+    host: 'smtp.mail.yahoo.com',
+    ports: [
+      { value: '465', label: '465 — SSL (recommended)' },
+      { value: '587', label: '587 — STARTTLS' },
+    ],
     userLabel: 'Yahoo email address', userPlaceholder: 'yourchurch@yahoo.com',
     passLabel: 'App Password', passPlaceholder: 'App password',
     passHint: 'Use a Yahoo App Password — not your regular Yahoo password. Generate one in Yahoo Account Security settings.',
@@ -46,7 +57,10 @@ const SMTP_PROVIDERS = [
   {
     key: 'icloud',
     label: 'iCloud Mail',
-    host: 'smtp.mail.me.com', port: '587',
+    host: 'smtp.mail.me.com',
+    ports: [
+      { value: '587', label: '587 — STARTTLS' },
+    ],
     userLabel: 'iCloud email address', userPlaceholder: 'yourname@icloud.com',
     passLabel: 'App-Specific Password', passPlaceholder: 'xxxx-xxxx-xxxx-xxxx',
     passHint: 'Create an app-specific password at appleid.apple.com — do not use your Apple ID password.',
@@ -54,7 +68,11 @@ const SMTP_PROVIDERS = [
   {
     key: 'zoho',
     label: 'Zoho Mail',
-    host: 'smtp.zoho.com', port: '587',
+    host: 'smtp.zoho.com',
+    ports: [
+      { value: '587', label: '587 — STARTTLS (recommended)' },
+      { value: '465', label: '465 — SSL' },
+    ],
     userLabel: 'Zoho email address', userPlaceholder: 'yourchurch@zohomail.com',
     passLabel: 'Password', passPlaceholder: 'Your Zoho password',
     passHint: 'Your Zoho Mail account password.',
@@ -62,7 +80,11 @@ const SMTP_PROVIDERS = [
   {
     key: 'resend',
     label: 'Resend',
-    host: 'smtp.resend.com', port: '587',
+    host: 'smtp.resend.com',
+    ports: [
+      { value: '465', label: '465 — SSL (recommended)' },
+      { value: '587', label: '587 — STARTTLS' },
+    ],
     userLabel: 'Username', userPlaceholder: 'resend', fixedUser: 'resend',
     passLabel: 'API Key', passPlaceholder: 're_xxxxxxxxxxxx',
     passHint: 'Use your Resend API key as the password. The username must be the word "resend".',
@@ -70,7 +92,12 @@ const SMTP_PROVIDERS = [
   {
     key: 'sendgrid',
     label: 'SendGrid',
-    host: 'smtp.sendgrid.net', port: '587',
+    host: 'smtp.sendgrid.net',
+    ports: [
+      { value: '587', label: '587 — STARTTLS (recommended)' },
+      { value: '465', label: '465 — SSL' },
+      { value: '2525', label: '2525 — Alternative (if 587/465 are blocked)' },
+    ],
     userLabel: 'Username', userPlaceholder: 'apikey', fixedUser: 'apikey',
     passLabel: 'API Key', passPlaceholder: 'SG.xxxxxxxxxxxx',
     passHint: 'Use your SendGrid API key as the password. The username must be the word "apikey".',
@@ -78,12 +105,18 @@ const SMTP_PROVIDERS = [
   {
     key: 'other',
     label: 'Other',
-    host: '', port: '587',
+    host: '',
+    ports: null,
     userLabel: 'Username', userPlaceholder: '',
     passLabel: 'Password', passPlaceholder: 'Your password',
     passHint: '',
   },
 ]
+
+function getPortLabel(provider, portValue) {
+  const opt = provider?.ports?.find(p => p.value === portValue)
+  return opt ? opt.label : portValue
+}
 
 function detectProvider(host) {
   return SMTP_PROVIDERS.find(p => p.key !== 'other' && p.host === host) ?? SMTP_PROVIDERS.find(p => p.key === 'other')
@@ -114,7 +147,11 @@ function EmailConfigSection() {
     const p = detectProvider(data.host || '')
     setProvider(p)
     setHost(data.host || '')
-    setPort(data.port || '587')
+    const saved = data.port || ''
+    const validPort = p.ports
+      ? (p.ports.some(o => o.value === saved) ? saved : p.ports[0].value)
+      : (saved || '587')
+    setPort(validPort)
     setUser(data.user || '')
     setPass('')
     setFrom(data.from || '')
@@ -125,7 +162,7 @@ function EmailConfigSection() {
     setProvider(p)
     if (p.key !== 'other') {
       setHost(p.host)
-      setPort(p.port)
+      setPort(p.ports[0].value)
     }
     if (p.fixedUser) setUser(p.fixedUser)
   }
@@ -207,7 +244,7 @@ function EmailConfigSection() {
             <span className={styles.smtpViewValue}>{config.host || <em className={styles.smtpEmpty}>Not set</em>}</span>
 
             <span className={styles.smtpViewLabel}>Port</span>
-            <span className={styles.smtpViewValue}>{config.port || '587'}</span>
+            <span className={styles.smtpViewValue}>{getPortLabel(viewProvider, config.port || '587')}</span>
 
             <span className={styles.smtpViewLabel}>Username</span>
             <span className={styles.smtpViewValue}>{config.user || <em className={styles.smtpEmpty}>Not set</em>}</span>
@@ -257,9 +294,11 @@ function EmailConfigSection() {
             </div>
             <div className={styles.formField}>
               <label className={styles.formLabel}>Port</label>
-              {provider.key === 'other'
-                ? <input className={styles.formInput} value={port} onChange={e => setPort(e.target.value)} placeholder="587" />
-                : <input className={styles.formInput} value={provider.port} readOnly style={{ opacity: 0.5, cursor: 'default' }} />
+              {provider.ports
+                ? <select className={styles.formInput} value={port} onChange={e => setPort(e.target.value)}>
+                    {provider.ports.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                : <input className={styles.formInput} value={port} onChange={e => setPort(e.target.value)} placeholder="587" />
               }
             </div>
           </div>
