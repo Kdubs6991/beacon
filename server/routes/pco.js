@@ -177,16 +177,38 @@ router.post('/import-people', async (req, res) => {
   }
 })
 
-// Test PCO connection — returns org name and service type count
+// Test PCO connection — tests both People and Services separately for diagnosis
 router.get('/test-connection', async (req, res) => {
   const orgId = req.session.orgId
+  let peopleOk = false, servicesOk = false, serviceTypeCount = 0, error = null
+
+  try {
+    await pcoGet('/people/v2/me', orgId)
+    peopleOk = true
+  } catch (err) {
+    error = err.message
+  }
+
   try {
     const data = await pcoGet('/services/v2/service_types?per_page=1', orgId)
-    const count = data.meta?.total_count ?? (data.data?.length ?? 0)
-    res.json({ ok: true, serviceTypeCount: count })
+    serviceTypeCount = data.meta?.total_count ?? (data.data?.length ?? 0)
+    servicesOk = true
   } catch (err) {
-    res.status(503).json({ ok: false, error: err.message })
+    if (!error) error = err.message
   }
+
+  if (servicesOk) {
+    return res.json({ ok: true, serviceTypeCount, peopleOk, servicesOk })
+  }
+  if (peopleOk && !servicesOk) {
+    return res.status(503).json({
+      ok: false,
+      peopleOk,
+      servicesOk,
+      error: 'Token is valid but Services access was denied (403). Your PCO account may not have the Services module, or the authorization was granted without the Services scope. Revoke Beacon\'s access in PCO (Profile → Connected Apps), then reconnect.',
+    })
+  }
+  res.status(503).json({ ok: false, peopleOk, servicesOk, error: error ?? 'Unknown error' })
 })
 
 module.exports = router

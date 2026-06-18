@@ -285,6 +285,7 @@ router.get('/pco/connect', requireAdmin, (req, res) => {
     redirect_uri: process.env.PCO_REDIRECT_URI,
     scope: 'services people',
     state,
+    prompt: 'consent',
   })
   res.redirect(`${PCO_AUTH_URL}?${params}`)
 })

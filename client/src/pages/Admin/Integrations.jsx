@@ -85,12 +85,12 @@ export default function Integrations() {
         </div>
       )
     }
-    const is403 = testResult.error?.includes('403')
+    const scopeIssue = testResult.peopleOk === true && testResult.servicesOk === false
     return (
       <div className={styles.testErr}>
-        {is403 ? (
+        {scopeIssue ? (
           <>
-            <strong>Permission denied (403):</strong> Beacon can't access your Planning Center services. This usually means the OAuth app in PCO doesn't have the <em>Services</em> scope enabled. Try disconnecting and reconnecting — if the issue persists, check the app permissions in your PCO Developer Console.
+            <strong>Token valid, but Services access was denied.</strong> Your PCO authorization doesn't include the Services scope. To fix: go to <strong>app.planningcenteronline.com/profile/connected_apps</strong>, find "Beacon Screen" and remove it, then come back and reconnect. PCO will show the full permission screen and grant Services access.
           </>
         ) : (
           `Test failed: ${testResult.error}`
