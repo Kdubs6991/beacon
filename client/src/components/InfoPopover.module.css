@@ -1,9 +1,5 @@
-.wrap {
-  position: relative;
-}
-
 .trigger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   background: rgba(59, 130, 246, 0.07);
@@ -14,6 +10,7 @@
   font-family: inherit;
   transition: all 0.15s;
   color: var(--text-sec);
+  flex-shrink: 0;
 }
 
 .trigger:hover,
@@ -43,35 +40,50 @@
   font-weight: 500;
 }
 
-/* popover card */
+/* Fixed overlay backdrop */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.12s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* centered card */
 .card {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  width: 320px;
+  width: 100%;
+  max-width: 360px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px;
-  z-index: 50;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
   animation: pop 0.15s ease;
 }
 
 @keyframes pop {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .cardTitle {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-pri);
   margin-bottom: 10px;
 }
 
 .cardBody {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--text-sec);
   line-height: 1.6;
   display: flex;

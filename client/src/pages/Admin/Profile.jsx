@@ -293,9 +293,6 @@ function OrgSection({ isAdmin }) {
     <div id="organization" className={styles.section}>
       <div className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>Organization</h2>
-        {isAdmin && (
-          <Link to="/admin/integrations" className={styles.editLink}>Integrations →</Link>
-        )}
       </div>
       {!org ? (
         <p className={styles.muted}>Loading…</p>

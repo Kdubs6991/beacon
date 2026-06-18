@@ -258,11 +258,8 @@ function PcoCardBody({ st, pcoConnected }) {
   const [plans, setPlans]               = useState(null)
   const [plansLoading, setPlansLoading] = useState(false)
   const [plansError, setPlansError]     = useState(null)
-  const [previewPlanId, setPreviewPlanId] = useState(null)
-  const [preview, setPreview]           = useState(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [viewPlan, setViewPlan]         = useState(null)   // plan object for overlay
-  const [viewPreview, setViewPreview]   = useState(null)   // team preview for overlay
+  const [viewPlan, setViewPlan]         = useState(null)
+  const [viewPreview, setViewPreview]   = useState(null)
   const [viewLoading, setViewLoading]   = useState(false)
   const [viewTeamFilter, setViewTeamFilter] = useState('all')
 
@@ -279,19 +276,6 @@ function PcoCardBody({ st, pcoConnected }) {
       setPlans(data.data ?? [])
     } catch (e) { setPlansError(e.message) }
     setPlansLoading(false)
-  }
-
-  async function loadPreview(planId) {
-    setPreviewPlanId(planId); setPreviewLoading(true); setPreview(null)
-    try {
-      const r = await fetch(
-        `/api/pco/service-types/${st.pco_service_type_id}/plans/${planId}/team-preview?service_type_id=${st.id}`,
-        { credentials: 'include' }
-      )
-      const data = await r.json()
-      setPreview(data.preview ?? [])
-    } catch { setPreview([]) }
-    setPreviewLoading(false)
   }
 
   async function openViewOverlay(plan) {
@@ -335,66 +319,20 @@ function PcoCardBody({ st, pcoConnected }) {
           {plans.map(plan => {
             const title = plan.attributes?.title || '(No title)'
             const date  = formatPlanDate(plan.attributes?.sort_date)
-            const isSelected = previewPlanId === plan.id
             return (
               <div key={plan.id} className={styles.planRow}>
                 <div className={styles.planRowLeft}>
                   <span className={styles.planTitle}>{title}</span>
                   {date && <span className={styles.planDate}>{date}</span>}
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button
-                    className={styles.btnIcon}
-                    onClick={() => openViewOverlay(plan)}
-                    title="View plan details"
-                  >View</button>
-                  <button
-                    className={`${styles.btnIcon} ${isSelected ? styles.btnIconActive : ''}`}
-                    onClick={() => isSelected ? (setPreviewPlanId(null), setPreview(null)) : loadPreview(plan.id)}
-                  >
-                    {isSelected ? 'Hide' : 'Preview team'}
-                  </button>
-                </div>
+                <button
+                  className={styles.btnIcon}
+                  onClick={() => openViewOverlay(plan)}
+                  title="View plan details"
+                >View team</button>
               </div>
             )
           })}
-        </div>
-      )}
-
-      {previewLoading && <p className={styles.emptyHint}>Loading team preview…</p>}
-
-      {preview && !previewLoading && (
-        <div className={styles.previewBox}>
-          <p className={styles.schedSectionLabel}>Team preview</p>
-          {preview.length === 0 && (
-            <p className={styles.emptyHint}>No team members found (or all declined).</p>
-          )}
-          {preview.map((m, i) => (
-            <div key={i} className={styles.previewRow}>
-              {m.photo ? (
-                <img src={m.photo} alt="" className={styles.previewAvatar} />
-              ) : (
-                <div className={styles.previewAvatarInitials}>
-                  {(m.displayName || m.name || '?')[0].toUpperCase()}
-                </div>
-              )}
-              <div className={styles.previewInfo}>
-                <span className={styles.previewName}>{m.displayName}</span>
-                <span className={styles.previewPos}>{m.position || 'No position'}</span>
-              </div>
-              {m.inBeacon && <span className={styles.previewInBeacon}>In Beacon</span>}
-              {m.matched === true && (
-                <span className={styles.previewMatched}>
-                  {m.micLabel ? `Mic: ${m.micLabel}` : ''}
-                  {m.micLabel && m.iemLabel ? ' · ' : ''}
-                  {m.iemLabel ? `IEM: ${m.iemLabel}` : ''}
-                </span>
-              )}
-              {m.matched === false && (
-                <span className={styles.previewNoMatch}>No rule matched</span>
-              )}
-            </div>
-          ))}
         </div>
       )}
 
@@ -892,121 +830,12 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
         style={{ cursor: editingSt ? 'default' : 'pointer' }}
       >
         <div className={styles.stHeaderLeft}>
-          <span className={`${styles.stChevron} ${open ? styles.stChevronOpen : ''}`}>
+          <span className={`${styles.stChevron} ${open || editingSt ? styles.stChevronOpen : ''}`}>
             <ChevronIcon />
           </span>
-          {editingSt ? (
+          <span className={styles.stName}>{st.name}</span>
+          {!editingSt && (
             <>
-              <div className={styles.formGroup}>
-                <span className={styles.formLabel}>Name</span>
-                <input
-                  className={styles.addStInput}
-                  value={stName}
-                  onChange={e => setStName(e.target.value)}
-                  style={{ minWidth: 220 }}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <span className={styles.formLabel}>Mode</span>
-                <select className={styles.formSelect} value={stMode} onChange={e => {
-                  setStMode(e.target.value)
-                  if (e.target.value === 'pco' && pcoConnected) loadPcoTypesForEdit()
-                }}>
-                  <option value="manual">Manual</option>
-                  {pcoConnected && <option value="pco">PCO Sync</option>}
-                </select>
-              </div>
-              {stMode === 'pco' && pcoConnected && (
-                <>
-                <div className={styles.formGroup} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
-                  <span className={styles.formLabel}>PCO service type</span>
-                  {pcoTypesLoading && <span className={styles.formLabel}>Loading…</span>}
-                  {!pcoTypesLoading && pcoTypes && pcoTypes.length > 0 && (
-                    <select
-                      className={styles.formSelect}
-                      value={stPcoId}
-                      onChange={e => {
-                        const picked = pcoTypes.find(t => t.id === e.target.value)
-                        setStPcoId(e.target.value)
-                        setStPcoName(picked?.attributes?.name ?? '')
-                        if (picked && !stName) setStName(picked.attributes?.name ?? '')
-                        if (e.target.value) { setPcoTeams(null); loadPcoTeamsForEdit(e.target.value) }
-                      }}
-                    >
-                      <option value="">Select from PCO…</option>
-                      {pcoTypes.map(t => <option key={t.id} value={t.id}>{t.attributes?.name}</option>)}
-                    </select>
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
-                    <input
-                      className={styles.addStInput}
-                      value={stPcoId}
-                      onChange={e => {
-                        setStPcoId(e.target.value); setStPcoName('')
-                        if (e.target.value) { setPcoTeams(null); loadPcoTeamsForEdit(e.target.value) }
-                      }}
-                      placeholder="Or type PCO service type ID…"
-                      style={{ flex: 1 }}
-                    />
-                    <InfoPopover title="Finding your PCO service type ID" docsHref="/docs#pco-service-id">
-                      <p>Go to Planning Center Services, open a service type, and look at the URL. The number after <strong>/service_types/</strong> is the ID.</p>
-                      <p>Example: <code style={{ fontSize: '0.8em', background: 'rgba(255,255,255,0.08)', padding: '1px 4px', borderRadius: 3 }}>planningcenteronline.com/services/v2/service_types/<strong>12345</strong></code></p>
-                    </InfoPopover>
-                  </div>
-                </div>
-                {stPcoId && (
-                  <div className={styles.formGroup} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
-                    <span className={styles.formLabel}>Teams to include</span>
-                    {pcoTeamsLoading && <span className={styles.formLabel}>Loading teams…</span>}
-                    {!pcoTeamsLoading && pcoTeams && pcoTeams.length === 0 && <span className={styles.formLabel}>No teams found.</span>}
-                    {!pcoTeamsLoading && pcoTeams && pcoTeams.length > 0 && (
-                      <div className={styles.teamChecklist}>
-                        <label className={styles.teamCheckItem} key="all">
-                          <input type="checkbox" checked={stTeamIds.length === 0}
-                            onChange={() => setStTeamIds([])} />
-                          <span>All teams</span>
-                        </label>
-                        {pcoTeams.map(t => (
-                          <label key={t.id} className={styles.teamCheckItem}>
-                            <input type="checkbox"
-                              checked={stTeamIds.includes(t.id)}
-                              onChange={e => setStTeamIds(prev =>
-                                e.target.checked ? [...prev, t.id] : prev.filter(id => id !== t.id)
-                              )}
-                            />
-                            <span>{t.attributes?.name ?? t.id}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                </>
-              )}
-              {campuses.length > 0 && (
-                <div className={styles.formGroup}>
-                  <span className={styles.formLabel}>Campus</span>
-                  <select className={styles.formSelect} value={stCampus} onChange={e => setStCampus(e.target.value)}>
-                    <option value="">No campus</option>
-                    {campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-              )}
-              <div className={styles.formGroup}>
-                <span className={styles.formLabel}>&nbsp;</span>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={saveStEdit} disabled={savingSt}>
-                    {savingSt ? 'Saving…' : 'Save'}
-                  </button>
-                  <button className={`${styles.btn} ${styles.btnSmall}`} onClick={() => { setEditingSt(false); setStName(st.name); setStCampus(st.campus_id ?? ''); setStMode(st.mode ?? 'manual'); setStPcoId(st.pco_service_type_id ?? ''); setStPcoName(st.pco_service_type_name ?? '') }}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <span className={styles.stName}>{st.name}</span>
               <span className={isManual ? styles.modeBadgeManual : styles.modeBadgePco}>
                 {isManual ? 'Manual' : 'PCO'}
               </span>
@@ -1018,6 +847,7 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
               )}
             </>
           )}
+          {editingSt && <span className={styles.stEditingBadge}>Editing</span>}
         </div>
         <div className={styles.stActions} onClick={e => e.stopPropagation()}>
           {!editingSt && (
@@ -1036,7 +866,119 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
         </div>
       </div>
 
-      {open && (
+      {editingSt && (
+        <div className={styles.stEditForm}>
+          <div className={styles.stEditRow}>
+            <div className={styles.stEditField}>
+              <label className={styles.formLabel}>Name</label>
+              <input
+                className={styles.addStInput}
+                value={stName}
+                onChange={e => setStName(e.target.value)}
+              />
+            </div>
+            <div className={styles.stEditField}>
+              <label className={styles.formLabel}>Mode</label>
+              <select className={styles.formSelect} value={stMode} onChange={e => {
+                setStMode(e.target.value)
+                if (e.target.value === 'pco' && pcoConnected) loadPcoTypesForEdit()
+              }}>
+                <option value="manual">Manual</option>
+                {pcoConnected && <option value="pco">PCO Sync</option>}
+              </select>
+            </div>
+            {campuses.length > 0 && (
+              <div className={styles.stEditField}>
+                <label className={styles.formLabel}>Campus</label>
+                <select className={styles.formSelect} value={stCampus} onChange={e => setStCampus(e.target.value)}>
+                  <option value="">No campus</option>
+                  {campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {stMode === 'pco' && pcoConnected && (
+            <div className={styles.stEditPcoSection}>
+              <div className={styles.stEditField} style={{ maxWidth: 480 }}>
+                <label className={styles.formLabel}>PCO service type</label>
+                {pcoTypesLoading && <span className={styles.emptyHint}>Loading…</span>}
+                {!pcoTypesLoading && pcoTypes && pcoTypes.length > 0 && (
+                  <select
+                    className={styles.formSelect}
+                    value={stPcoId}
+                    onChange={e => {
+                      const picked = pcoTypes.find(t => t.id === e.target.value)
+                      setStPcoId(e.target.value)
+                      setStPcoName(picked?.attributes?.name ?? '')
+                      if (picked && !stName) setStName(picked.attributes?.name ?? '')
+                      if (e.target.value) { setPcoTeams(null); loadPcoTeamsForEdit(e.target.value) }
+                    }}
+                  >
+                    <option value="">Select from PCO…</option>
+                    {pcoTypes.map(t => <option key={t.id} value={t.id}>{t.attributes?.name}</option>)}
+                  </select>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: pcoTypes?.length ? 8 : 0 }}>
+                  <input
+                    className={styles.addStInput}
+                    value={stPcoId}
+                    onChange={e => {
+                      setStPcoId(e.target.value); setStPcoName('')
+                      if (e.target.value) { setPcoTeams(null); loadPcoTeamsForEdit(e.target.value) }
+                    }}
+                    placeholder="Or enter PCO service type ID…"
+                    style={{ flex: 1 }}
+                  />
+                  <InfoPopover title="Finding your PCO service type ID" docsHref="/docs#pco-service-id">
+                    <p>Go to Planning Center Services, open a service type, and look at the URL. The number after <strong>/service_types/</strong> is the ID.</p>
+                    <p>Example: <code style={{ fontSize: '0.8em', background: 'rgba(255,255,255,0.08)', padding: '1px 4px', borderRadius: 3 }}>…/service_types/<strong>12345</strong></code></p>
+                  </InfoPopover>
+                </div>
+              </div>
+
+              {stPcoId && (
+                <div className={styles.stEditField}>
+                  <label className={styles.formLabel}>Teams to include <span className={styles.formLabelHint}>(leave all unchecked for all teams)</span></label>
+                  {pcoTeamsLoading && <span className={styles.emptyHint}>Loading teams…</span>}
+                  {!pcoTeamsLoading && pcoTeams && pcoTeams.length === 0 && <span className={styles.emptyHint}>No teams found.</span>}
+                  {!pcoTeamsLoading && pcoTeams && pcoTeams.length > 0 && (
+                    <div className={styles.teamChecklist}>
+                      <label className={styles.teamCheckItem} key="all">
+                        <input type="checkbox" checked={stTeamIds.length === 0}
+                          onChange={() => setStTeamIds([])} />
+                        <span>All teams</span>
+                      </label>
+                      {pcoTeams.map(t => (
+                        <label key={t.id} className={styles.teamCheckItem}>
+                          <input type="checkbox"
+                            checked={stTeamIds.includes(t.id)}
+                            onChange={e => setStTeamIds(prev =>
+                              e.target.checked ? [...prev, t.id] : prev.filter(id => id !== t.id)
+                            )}
+                          />
+                          <span>{t.attributes?.name ?? t.id}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className={styles.stEditActions}>
+            <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={saveStEdit} disabled={savingSt}>
+              {savingSt ? 'Saving…' : 'Save changes'}
+            </button>
+            <button className={`${styles.btn} ${styles.btnSmall}`} onClick={() => { setEditingSt(false); setStName(st.name); setStCampus(st.campus_id ?? ''); setStMode(st.mode ?? 'manual'); setStPcoId(st.pco_service_type_id ?? ''); setStPcoName(st.pco_service_type_name ?? '') }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {open && !editingSt && (
         <div className={styles.schedBody}>
           {!isManual && !pcoConnected && (
             <div className={styles.pcoNotice}>

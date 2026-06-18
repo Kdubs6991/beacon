@@ -124,7 +124,7 @@ router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res)
       }
 
       const beaconPerson = pcoPId
-        ? await db.getOne('SELECT id, name, name_override FROM people WHERE pco_person_id = ? AND org_id = ?', [pcoPId, orgId])
+        ? await db.getOne('SELECT id, name, name_override, photo_url, photo_override FROM people WHERE pco_person_id = ? AND org_id = ?', [pcoPId, orgId])
         : null
 
       preview.push({
@@ -134,7 +134,7 @@ router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res)
         position,
         teamId,
         teamName,
-        photo:        pcoPerson?.attributes?.photo_thumbnail ?? null,
+        photo:        beaconPerson?.photo_override ?? beaconPerson?.photo_url ?? pcoPerson?.attributes?.photo_thumbnail ?? null,
         inBeacon:     !!beaconPerson,
         beaconId:     beaconPerson?.id ?? null,
         matched:      rules.length > 0 ? matched : null,
