@@ -46,6 +46,7 @@ async function pcoGet(path) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
+      'User-Agent': 'Beacon/1.0 (https://beaconscreen.com; support@beaconscreen.com)',
     },
   })
   if (!res.ok) throw new Error(`PCO request failed: ${res.status} ${path}`)
