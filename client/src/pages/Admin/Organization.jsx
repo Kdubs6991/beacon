@@ -316,7 +316,7 @@ export default function Organization() {
       })
       const data = await res.json()
       if (!res.ok) { setInviteStatus({ error: data.error || 'Failed to send invite' }); return }
-      setInviteStatus({ sent: data.sent, email: data.email, link: data.link })
+      setInviteStatus({ sent: data.sent, email: data.email, link: data.link, error: data.error })
       setInviteEmail('')
       setInvites(prev => [{ ...data, role: inviteRole }, ...prev])
     } catch {

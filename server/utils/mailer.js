@@ -1,19 +1,12 @@
-const nodemailer = require('nodemailer')
-const dns = require('dns')
 const db = require('../db')
 
-// Railway has no outbound IPv6 routes — resolve SMTP hostnames to IPv4 only
-function lookupIPv4(hostname, _opts, callback) {
-  dns.resolve4(hostname, (err, addresses) => {
-    if (err) return callback(err)
-    callback(null, addresses[0], 4)
-  })
-}
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
 
 async function getSmtpConfig() {
   // Env vars take full priority — if SMTP_HOST is set, skip the DB entirely
   if (process.env.SMTP_HOST) {
-    console.log(`[smtp:config] using env vars: host=${process.env.SMTP_HOST} user=${process.env.SMTP_USER} pass=${process.env.SMTP_PASS ? '(set)' : '(NOT SET)'}`)
     return {
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
@@ -25,7 +18,6 @@ async function getSmtpConfig() {
   // No env vars — fall back to DB (local dev / self-hosted)
   async function s(key) { return (await db.getOne('SELECT value FROM settings WHERE key = ?', [key]))?.value }
   const host = await s('smtp_host')
-  console.log(`[smtp:config] no env vars, db.smtp_host=${JSON.stringify(host)}`)
   if (!host) return null
   return {
     host,
@@ -36,11 +28,49 @@ async function getSmtpConfig() {
   }
 }
 
-async function getTransporter() {
+async function isSmtpConfigured() {
   const c = await getSmtpConfig()
-  console.log(`[smtp:transporter] c.user=${JSON.stringify(c?.user)} c.pass=${c?.pass ? '(set)' : '(NOT SET)'} → returning ${(!c || !c.user || !c.pass) ? 'null' : 'transporter'}`)
-  if (!c || !c.user || !c.pass) return null
-  return nodemailer.createTransport({
+  return !!(c?.host && c?.user && c?.pass)
+}
+
+// ---------------------------------------------------------------------------
+// Sending — Resend HTTP API or nodemailer SMTP
+// ---------------------------------------------------------------------------
+
+async function sendEmail({ to, subject, text, html }) {
+  const c = await getSmtpConfig()
+  if (!c?.host || !c?.pass) {
+    console.log('[mailer] not configured — no host/pass')
+    return { sent: false }
+  }
+
+  const from = c.from || c.user || 'noreply@beaconscreen.com'
+
+  // Use Resend HTTP API when pointed at Resend — bypasses SMTP port blocking
+  if (c.host === 'smtp.resend.com') {
+    console.log(`[mailer] sending via Resend API to ${to}`)
+    const { Resend } = require('resend')
+    const resend = new Resend(c.pass)
+    const { data, error } = await resend.emails.send({ from, to, subject, text, html })
+    if (error) {
+      console.error('[mailer] Resend API error:', error)
+      throw new Error(error.message || JSON.stringify(error))
+    }
+    console.log('[mailer] Resend API sent, id:', data?.id)
+    return { sent: true }
+  }
+
+  // Fallback: nodemailer SMTP (local dev / other providers)
+  console.log(`[mailer] sending via SMTP ${c.host}:${c.port} to ${to}`)
+  const nodemailer = require('nodemailer')
+  const dns = require('dns')
+  function lookupIPv4(hostname, _opts, callback) {
+    dns.resolve4(hostname, (err, addresses) => {
+      if (err) return callback(err)
+      callback(null, addresses[0], 4)
+    })
+  }
+  const t = nodemailer.createTransport({
     host: c.host,
     port: c.port,
     secure: c.port === 465,
@@ -50,17 +80,13 @@ async function getTransporter() {
     socketTimeout: 30_000,
     lookup: lookupIPv4,
   })
+  await t.sendMail({ from, to, subject, text, html })
+  return { sent: true }
 }
 
-async function fromAddress() {
-  const c = await getSmtpConfig()
-  return c?.from || c?.user || process.env.SMTP_FROM || process.env.SMTP_USER
-}
-
-async function isSmtpConfigured() {
-  const c = await getSmtpConfig()
-  return !!(c?.host && c?.user && c?.pass)
-}
+// ---------------------------------------------------------------------------
+// HTML wrapper
+// ---------------------------------------------------------------------------
 
 function emailWrapper({ preheader, headerLabel, body, footerText }) {
   return `<!DOCTYPE html>
@@ -71,14 +97,10 @@ function emailWrapper({ preheader, headerLabel, body, footerText }) {
   <title>${headerLabel}</title>
 </head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <!-- preheader -->
   <span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</span>
-
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-
-        <!-- Header -->
         <tr>
           <td style="background:#1e2433;border-radius:10px 10px 0 0;padding:24px 32px;">
             <table width="100%" cellpadding="0" cellspacing="0">
@@ -91,21 +113,16 @@ function emailWrapper({ preheader, headerLabel, body, footerText }) {
             </table>
           </td>
         </tr>
-
-        <!-- Body card -->
         <tr>
           <td style="background:#ffffff;padding:32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
             ${body}
           </td>
         </tr>
-
-        <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;padding:16px 32px;">
             <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">${footerText}</p>
           </td>
         </tr>
-
       </table>
     </td></tr>
   </table>
@@ -113,12 +130,15 @@ function emailWrapper({ preheader, headerLabel, body, footerText }) {
 </html>`
 }
 
-async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
-  const t = await getTransporter()
-  const roleLabel = role === 'admin' ? 'Admin' : 'Team Member'
+// ---------------------------------------------------------------------------
+// Public send functions
+// ---------------------------------------------------------------------------
 
-  if (!t) {
-    console.log(`[INVITE] SMTP not configured — invite link for ${to}: ${inviteUrl}`)
+async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
+  const roleLabel = role === 'admin' ? 'Admin' : 'Team Member'
+  const c = await getSmtpConfig()
+  if (!c?.host || !c?.pass) {
+    console.log(`[invite] not configured — link: ${inviteUrl}`)
     return { sent: false, link: inviteUrl }
   }
 
@@ -128,14 +148,12 @@ async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
     body: `
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;line-height:1.3;">You're invited to join</h1>
       <p style="margin:0 0 24px;font-size:24px;font-weight:800;color:#3b82f6;">${orgName}</p>
-
       <p style="margin:0 0 6px;font-size:15px;color:#334155;line-height:1.6;">
         You've been added as a <strong style="color:#0f172a;">${roleLabel}</strong> on Beacon, the worship team display app used by ${orgName}.
       </p>
       <p style="margin:0 0 28px;font-size:15px;color:#334155;line-height:1.6;">
         Click the button below to create your account and get started.
       </p>
-
       <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
         <tr>
           <td style="background:#3b82f6;border-radius:8px;">
@@ -145,7 +163,6 @@ async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
           </td>
         </tr>
       </table>
-
       <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;">
         Or copy this link into your browser:<br />
         <span style="color:#3b82f6;word-break:break-all;">${inviteUrl}</span>
@@ -154,29 +171,23 @@ async function sendInviteEmail({ to, orgName, role, inviteUrl }) {
     footerText: `This invite link expires in <strong>7 days</strong>. If you weren't expecting this email, you can safely ignore it — no account will be created unless you click the link above.`,
   })
 
-  await t.sendMail({
-    from: await fromAddress(),
+  await sendEmail({
     to,
     subject: `You've been invited to join ${orgName} on Beacon`,
     text: [
       `You've been invited to join ${orgName} on Beacon as a ${roleLabel}.`,
-      '',
-      'Click the link below to create your account:',
-      inviteUrl,
-      '',
-      "This link expires in 7 days. If you weren't expecting this, you can ignore it.",
+      '', 'Click the link below to create your account:', inviteUrl,
+      '', "This link expires in 7 days. If you weren't expecting this, you can ignore it.",
     ].join('\n'),
     html,
   })
-
   return { sent: true }
 }
 
 async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
-  const t = await getTransporter()
-
-  if (!t) {
-    console.log(`[PASSWORD RESET] SMTP not configured — reset link for ${to}: ${resetUrl}`)
+  const c = await getSmtpConfig()
+  if (!c?.host || !c?.pass) {
+    console.log(`[reset] not configured — link: ${resetUrl}`)
     return { sent: false, link: resetUrl }
   }
 
@@ -189,7 +200,6 @@ async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
         We received a request to reset the password for your Beacon account at <strong style="color:#0f172a;">${orgName}</strong>.
         Click the button below to choose a new password.
       </p>
-
       <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
         <tr>
           <td style="background:#3b82f6;border-radius:8px;">
@@ -199,12 +209,10 @@ async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
           </td>
         </tr>
       </table>
-
       <p style="margin:0 0 16px;font-size:13px;color:#64748b;line-height:1.5;">
         Or copy this link into your browser:<br />
         <span style="color:#3b82f6;word-break:break-all;">${resetUrl}</span>
       </p>
-
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td style="background:#fef9ec;border:1px solid #fde68a;border-radius:6px;padding:12px 14px;">
@@ -218,22 +226,17 @@ async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
     footerText: `This link expires in <strong>1 hour</strong>. For security, never share this link with anyone.`,
   })
 
-  await t.sendMail({
-    from: await fromAddress(),
+  await sendEmail({
     to,
     subject: `Reset your Beacon password`,
     text: [
       `You requested a password reset for your Beacon account at ${orgName}.`,
-      '',
-      'Click the link below to set a new password:',
-      resetUrl,
-      '',
-      'This link expires in 1 hour. If you did not request a reset, you can safely ignore this email.',
+      '', 'Click the link below to set a new password:', resetUrl,
+      '', 'This link expires in 1 hour. If you did not request a reset, you can safely ignore this email.',
     ].join('\n'),
     html,
   })
-
   return { sent: true }
 }
 
-module.exports = { sendInviteEmail, sendPasswordResetEmail, isSmtpConfigured, getTransporter }
+module.exports = { sendInviteEmail, sendPasswordResetEmail, isSmtpConfigured }
