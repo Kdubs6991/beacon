@@ -245,6 +245,110 @@
   margin-bottom: 14px;
 }
 
+/* ── Disconnect modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modalBox {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  width: 480px;
+  max-width: calc(100vw - 40px);
+}
+
+.modalTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin-bottom: 8px;
+}
+
+.modalDesc {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  margin-bottom: 18px;
+}
+
+.disconnectOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.disconnectOption {
+  text-align: left;
+  background: var(--bg-page, var(--bg-card));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+
+.disconnectOption:hover {
+  border-color: var(--accent);
+  background: rgba(96, 165, 250, 0.05);
+}
+
+.disconnectOption:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.disconnectOptionDanger:hover {
+  border-color: #f87171;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.disconnectOptionTitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  margin-bottom: 4px;
+}
+
+.disconnectOptionDanger .disconnectOptionTitle {
+  color: #f87171;
+}
+
+.disconnectOptionDesc {
+  font-size: 0.8rem;
+  color: var(--text-sec);
+  line-height: 1.45;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btnSecondary {
+  background: transparent;
+  color: var(--text-sec);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.btnSecondary:hover { background: rgba(255,255,255,0.04); }
+.btnSecondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ── Coming soon state ── */
 .comingSoonBadge {
   margin-left: auto;

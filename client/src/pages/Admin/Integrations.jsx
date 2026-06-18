@@ -8,6 +8,7 @@ export default function Integrations() {
   const [disconnecting, setDisconnecting] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState(null)
+  const [disconnectModal, setDisconnectModal] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   function loadStatus() {
@@ -19,20 +20,38 @@ export default function Integrations() {
 
   useEffect(() => { loadStatus() }, [])
 
+  // Handle OAuth callback — if we're in a popup, notify parent and close
   useEffect(() => {
     if (searchParams.get('connected') === '1') {
       setSearchParams({}, { replace: true })
+      if (searchParams.get('popup') === '1' && window.opener) {
+        try { window.opener.postMessage({ pcoConnected: true }, window.location.origin) } catch {}
+        window.close()
+        return
+      }
       loadStatus()
     }
   }, [])
 
-  async function handleDisconnect() {
-    if (!confirm('Disconnect Planning Center? Beacon will stop syncing PCO data.')) return
-    setDisconnecting(true)
-    await fetch('/api/auth/pco/disconnect', { method: 'DELETE', credentials: 'include' })
-    setStatus(s => ({ ...s, connected: false, expiresAt: null }))
-    setTestResult(null)
-    setDisconnecting(false)
+  // Listen for popup completing
+  useEffect(() => {
+    function handleMessage(e) {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.pcoConnected) loadStatus()
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
+  function handleConnect() {
+    const popup = window.open(
+      '/api/auth/pco/connect',
+      'pco_oauth',
+      'width=640,height=720,left=200,top=100,noopener=no'
+    )
+    if (!popup) {
+      window.location.href = '/api/auth/pco/connect'
+    }
   }
 
   async function handleTest() {
@@ -46,6 +65,38 @@ export default function Integrations() {
       setTestResult({ ok: false, error: 'Request failed' })
     }
     setTesting(false)
+  }
+
+  async function handleDisconnect(mode) {
+    setDisconnecting(true)
+    await fetch(`/api/auth/pco/disconnect?mode=${mode}`, { method: 'DELETE', credentials: 'include' })
+    setStatus(s => ({ ...s, connected: false, expiresAt: null }))
+    setTestResult(null)
+    setDisconnecting(false)
+    setDisconnectModal(false)
+  }
+
+  function renderTestResult() {
+    if (!testResult) return null
+    if (testResult.ok) {
+      return (
+        <div className={styles.testOk}>
+          Connection verified — found {testResult.serviceTypeCount} service type{testResult.serviceTypeCount !== 1 ? 's' : ''} in your PCO account.
+        </div>
+      )
+    }
+    const is403 = testResult.error?.includes('403')
+    return (
+      <div className={styles.testErr}>
+        {is403 ? (
+          <>
+            <strong>Permission denied (403):</strong> Beacon can't access your Planning Center services. This usually means the OAuth app in PCO doesn't have the <em>Services</em> scope enabled. Try disconnecting and reconnecting — if the issue persists, check the app permissions in your PCO Developer Console.
+          </>
+        ) : (
+          `Test failed: ${testResult.error}`
+        )}
+      </div>
+    )
   }
 
   const configured = status?.configured
@@ -91,21 +142,14 @@ export default function Integrations() {
               </div>
             </div>
 
-            {testResult && (
-              <div className={testResult.ok ? styles.testOk : styles.testErr}>
-                {testResult.ok
-                  ? `Connection verified — found ${testResult.serviceTypeCount} service type${testResult.serviceTypeCount !== 1 ? 's' : ''} in your PCO account.`
-                  : `Test failed: ${testResult.error}`
-                }
-              </div>
-            )}
+            {renderTestResult()}
 
             <div className={styles.actions}>
               <button className={styles.btnPrimary} onClick={handleTest} disabled={testing}>
                 {testing ? 'Testing…' : 'Test connection'}
               </button>
-              <button className={styles.disconnectBtn} onClick={handleDisconnect} disabled={disconnecting}>
-                {disconnecting ? 'Disconnecting…' : 'Disconnect'}
+              <button className={styles.disconnectBtn} onClick={() => setDisconnectModal(true)} disabled={disconnecting}>
+                Disconnect
               </button>
             </div>
           </div>
@@ -122,9 +166,9 @@ export default function Integrations() {
               <li>Match team members to automation rules automatically on a schedule</li>
               <li>Sync photos and positions without any manual entry</li>
             </ul>
-            <a href="/api/auth/pco/connect" className={styles.connectBtn}>
+            <button className={styles.connectBtn} onClick={handleConnect}>
               Connect to Planning Center
-            </a>
+            </button>
           </div>
         )}
 
@@ -142,6 +186,45 @@ export default function Integrations() {
           </div>
         )}
       </div>
+
+      {/* Disconnect confirmation modal */}
+      {disconnectModal && (
+        <div className={styles.modalOverlay} onClick={() => setDisconnectModal(false)}>
+          <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Disconnect Planning Center?</h3>
+            <p className={styles.modalDesc}>
+              Choose what happens to people that were imported from Planning Center:
+            </p>
+            <div className={styles.disconnectOptions}>
+              <button
+                className={styles.disconnectOption}
+                onClick={() => handleDisconnect('keep')}
+                disabled={disconnecting}
+              >
+                <div className={styles.disconnectOptionTitle}>Keep imported people</div>
+                <div className={styles.disconnectOptionDesc}>
+                  People stay in your roster but become manual — their PCO link is removed and any changes you made in Beacon are preserved.
+                </div>
+              </button>
+              <button
+                className={`${styles.disconnectOption} ${styles.disconnectOptionDanger}`}
+                onClick={() => handleDisconnect('remove')}
+                disabled={disconnecting}
+              >
+                <div className={styles.disconnectOptionTitle}>Remove imported people</div>
+                <div className={styles.disconnectOptionDesc}>
+                  Deletes everyone who was originally imported from Planning Center. Manual people are not affected.
+                </div>
+              </button>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.btnSecondary} onClick={() => setDisconnectModal(false)} disabled={disconnecting}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   )
 }

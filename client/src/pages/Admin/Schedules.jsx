@@ -1051,7 +1051,11 @@ function AddServiceTypeModal({ campuses, pcoConnected, onAdd, onCancel }) {
           {pcoLoading && <p className={styles.emptyHint}>Loading your PCO services…</p>}
           {pcoError && (
             <p className={styles.emptyHint} style={{ color: 'var(--red)' }}>
-              {pcoError} <button className={styles.btnLink} onClick={loadPcoTypes}><RefreshIcon /> Retry</button>
+              {pcoError?.includes('403')
+                ? 'Permission denied — the PCO connection may be missing the Services scope. Try disconnecting and reconnecting on the Integrations page.'
+                : pcoError
+              }{' '}
+              <button className={styles.btnLink} onClick={loadPcoTypes}><RefreshIcon /> Retry</button>
             </p>
           )}
           {!pcoLoading && pcoTypes && pcoTypes.length === 0 && (

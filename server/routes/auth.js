@@ -318,7 +318,7 @@ router.get('/pco/callback', async (req, res) => {
       'INSERT INTO pco_tokens (org_id, access_token, refresh_token, expires_at) VALUES (?, ?, ?, ?)',
       [orgId, data.access_token, data.refresh_token, expiresAt]
     )
-    res.redirect('/admin/integrations?connected=1')
+    res.redirect('/admin/integrations?connected=1&popup=1')
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -339,7 +339,14 @@ router.get('/pco/status', async (req, res) => {
 })
 
 router.delete('/pco/disconnect', requireAdmin, async (req, res) => {
-  await db.execute('DELETE FROM pco_tokens WHERE org_id = ?', [req.session.orgId])
+  const orgId = req.session.orgId
+  const mode = req.query.mode ?? 'keep'
+  if (mode === 'remove') {
+    await db.execute('DELETE FROM people WHERE pco_person_id IS NOT NULL AND org_id = ?', [orgId])
+  } else {
+    await db.execute('UPDATE people SET pco_person_id = NULL WHERE org_id = ?', [orgId])
+  }
+  await db.execute('DELETE FROM pco_tokens WHERE org_id = ?', [orgId])
   res.json({ ok: true })
 })
 
