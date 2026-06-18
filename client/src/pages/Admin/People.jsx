@@ -908,6 +908,14 @@ export default function People() {
     setModal(null)
   }
 
+  const usedCats = useMemo(() => {
+    const seen = new Set()
+    for (const p of people) {
+      parseCategories(p.category_override || p.category).forEach(c => seen.add(c))
+    }
+    return CATEGORIES.filter(c => seen.has(c))
+  }, [people])
+
   const filtered = useMemo(() => {
     let result = people
     const q = search.toLowerCase().trim()
@@ -1006,16 +1014,18 @@ export default function People() {
             ))}
           </div>
         )}
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Category</span>
-          {CATEGORIES.map(c => (
-            <button
-              key={c}
-              className={`${styles.filterPill} ${filterCats.includes(c) ? styles.filterPillActive : ''}`}
-              onClick={() => toggleFilterCat(c)}
-            >{c}</button>
-          ))}
-        </div>
+        {usedCats.length > 0 && (
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Category</span>
+            {usedCats.map(c => (
+              <button
+                key={c}
+                className={`${styles.filterPill} ${filterCats.includes(c) ? styles.filterPillActive : ''}`}
+                onClick={() => toggleFilterCat(c)}
+              >{c}</button>
+            ))}
+          </div>
+        )}
         {hasActiveFilters && (
           <button className={styles.filterClear} onClick={() => { setFilterSource(''); setFilterCats([]) }}>
             Clear filters

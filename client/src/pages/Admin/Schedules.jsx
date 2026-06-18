@@ -635,11 +635,11 @@ function PushModal({ st, screens, scheduleScreenIds, onClose }) {
       {result ? (
         result.pushed === 0 ? (
           <p className={styles.pushError}>
-            Push succeeded but no musicians were sent — no team members matched any automation rules. Check your rules on the Automation page.
+            Push succeeded but no people were sent — no team members matched any automation rules. Check your rules on the Automation page.
           </p>
         ) : (
           <p className={styles.pushSuccess}>
-            Pushed {result.pushed} musician{result.pushed !== 1 ? 's' : ''} to {result.screens} screen{result.screens !== 1 ? 's' : ''}.
+            Pushed {result.pushed} {result.pushed !== 1 ? 'people' : 'person'} to {result.screens} screen{result.screens !== 1 ? 's' : ''}.
           </p>
         )
       ) : (

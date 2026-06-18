@@ -195,7 +195,7 @@ router.post('/import-people', async (req, res) => {
       const pcoPerson = pcoPersonById[pcoPId]
       const name     = member.attributes?.name               ?? pcoPerson?.attributes?.full_name ?? 'Unknown'
       const position = member.attributes?.team_position_name ?? null
-      const photoUrl = pcoPerson?.attributes?.photo_thumbnail_url ?? null
+      const photoUrl = pcoPerson?.attributes?.photo_url ?? pcoPerson?.attributes?.photo_thumbnail_url ?? null
 
       if (name.trim().length > 60) { skipped++; continue }
 
