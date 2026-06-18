@@ -723,7 +723,7 @@ export default function Docs() {
                 <li>Automatically assigns the chosen role when the account is created.</li>
               </ul>
               <Callout type="info">
-                If an invite expires before the recipient uses it, generate a new one. Expired tokens are cleaned up automatically. You can revoke active invites from either the <strong>Organization</strong> page or the <strong>Users</strong> page.
+                Email is pre-configured on the hosted version — invite emails send automatically with no setup required. If an invite expires before the recipient uses it, generate a new one. You can revoke active invites from either the <strong>Organization</strong> page or the <strong>Users</strong> page.
               </Callout>
             </SubSection>
 
@@ -764,11 +764,14 @@ export default function Docs() {
 
           {/* ── Hosting ── */}
           <Section id="hosting" title="Self-Hosting">
-            <p>Beacon runs anywhere Node.js 22+ is available — a laptop, a Raspberry Pi, a VPS, a home server. Display screens are just browser tabs, so any device on the same network (or any network if you use a tunnel) can show them.</p>
-            <Callout type="warning">
-              Node.js 22 or higher is required — Beacon uses the built-in <code>node:sqlite</code> module which was introduced in Node 22. Earlier versions will fail to start.
+            <Callout type="info">
+              You're currently using the <strong>hosted version</strong> of Beacon at beaconscreen.com — no server setup is required. This section is for organizations who want to run their own private instance on a local machine or server.
             </Callout>
-            <p><strong>Fresh install — three commands:</strong></p>
+            <p>The self-hosted version of Beacon runs anywhere Node.js 22+ is available — a laptop, a Raspberry Pi, a VPS, a home server. Display screens are just browser tabs, so any device on the same network (or any network if you use a tunnel) can show them.</p>
+            <Callout type="warning">
+              Node.js 22 or higher is required — the self-hosted version uses the built-in <code>node:sqlite</code> module introduced in Node 22. Earlier versions will fail to start.
+            </Callout>
+            <p><strong>Fresh install — four commands:</strong></p>
             <div className={styles.codeBlock}>{`git clone https://github.com/Kdubs6991/beacon
 cd beacon
 npm run setup
