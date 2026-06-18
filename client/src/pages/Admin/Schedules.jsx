@@ -592,7 +592,7 @@ function PushModal({ st, screens, scheduleScreenIds, onClose }) {
     setPushing(true); setError(null)
     try {
       const body = { screen_ids: selectedIds }
-      if (isPco && planMode === 'pick' && selectedPlanId) body.plan_id = selectedPlanId
+      if (isPco && (planMode === 'pick' || planMode === 'nextup') && selectedPlanId) body.plan_id = selectedPlanId
       const r = await api(`/service-types/${st.id}/push`, {
         method: 'POST',
         body: JSON.stringify(body),

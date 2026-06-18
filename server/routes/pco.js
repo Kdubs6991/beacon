@@ -148,6 +148,15 @@ router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res)
   }
 })
 
+function inferCategory(position) {
+  if (!position) return 'Other'
+  const p = position.toLowerCase()
+  if (/tech|production|sound|audio mix|engineer|lyric|slide|video|light|camera|media|graphic|broadcast|stream|recording|director|producer|av\b|a\/v/.test(p)) return 'Tech'
+  if (/pastor|preach|teach|speaker|host|elder|minister|deacon|chaplain|communion|offering/.test(p)) return 'Pastor'
+  if (/singer|vocal|harmony|bgv|background|guitar|bass|drum|piano|keys\b|keyboard|violin|viola|cello|trumpet|sax|saxophone|horn|brass|string|cajon|percuss|banjo|ukulele|mandolin|worship|musician|electric|acoustic|instrument/.test(p)) return 'Worship'
+  return 'Other'
+}
+
 // Import people from a PCO plan into the Beacon people roster
 // Accepts optional pco_person_ids array to import only specific people
 router.post('/import-people', async (req, res) => {
@@ -199,10 +208,12 @@ router.post('/import-people', async (req, res) => {
 
       if (name.trim().length > 60) { skipped++; continue }
 
+      const category = JSON.stringify([inferCategory(position)])
+
       // Insert person first (without photo) to get the ID
       const row = await db.getOne(
-        'INSERT INTO people (org_id, name, pco_person_id, position) VALUES (?, ?, ?, ?) RETURNING id',
-        [orgId, name.trim(), pcoPId, position]
+        'INSERT INTO people (org_id, name, pco_person_id, position, category) VALUES (?, ?, ?, ?, ?) RETURNING id',
+        [orgId, name.trim(), pcoPId, position, category]
       )
       const newId = row.id
 
