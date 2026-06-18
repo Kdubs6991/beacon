@@ -12,19 +12,29 @@ function lookupIPv4(hostname, _opts, callback) {
 
 async function getSmtpConfig() {
   async function s(key) { return (await db.getOne('SELECT value FROM settings WHERE key = ?', [key]))?.value }
-  const host = (await s('smtp_host')) || process.env.SMTP_HOST
-  if (!host) return null
+  const dbHost = await s('smtp_host')
+  const host = dbHost || process.env.SMTP_HOST
+  console.log(`[smtp:config] db.smtp_host=${JSON.stringify(dbHost)} env.SMTP_HOST=${JSON.stringify(process.env.SMTP_HOST)} → host=${JSON.stringify(host)}`)
+  if (!host) { console.log('[smtp:config] no host — returning null'); return null }
+
+  const dbUser = await s('smtp_user')
+  const dbPass = await s('smtp_pass')
+  const user = dbUser || process.env.SMTP_USER
+  const pass = dbPass || process.env.SMTP_PASS
+  console.log(`[smtp:config] user=${JSON.stringify(user)} pass=${pass ? '(set)' : '(NOT SET)'} db.pass=${dbPass ? '(set)' : 'null'}`)
+
   return {
     host,
     port: parseInt((await s('smtp_port')) || process.env.SMTP_PORT || '587'),
-    user: (await s('smtp_user')) || process.env.SMTP_USER,
-    pass: (await s('smtp_pass')) || process.env.SMTP_PASS,
+    user,
+    pass,
     from: (await s('smtp_from')) || process.env.SMTP_FROM,
   }
 }
 
 async function getTransporter() {
   const c = await getSmtpConfig()
+  console.log(`[smtp:transporter] c.user=${JSON.stringify(c?.user)} c.pass=${c?.pass ? '(set)' : '(NOT SET)'} → returning ${(!c || !c.user || !c.pass) ? 'null' : 'transporter'}`)
   if (!c || !c.user || !c.pass) return null
   return nodemailer.createTransport({
     host: c.host,

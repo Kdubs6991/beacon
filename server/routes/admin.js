@@ -154,9 +154,12 @@ router.post('/users/invite', requireAdmin, async (req, res) => {
   const inviteUrl = `${origin}/register?invite=${token}`
 
   try {
+    console.log(`[invite] sending to ${email}`)
     const result = await sendInviteEmail({ to: email, orgName: org.name, role, inviteUrl })
+    console.log(`[invite] result: sent=${result.sent} error=${result.error || 'none'}`)
     res.json({ id: inviteId, token, expiresAt, email, sent: result.sent, link: result.sent ? undefined : inviteUrl })
   } catch (err) {
+    console.error(`[invite] threw: ${err.message}`)
     res.json({ id: inviteId, token, expiresAt, email, sent: false, link: inviteUrl, error: err.message })
   }
 })
