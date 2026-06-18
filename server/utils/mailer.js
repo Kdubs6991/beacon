@@ -11,24 +11,28 @@ function lookupIPv4(hostname, _opts, callback) {
 }
 
 async function getSmtpConfig() {
+  // Env vars take full priority — if SMTP_HOST is set, skip the DB entirely
+  if (process.env.SMTP_HOST) {
+    console.log(`[smtp:config] using env vars: host=${process.env.SMTP_HOST} user=${process.env.SMTP_USER} pass=${process.env.SMTP_PASS ? '(set)' : '(NOT SET)'}`)
+    return {
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+      from: process.env.SMTP_FROM,
+    }
+  }
+  // No env vars — fall back to DB (local dev / self-hosted)
   async function s(key) { return (await db.getOne('SELECT value FROM settings WHERE key = ?', [key]))?.value }
-  const dbHost = await s('smtp_host')
-  const host = dbHost || process.env.SMTP_HOST
-  console.log(`[smtp:config] db.smtp_host=${JSON.stringify(dbHost)} env.SMTP_HOST=${JSON.stringify(process.env.SMTP_HOST)} → host=${JSON.stringify(host)}`)
-  if (!host) { console.log('[smtp:config] no host — returning null'); return null }
-
-  const dbUser = await s('smtp_user')
-  const dbPass = await s('smtp_pass')
-  const user = dbUser || process.env.SMTP_USER
-  const pass = dbPass || process.env.SMTP_PASS
-  console.log(`[smtp:config] user=${JSON.stringify(user)} pass=${pass ? '(set)' : '(NOT SET)'} db.pass=${dbPass ? '(set)' : 'null'}`)
-
+  const host = await s('smtp_host')
+  console.log(`[smtp:config] no env vars, db.smtp_host=${JSON.stringify(host)}`)
+  if (!host) return null
   return {
     host,
-    port: parseInt((await s('smtp_port')) || process.env.SMTP_PORT || '587'),
-    user,
-    pass,
-    from: (await s('smtp_from')) || process.env.SMTP_FROM,
+    port: parseInt((await s('smtp_port')) || '587'),
+    user: await s('smtp_user'),
+    pass: await s('smtp_pass'),
+    from: await s('smtp_from'),
   }
 }
 
