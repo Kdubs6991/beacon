@@ -37,7 +37,7 @@ async function isSmtpConfigured() {
 // Sending — Resend HTTP API or nodemailer SMTP
 // ---------------------------------------------------------------------------
 
-async function sendEmail({ to, subject, text, html }) {
+async function sendEmail({ to, subject, text, html, replyTo }) {
   const c = await getSmtpConfig()
   if (!c?.host || !c?.pass) {
     console.log('[mailer] not configured — no host/pass')
@@ -51,7 +51,9 @@ async function sendEmail({ to, subject, text, html }) {
     console.log(`[mailer] sending via Resend API to ${to}`)
     const { Resend } = require('resend')
     const resend = new Resend(c.pass)
-    const { data, error } = await resend.emails.send({ from, to, subject, text, html })
+    const payload = { from, to, subject, text, html }
+    if (replyTo) payload.replyTo = replyTo
+    const { data, error } = await resend.emails.send(payload)
     if (error) {
       console.error('[mailer] Resend API error:', error)
       throw new Error(error.message || JSON.stringify(error))
@@ -80,8 +82,36 @@ async function sendEmail({ to, subject, text, html }) {
     socketTimeout: 30_000,
     lookup: lookupIPv4,
   })
-  await t.sendMail({ from, to, subject, text, html })
+  await t.sendMail({ from, to, subject, text, html, replyTo })
   return { sent: true }
+}
+
+async function sendContactEmail({ name, email, message }) {
+  const escaped = message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
+  const html = emailWrapper({
+    preheader: `New contact form message from ${name}`,
+    headerLabel: 'Contact Form',
+    body: `
+      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f172a;">New message from the contact form</h1>
+      <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:20px;">
+        <tr><td style="padding:6px 0;font-size:14px;color:#64748b;width:80px;vertical-align:top;">Name</td>
+            <td style="padding:6px 0;font-size:14px;color:#0f172a;font-weight:600;">${name}</td></tr>
+        <tr><td style="padding:6px 0;font-size:14px;color:#64748b;vertical-align:top;">Reply to</td>
+            <td style="padding:6px 0;font-size:14px;"><a href="mailto:${email}" style="color:#3b82f6;">${email}</a></td></tr>
+      </table>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:18px;">
+        <p style="margin:0;font-size:14px;color:#334155;line-height:1.7;">${escaped}</p>
+      </div>
+    `,
+    footerText: 'Sent via the Beacon contact form at beaconscreen.com.',
+  })
+  return sendEmail({
+    to: 'support@beaconscreen.com',
+    subject: `Contact: ${name}`,
+    text: `From: ${name} <${email}>\n\n${message}`,
+    html,
+    replyTo: `${name} <${email}>`,
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -242,4 +272,4 @@ async function sendPasswordResetEmail({ to, orgName, resetUrl }) {
   return { sent: true }
 }
 
-module.exports = { sendInviteEmail, sendPasswordResetEmail, isSmtpConfigured }
+module.exports = { sendInviteEmail, sendPasswordResetEmail, sendContactEmail, isSmtpConfigured }

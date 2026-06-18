@@ -31,6 +31,7 @@ const adminRoutes = require('./routes/admin')
 const displayRoutes = require('./routes/display')
 const orgRoutes = require('./routes/org')
 const setupRoutes = require('./routes/setup')
+const contactRoutes = require('./routes/contact')
 
 const compression = require('compression')
 
@@ -75,6 +76,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/display', displayRoutes)
 app.use('/api/org', orgRoutes)
 app.use('/api/setup', setupRoutes)
+app.use('/api/contact', contactRoutes)
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' })
