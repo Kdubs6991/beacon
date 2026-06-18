@@ -78,6 +78,13 @@
 }
 .userInfo:hover { opacity: 0.75; }
 
+.userInfoRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
 .userName {
   font-size: 0.8rem;
   font-weight: 600;
@@ -85,7 +92,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
+
+.userSettingsIcon {
+  color: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.userInfo:hover .userSettingsIcon { color: rgba(255,255,255,0.7); }
 
 .userRole {
   font-size: 0.65rem;

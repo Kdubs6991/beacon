@@ -79,6 +79,7 @@ async function runSchedule(scheduleId) {
     SELECT s.*,
            st.name               AS service_type_name,
            st.pco_service_type_id,
+           st.pco_team_ids,
            st.mode               AS service_type_mode,
            c.org_id,
            o.timezone
@@ -91,7 +92,8 @@ async function runSchedule(scheduleId) {
 
   if (!schedule) return
 
-  const { org_id: orgId, timezone, service_type_name, pco_service_type_id, service_type_mode } = schedule
+  const { org_id: orgId, timezone, service_type_name, pco_service_type_id, pco_team_ids, service_type_mode } = schedule
+  const scheduleAllowedTeamIds = pco_team_ids ? (() => { try { return JSON.parse(pco_team_ids) } catch { return null } })() : null
   const mode = service_type_mode ?? 'pco'
   const stamp = `[schedule ${scheduleId} · ${service_type_name}]`
   console.log(`${stamp} triggered`)
@@ -236,7 +238,7 @@ async function runSchedule(scheduleId) {
     console.log(`${stamp} found plan ${todayPlan.id} "${planTitle}"`)
 
     const teamRes = await pcoGet(
-      `/services/v2/service_types/${pco_service_type_id}/plans/${todayPlan.id}/team_members?per_page=100&include=person`,
+      `/services/v2/service_types/${pco_service_type_id}/plans/${todayPlan.id}/team_members?per_page=100&include=person,team`,
       orgId
     )
 
@@ -257,6 +259,11 @@ async function runSchedule(scheduleId) {
     let nextSlot = 0
 
     for (const member of members) {
+      // Filter by allowed teams if configured
+      if (scheduleAllowedTeamIds && scheduleAllowedTeamIds.length > 0) {
+        const memberTeamId = member.relationships?.team?.data?.id ?? null
+        if (!memberTeamId || !scheduleAllowedTeamIds.includes(memberTeamId)) continue
+      }
       const name         = member.attributes?.name               ?? ''
       const teamPosition = member.attributes?.team_position_name ?? ''
       const status       = member.attributes?.status
@@ -344,7 +351,8 @@ async function pushToScreens(serviceTypeId, screenIds, opts = {}) {
 
   if (!serviceType) throw new Error('Service type not found')
 
-  const { org_id: orgId, timezone, name: serviceName, mode, pco_service_type_id } = serviceType
+  const { org_id: orgId, timezone, name: serviceName, mode, pco_service_type_id, pco_team_ids } = serviceType
+  const allowedTeamIds = pco_team_ids ? (() => { try { return JSON.parse(pco_team_ids) } catch { return null } })() : null
   const tz    = timezone || 'America/Chicago'
   const today = todayInTz(tz)
   const rules  = await db.getAll('SELECT * FROM automation_rules WHERE org_id = ? ORDER BY priority', [orgId])
@@ -400,7 +408,7 @@ async function pushToScreens(serviceTypeId, screenIds, opts = {}) {
       planId = todayPlan.id
     }
 
-    const teamRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans/${planId}/team_members?per_page=100&include=person`, orgId)
+    const teamRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans/${planId}/team_members?per_page=100&include=person,team`, orgId)
     const pcoPersonById = {}
     for (const p of teamRes.included ?? []) { if (p.type === 'Person') pcoPersonById[p.id] = p }
 
@@ -408,6 +416,11 @@ async function pushToScreens(serviceTypeId, screenIds, opts = {}) {
     const usedIemIds = new Set()
     for (const member of teamRes.data ?? []) {
       if (member.attributes?.status === 'D') continue
+      // Filter by allowed teams if configured
+      if (allowedTeamIds && allowedTeamIds.length > 0) {
+        const memberTeamId = member.relationships?.team?.data?.id ?? null
+        if (!memberTeamId || !allowedTeamIds.includes(memberTeamId)) continue
+      }
       const name = member.attributes?.name ?? ''
       const pos  = member.attributes?.team_position_name ?? ''
       let mic = null, iem = null, matched = false

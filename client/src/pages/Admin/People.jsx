@@ -639,6 +639,7 @@ function PcoImportModal({ onClose, onImported }) {
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [preview, setPreview]           = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
+  const [selectedIds, setSelectedIds]   = useState(new Set())
   const [importing, setImporting]       = useState(false)
   const [importResult, setImportResult] = useState(null)
 
@@ -662,14 +663,17 @@ function PcoImportModal({ onClose, onImported }) {
   }
 
   async function selectPlan(p) {
-    setSelectedPlan(p); setPreviewLoading(true); setPreview(null)
+    setSelectedPlan(p); setPreviewLoading(true); setPreview(null); setSelectedIds(new Set())
     try {
       const r = await fetch(
         `/api/pco/service-types/${selectedType.id}/plans/${p.id}/team-preview`,
         { credentials: 'include' }
       )
       const data = await r.json()
-      setPreview(data.preview ?? [])
+      const members = data.preview ?? []
+      setPreview(members)
+      // Pre-select all new (not already in Beacon) people
+      setSelectedIds(new Set(members.filter(m => !m.inBeacon && m.pcoPersonId).map(m => m.pcoPersonId)))
     } catch { setPreview([]) }
     setPreviewLoading(false)
     setStep('preview')
@@ -682,7 +686,11 @@ function PcoImportModal({ onClose, onImported }) {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pco_service_type_id: selectedType.id, plan_id: selectedPlan.id }),
+        body: JSON.stringify({
+          pco_service_type_id: selectedType.id,
+          plan_id: selectedPlan.id,
+          pco_person_ids: [...selectedIds],
+        }),
       })
       const data = await r.json()
       setImportResult(data)
@@ -690,6 +698,22 @@ function PcoImportModal({ onClose, onImported }) {
       if (data.imported > 0) onImported()
     } catch (e) { setImportResult({ error: e.message }) }
     setImporting(false)
+  }
+
+  function togglePerson(pcoPersonId) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(pcoPersonId) ? next.delete(pcoPersonId) : next.add(pcoPersonId)
+      return next
+    })
+  }
+
+  function selectAll() {
+    setSelectedIds(new Set((preview ?? []).filter(m => !m.inBeacon && m.pcoPersonId).map(m => m.pcoPersonId)))
+  }
+
+  function deselectAll() {
+    setSelectedIds(new Set())
   }
 
   const Modal = ({ children, footer }) => (
@@ -749,39 +773,61 @@ function PcoImportModal({ onClose, onImported }) {
     </Modal>
   )
 
-  if (step === 'preview') return (
+  if (step === 'preview') {
+    const newPeople = (preview ?? []).filter(m => !m.inBeacon && m.pcoPersonId)
+    const allSelected = newPeople.length > 0 && newPeople.every(m => selectedIds.has(m.pcoPersonId))
+    return (
     <Modal footer={<>
       <button onClick={() => setStep('plan')} style={{ padding: '7px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem' }}>Back</button>
-      <button onClick={handleImport} disabled={importing || !preview || preview.length === 0}
-        style={{ padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: importing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600, opacity: importing ? 0.7 : 1 }}>
-        {importing ? 'Importing…' : `Import ${(preview ?? []).filter(m => !m.inBeacon).length} new people`}
+      <button onClick={handleImport} disabled={importing || selectedIds.size === 0}
+        style={{ padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: (importing || selectedIds.size === 0) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600, opacity: (importing || selectedIds.size === 0) ? 0.6 : 1 }}>
+        {importing ? 'Importing…' : `Import ${selectedIds.size} ${selectedIds.size === 1 ? 'person' : 'people'}`}
       </button>
     </>}>
       <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 4 }}>{selectedType.attributes?.name} — {selectedPlan.attributes?.title}</p>
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', marginBottom: 14 }}>
-        People already in Beacon will be skipped. Only new people will be imported.
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', margin: 0 }}>
+          Check who to import. Already-in-Beacon people are skipped.
+        </p>
+        {newPeople.length > 0 && (
+          <button onClick={allSelected ? deselectAll : selectAll}
+            style={{ fontSize: '0.78rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', marginLeft: 10 }}>
+            {allSelected ? 'Deselect all' : 'Select all'}
+          </button>
+        )}
+      </div>
       {previewLoading && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading team…</p>}
-      {preview && preview.map((m, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
-          {m.photo
-            ? <img src={m.photo} alt="" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-            : <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--bg-main)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
-                {(m.name || '?')[0].toUpperCase()}
-              </div>
-          }
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-pri)' }}>{m.name}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.position || 'No position'}</div>
+      {preview && preview.map((m, i) => {
+        const isNew = !m.inBeacon && !!m.pcoPersonId
+        const checked = isNew && selectedIds.has(m.pcoPersonId)
+        return (
+          <div key={i}
+            onClick={() => isNew && togglePerson(m.pcoPersonId)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border)', cursor: isNew ? 'pointer' : 'default', opacity: m.inBeacon ? 0.5 : 1 }}>
+            {isNew && (
+              <input type="checkbox" checked={checked} onChange={() => togglePerson(m.pcoPersonId)}
+                onClick={e => e.stopPropagation()}
+                style={{ flexShrink: 0, accentColor: 'var(--accent)', width: 15, height: 15 }} />
+            )}
+            {m.photo
+              ? <img src={m.photo} alt="" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+              : <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--bg-main)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
+                  {(m.name || '?')[0].toUpperCase()}
+                </div>
+            }
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-pri)' }}>{m.name}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.position || 'No position'}</div>
+            </div>
+            {m.inBeacon
+              ? <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '999px', padding: '2px 8px', flexShrink: 0 }}>In Beacon</span>
+              : null
+            }
           </div>
-          {m.inBeacon
-            ? <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '999px', padding: '2px 8px' }}>Already in Beacon</span>
-            : <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '999px', padding: '2px 8px' }}>New</span>
-          }
-        </div>
-      ))}
+        )
+      })}
     </Modal>
-  )
+  )}
 
   if (step === 'done') return (
     <Modal footer={<button onClick={onClose} style={{ padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600 }}>Done</button>}>

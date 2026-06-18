@@ -300,6 +300,9 @@ const db = {
     // Migrate: cache PCO service type name alongside the ID
     await pool.query(`ALTER TABLE service_types ADD COLUMN IF NOT EXISTS pco_service_type_name TEXT`)
 
+    // Migrate: store selected PCO team IDs for filtering (JSON array, null = all teams)
+    await pool.query(`ALTER TABLE service_types ADD COLUMN IF NOT EXISTS pco_team_ids TEXT`)
+
     // Migrate: replace global email uniqueness with per-org uniqueness
     await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`)
     await pool.query(`

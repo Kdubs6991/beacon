@@ -3,6 +3,7 @@ const router = express.Router()
 const { pcoGet } = require('../pco-client')
 const db = require('../db')
 const { requireAuth } = require('../middleware/auth')
+const { cloudinary, USE_CLOUDINARY } = require('../storage')
 
 router.use(requireAuth)
 
@@ -35,11 +36,22 @@ router.get('/service-types/:id/plans', async (req, res) => {
   }
 })
 
+// Teams for a service type — used to build team filter/selection UI
+router.get('/service-types/:id/teams', async (req, res) => {
+  const orgId = req.session.orgId
+  try {
+    const data = await pcoGet(`/services/v2/service_types/${req.params.id}/teams?per_page=100`, orgId)
+    res.json(data)
+  } catch (err) {
+    res.status(503).json({ error: err.message })
+  }
+})
+
 router.get('/service-types/:typeId/plans/:planId/team-members', async (req, res) => {
   const orgId = req.session.orgId
   try {
     const data = await pcoGet(
-      `/services/v2/service_types/${req.params.typeId}/plans/${req.params.planId}/team_members?per_page=100&include=person`,
+      `/services/v2/service_types/${req.params.typeId}/plans/${req.params.planId}/team_members?per_page=100&include=person,team`,
       orgId
     )
     res.json(data)
@@ -48,19 +60,23 @@ router.get('/service-types/:typeId/plans/:planId/team-members', async (req, res)
   }
 })
 
-// Preview what would be pushed — runs automation matching client-side-friendly response
+// Preview what would be pushed — runs automation matching, includes team name per member
 router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res) => {
   const orgId = req.session.orgId
   const beaconServiceTypeId = req.query.service_type_id ? Number(req.query.service_type_id) : null
   try {
     const teamRes = await pcoGet(
-      `/services/v2/service_types/${req.params.typeId}/plans/${req.params.planId}/team_members?per_page=100&include=person`,
+      `/services/v2/service_types/${req.params.typeId}/plans/${req.params.planId}/team_members?per_page=100&include=person,team`,
       orgId
     )
     const members  = teamRes.data     ?? []
     const included = teamRes.included ?? []
     const pcoPersonById = {}
-    for (const p of included) { if (p.type === 'Person') pcoPersonById[p.id] = p }
+    const pcoTeamById = {}
+    for (const item of included) {
+      if (item.type === 'Person') pcoPersonById[item.id] = item
+      if (item.type === 'Team')   pcoTeamById[item.id]   = item
+    }
 
     let rules  = []
     let labels = []
@@ -90,7 +106,9 @@ router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res)
       const name     = member.attributes?.name               ?? ''
       const position = member.attributes?.team_position_name ?? ''
       const pcoPId   = member.relationships?.person?.data?.id ?? null
+      const teamId   = member.relationships?.team?.data?.id   ?? null
       const pcoPerson = pcoPId ? pcoPersonById[pcoPId] : null
+      const teamName  = teamId ? (pcoTeamById[teamId]?.attributes?.name ?? null) : null
 
       let mic = null, iem = null, matched = false
       for (const rule of rules) {
@@ -114,6 +132,8 @@ router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res)
         name,
         displayName:  beaconPerson?.name_override ?? beaconPerson?.name ?? name,
         position,
+        teamId,
+        teamName,
         photo:        pcoPerson?.attributes?.photo_thumbnail ?? null,
         inBeacon:     !!beaconPerson,
         beaconId:     beaconPerson?.id ?? null,
@@ -129,12 +149,16 @@ router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res)
 })
 
 // Import people from a PCO plan into the Beacon people roster
+// Accepts optional pco_person_ids array to import only specific people
 router.post('/import-people', async (req, res) => {
   const orgId = req.session.orgId
-  const { pco_service_type_id, plan_id } = req.body
+  const { pco_service_type_id, plan_id, pco_person_ids } = req.body
   if (!pco_service_type_id || !plan_id) {
     return res.status(400).json({ error: 'pco_service_type_id and plan_id required' })
   }
+
+  const allowedIds = Array.isArray(pco_person_ids) && pco_person_ids.length > 0 ? new Set(pco_person_ids) : null
+
   try {
     const teamRes = await pcoGet(
       `/services/v2/service_types/${pco_service_type_id}/plans/${plan_id}/team_members?per_page=100&include=person`,
@@ -145,11 +169,21 @@ router.post('/import-people', async (req, res) => {
     const pcoPersonById = {}
     for (const p of included) { if (p.type === 'Person') pcoPersonById[p.id] = p }
 
+    // Get org slug once for Cloudinary folder paths
+    let orgSlug = null
+    if (USE_CLOUDINARY && cloudinary) {
+      const org = await db.getOne('SELECT slug FROM organizations WHERE id = ?', [orgId])
+      orgSlug = org?.slug ?? 'unknown'
+    }
+
     let imported = 0, skipped = 0
     for (const member of members) {
       if (member.attributes?.status === 'D') continue
       const pcoPId = member.relationships?.person?.data?.id ?? null
       if (!pcoPId) continue
+
+      // If caller specified which people to import, skip others
+      if (allowedIds && !allowedIds.has(pcoPId)) { skipped++; continue }
 
       // Skip if already in this org's people
       const existing = await db.getOne(
@@ -161,14 +195,33 @@ router.post('/import-people', async (req, res) => {
       const pcoPerson = pcoPersonById[pcoPId]
       const name     = member.attributes?.name               ?? pcoPerson?.attributes?.full_name ?? 'Unknown'
       const position = member.attributes?.team_position_name ?? null
-      const photo    = pcoPerson?.attributes?.photo_thumbnail ?? null
+      const photoUrl = pcoPerson?.attributes?.photo_thumbnail ?? null
 
-      if (name.trim().length > 60) continue
+      if (name.trim().length > 60) { skipped++; continue }
 
-      await db.execute(
-        'INSERT INTO people (org_id, name, pco_person_id, photo_url, position) VALUES (?, ?, ?, ?, ?)',
-        [orgId, name.trim(), pcoPId, photo, position]
+      // Insert person first (without photo) to get the ID
+      const row = await db.getOne(
+        'INSERT INTO people (org_id, name, pco_person_id, position) VALUES (?, ?, ?, ?) RETURNING id',
+        [orgId, name.trim(), pcoPId, position]
       )
+      const newId = row.id
+
+      // Upload photo to Cloudinary or store PCO URL directly
+      if (photoUrl) {
+        let finalPhotoUrl = photoUrl
+        if (USE_CLOUDINARY && cloudinary && orgSlug) {
+          try {
+            const uploadRes = await cloudinary.uploader.upload(photoUrl, {
+              folder:        `beacon/${orgSlug}/photos/${newId}`,
+              resource_type: 'image',
+              transformation: [{ width: 800, crop: 'limit' }],
+            })
+            finalPhotoUrl = uploadRes.secure_url
+          } catch { /* fall back to PCO URL */ }
+        }
+        await db.execute('UPDATE people SET photo_url = ? WHERE id = ?', [finalPhotoUrl, newId])
+      }
+
       imported++
     }
     res.json({ imported, skipped })

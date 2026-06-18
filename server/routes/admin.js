@@ -234,29 +234,29 @@ router.get('/service-types', async (req, res) => {
 })
 router.post('/service-types', async (req, res) => {
   const orgId = req.session.orgId
-  const { name, campus_id, pco_service_type_id, pco_service_type_name, mode } = req.body
+  const { name, campus_id, pco_service_type_id, pco_service_type_name, pco_team_ids, mode } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
   if (campus_id) {
     const campus = await db.getOne('SELECT id FROM campuses WHERE id = ? AND org_id = ?', [campus_id, orgId])
     if (!campus) return res.status(400).json({ error: 'Invalid campus' })
   }
   const r = await db.execute(
-    'INSERT INTO service_types (name, campus_id, pco_service_type_id, pco_service_type_name, mode) VALUES (?, ?, ?, ?, ?) RETURNING id',
-    [name, campus_id ?? null, pco_service_type_id ?? null, pco_service_type_name ?? null, mode ?? 'manual']
+    'INSERT INTO service_types (name, campus_id, pco_service_type_id, pco_service_type_name, pco_team_ids, mode) VALUES (?, ?, ?, ?, ?, ?) RETURNING id',
+    [name, campus_id ?? null, pco_service_type_id ?? null, pco_service_type_name ?? null, pco_team_ids ? JSON.stringify(pco_team_ids) : null, mode ?? 'manual']
   )
   res.json(await db.getOne('SELECT * FROM service_types WHERE id = ?', [r.lastInsertId]))
 })
 router.put('/service-types/:id', async (req, res) => {
   const orgId = req.session.orgId
-  const { name, campus_id, pco_service_type_id, pco_service_type_name, mode } = req.body
+  const { name, campus_id, pco_service_type_id, pco_service_type_name, pco_team_ids, mode } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
   if (campus_id) {
     const campus = await db.getOne('SELECT id FROM campuses WHERE id = ? AND org_id = ?', [campus_id, orgId])
     if (!campus) return res.status(400).json({ error: 'Invalid campus' })
   }
   await db.execute(
-    'UPDATE service_types SET name = ?, campus_id = ?, pco_service_type_id = ?, pco_service_type_name = ?, mode = ? WHERE id = ?',
-    [name, campus_id ?? null, pco_service_type_id ?? null, pco_service_type_name ?? null, mode ?? 'manual', req.params.id]
+    'UPDATE service_types SET name = ?, campus_id = ?, pco_service_type_id = ?, pco_service_type_name = ?, pco_team_ids = ?, mode = ? WHERE id = ?',
+    [name, campus_id ?? null, pco_service_type_id ?? null, pco_service_type_name ?? null, pco_team_ids ? JSON.stringify(pco_team_ids) : null, mode ?? 'manual', req.params.id]
   )
   res.json(await db.getOne('SELECT * FROM service_types WHERE id = ?', [req.params.id]))
 })
@@ -750,7 +750,7 @@ router.get('/dashboard', async (req, res) => {
   )
   const pcoPeopleCount = parseInt(pcoPeopleCountRow?.n ?? 0)
   const peoplePreview = await db.getAll(
-    'SELECT id, name, position, photo_url, photo_override FROM people WHERE org_id = ? ORDER BY name LIMIT 6',
+    'SELECT id, name, position, photo_url, photo_override, pco_person_id FROM people WHERE org_id = ? ORDER BY name LIMIT 8',
     [orgId]
   )
 

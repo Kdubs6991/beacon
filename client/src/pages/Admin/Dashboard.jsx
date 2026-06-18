@@ -288,6 +288,8 @@ function PeopleCard({ people, pcoConnected }) {
   const [tab, setTab] = useState('manual')
   const { count = 0, pcoCount = 0, preview = [] } = people ?? {}
   const manualCount = count - pcoCount
+  const pcoPreview = preview.filter(p => p.pco_person_id)
+  const manualPreview = preview.filter(p => !p.pco_person_id)
 
   return (
     <DashCard icon={<PeopleIcon />} title="People" to="/admin/people">
@@ -299,11 +301,11 @@ function PeopleCard({ people, pcoConnected }) {
         ) : (
           <>
             <div className={styles.cardSummary}>
-              <span className={styles.summaryChip}>{count} people</span>
+              <span className={styles.summaryChip}>{manualCount} manual</span>
               {pcoCount > 0 && <span className={styles.summaryMeta}>{pcoCount} from PCO</span>}
             </div>
             <ul className={styles.itemList}>
-              {preview.slice(0, 4).map(p => (
+              {manualPreview.slice(0, 4).map(p => (
                 <li key={p.id} className={styles.personItem}>
                   <MiniAvatar name={p.name} photo={p.photo_override ?? p.photo_url} />
                   <div className={styles.itemBody}>
@@ -312,8 +314,8 @@ function PeopleCard({ people, pcoConnected }) {
                   </div>
                 </li>
               ))}
-              {count > 4 && (
-                <li className={styles.moreRow}>+{count - 4} more</li>
+              {manualCount > 4 && (
+                <li className={styles.moreRow}>+{manualCount - 4} more</li>
               )}
             </ul>
           </>
@@ -323,16 +325,30 @@ function PeopleCard({ people, pcoConnected }) {
       {tab === 'pco' && (
         pcoConnected === null ? (
           <p className={styles.emptyMsg}>Checking connection…</p>
-        ) : pcoConnected ? (
-          <div>
+        ) : !pcoConnected ? (
+          <NotConnected hint="Connect your PCO account in Integrations to sync your team roster automatically." />
+        ) : pcoCount === 0 ? (
+          <p className={styles.emptyMsg}>No PCO people imported yet. Use Import from PCO on the People page.</p>
+        ) : (
+          <>
             <div className={styles.cardSummary}>
               <span className={styles.summaryChip}>{pcoCount} from PCO</span>
-              <span className={styles.summaryMeta}>{manualCount} manual</span>
             </div>
-            <p className={styles.emptyMsg}>PCO sync management coming soon.</p>
-          </div>
-        ) : (
-          <NotConnected hint="Connect your PCO account in Settings to sync your team roster automatically." />
+            <ul className={styles.itemList}>
+              {pcoPreview.slice(0, 4).map(p => (
+                <li key={p.id} className={styles.personItem}>
+                  <MiniAvatar name={p.name} photo={p.photo_override ?? p.photo_url} />
+                  <div className={styles.itemBody}>
+                    <span className={styles.itemName}>{p.name}</span>
+                    {p.position && <span className={styles.itemSub}>{p.position}</span>}
+                  </div>
+                </li>
+              ))}
+              {pcoCount > 4 && (
+                <li className={styles.moreRow}>+{pcoCount - 4} more</li>
+              )}
+            </ul>
+          </>
         )
       )}
     </DashCard>
@@ -611,10 +627,16 @@ export default function Dashboard() {
           <InfoPopover title="Dashboard" docsHref="/docs#dashboard">
             <p>Your at-a-glance view of everything running in Beacon. Eight cards each show a live snapshot of one area — click any card's title bar to go to its full management page.</p>
             <p><strong>Screens</strong> shows which TVs are live right now. <strong>Services</strong> shows what's currently pushed to those screens. <strong>Quick Push</strong> lets you push a service's team to screens immediately — useful before a service or when the roster changes mid-week. <strong>Schedules</strong> shows your auto-push timers and when they last fired. <strong>Recent Activity</strong> shows which screens were updated most recently.</p>
-            <p>Hide cards or drag them into a different order using <strong>Customize dashboard →</strong> above.</p>
           </InfoPopover>
         </div>
-        <Link to="/admin/profile#dashboard" className={styles.customizeLink}>Customize dashboard →</Link>
+        <div className={styles.topBarRight}>
+          {pcoConnected !== null && (
+            <Link to="/admin/integrations" className={`${styles.pcoStatusPill} ${pcoConnected ? styles.pcoStatusOn : styles.pcoStatusOff}`}>
+              <span className={`${styles.pcoStatusDot} ${pcoConnected ? styles.pcoStatusDotOn : ''}`} />
+              PCO {pcoConnected ? 'connected' : 'not connected'}
+            </Link>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -624,6 +646,12 @@ export default function Dashboard() {
       ) : (
         <div className={styles.cardGrid}>
           {cardConfig.filter(c => c.visible).map(renderCard)}
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className={styles.bottomBar}>
+          <Link to="/admin/profile#dashboard" className={styles.customizeLink}>Customize dashboard →</Link>
         </div>
       )}
     </AdminLayout>

@@ -50,7 +50,6 @@ const SECTIONS = [
   { id: 'security',     label: 'Security' },
   { id: 'appearance',   label: 'Appearance' },
   { id: 'dashboard',    label: 'Dashboard' },
-  { id: 'connections',  label: 'Connections' },
   { id: 'organization', label: 'Organization' },
 ]
 
@@ -295,7 +294,7 @@ function OrgSection({ isAdmin }) {
       <div className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>Organization</h2>
         {isAdmin && (
-          <Link to="/admin/organization" className={styles.editLink}>Edit settings →</Link>
+          <Link to="/admin/integrations" className={styles.editLink}>Integrations →</Link>
         )}
       </div>
       {!org ? (
@@ -517,7 +516,6 @@ export default function Profile() {
         <SecuritySection />
         <AppearanceSection />
         <DashboardSection />
-        <ConnectionsSection isAdmin={user?.role === 'admin'} />
         <OrgSection isAdmin={user?.role === 'admin'} />
 
         <div className={styles.signOutRow}>
