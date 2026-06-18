@@ -8,7 +8,7 @@
 
 .backRow {
   padding: 20px 32px 0;
-  max-width: 960px;
+  max-width: 680px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -29,10 +29,11 @@
 }
 .backLink:hover { color: var(--text-pri); border-color: rgba(255,255,255,0.2); }
 
+/* ── Hero ── */
 .hero {
-  max-width: 640px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 40px 32px 40px;
+  padding: 48px 32px 36px;
   text-align: center;
 }
 
@@ -65,123 +66,39 @@
   margin: 0;
 }
 
-/* ── Two-column layout ── */
-.main {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 24px;
-  max-width: 960px;
+/* ── Main content ── */
+.content {
+  max-width: 640px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 32px 80px;
-  width: 100%;
   box-sizing: border-box;
   flex: 1;
-}
-
-/* ── Sidebar — link cards + direct email ── */
-.sidebar {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
 
-.linkCard {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  text-decoration: none;
-  transition: border-color 0.15s;
-}
-.linkCard:hover { border-color: rgba(255,255,255,0.12); }
-
-.linkIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.linkBody { min-width: 0; }
-
-.linkLabel {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  margin-bottom: 3px;
-}
-
-.linkValue {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--accent);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.directEmail {
-  margin-top: 8px;
-  padding: 18px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.directEmailLabel {
-  margin: 0 0 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-}
-
-.directEmailLink {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-  word-break: break-all;
-  transition: opacity 0.15s;
-}
-.directEmailLink:hover { opacity: 0.75; }
-
-/* ── Contact form card ── */
+/* ── Form card ── */
 .formCard {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 32px;
+  padding: 36px;
 }
 
-.formTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-pri);
-  margin: 0 0 24px;
-}
-
-.form { display: flex; flex-direction: column; gap: 18px; }
+.form { display: flex; flex-direction: column; gap: 20px; }
 
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 16px;
 }
 
-.field { display: flex; flex-direction: column; gap: 6px; }
+.field { display: flex; flex-direction: column; gap: 7px; }
 
 .label {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-sec);
 }
@@ -192,7 +109,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-pri);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   padding: 10px 14px;
   font-family: inherit;
   transition: border-color 0.15s;
@@ -207,18 +124,17 @@
 .input::placeholder,
 .textarea::placeholder { color: var(--text-muted); }
 
-.textarea { resize: vertical; min-height: 120px; }
+.textarea { resize: vertical; min-height: 130px; }
 
 .charCount {
   font-size: 0.72rem;
   color: var(--text-muted);
   text-align: right;
-  margin-top: 2px;
 }
 
 .errorMsg {
   font-size: 0.85rem;
-  color: var(--danger, #ef4444);
+  color: #ef4444;
   margin: 0;
 }
 
@@ -228,28 +144,84 @@
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
-  padding: 11px 28px;
+  padding: 12px 32px;
   cursor: pointer;
   transition: opacity 0.15s;
   font-family: inherit;
 }
 .submitBtn:hover:not(:disabled) { opacity: 0.85; }
-.submitBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+.submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.successBox {
+/* ── Success state ── */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 0;
+  gap: 12px;
+}
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.25);
+  color: #4ade80;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(34,197,94,0.1);
-  border: 1px solid rgba(34,197,94,0.25);
-  border-radius: var(--radius-sm);
-  color: #4ade80;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 14px 18px;
+  justify-content: center;
+  margin-bottom: 4px;
 }
+
+.successTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin: 0;
+}
+
+.successDesc {
+  font-size: 0.92rem;
+  color: var(--text-sec);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 360px;
+}
+
+.resetBtn {
+  margin-top: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+.resetBtn:hover { color: var(--text-pri); border-color: rgba(255,255,255,0.2); }
+
+/* ── Direct email line ── */
+.directEmail {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.directEmailLink {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.directEmailLink:hover { opacity: 0.75; }
 
 /* ── Footer ── */
 .footer {
@@ -286,12 +258,10 @@
 .footerLink:hover { color: var(--text-sec); }
 
 /* ── Responsive ── */
-@media (max-width: 720px) {
-  .main {
-    grid-template-columns: 1fr;
-    padding: 0 20px 56px;
-  }
-  .hero { padding: 40px 20px 32px; }
+@media (max-width: 600px) {
+  .content { padding: 0 20px 56px; }
+  .hero { padding: 40px 20px 28px; }
+  .formCard { padding: 24px 20px; }
   .row { grid-template-columns: 1fr; }
   .footer { padding: 20px; }
   .footerInner { flex-direction: column; gap: 16px; align-items: flex-start; }
