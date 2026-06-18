@@ -224,6 +224,27 @@
 .disconnectBtn:hover { background: rgba(239, 68, 68, 0.18); }
 .disconnectBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Test result ── */
+.testOk {
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #4ade80;
+  margin-bottom: 14px;
+}
+
+.testErr {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #f87171;
+  margin-bottom: 14px;
+}
+
 /* ── Coming soon state ── */
 .comingSoonBadge {
   margin-left: auto;

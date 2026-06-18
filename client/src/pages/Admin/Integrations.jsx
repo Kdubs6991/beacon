@@ -6,21 +6,23 @@ import styles from './Integrations.module.css'
 export default function Integrations() {
   const [status, setStatus] = useState(null)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
-  useEffect(() => {
-    fetch('/api/auth/pco/status', { credentials: 'include' })
+  function loadStatus() {
+    return fetch('/api/auth/pco/status', { credentials: 'include' })
       .then(r => r.json())
       .then(setStatus)
       .catch(() => setStatus({ configured: false, connected: false }))
-  }, [])
+  }
+
+  useEffect(() => { loadStatus() }, [])
 
   useEffect(() => {
     if (searchParams.get('connected') === '1') {
       setSearchParams({}, { replace: true })
-      fetch('/api/auth/pco/status', { credentials: 'include' })
-        .then(r => r.json())
-        .then(setStatus)
+      loadStatus()
     }
   }, [])
 
@@ -29,7 +31,21 @@ export default function Integrations() {
     setDisconnecting(true)
     await fetch('/api/auth/pco/disconnect', { method: 'DELETE', credentials: 'include' })
     setStatus(s => ({ ...s, connected: false, expiresAt: null }))
+    setTestResult(null)
     setDisconnecting(false)
+  }
+
+  async function handleTest() {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const r = await fetch('/api/pco/test-connection', { credentials: 'include' })
+      const data = await r.json()
+      setTestResult(data)
+    } catch {
+      setTestResult({ ok: false, error: 'Request failed' })
+    }
+    setTesting(false)
   }
 
   const configured = status?.configured
@@ -74,9 +90,24 @@ export default function Integrations() {
                 <p className={styles.muted}>Beacon can now pull team rosters from your Planning Center service plans.</p>
               </div>
             </div>
-            <button className={styles.disconnectBtn} onClick={handleDisconnect} disabled={disconnecting}>
-              {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-            </button>
+
+            {testResult && (
+              <div className={testResult.ok ? styles.testOk : styles.testErr}>
+                {testResult.ok
+                  ? `Connection verified — found ${testResult.serviceTypeCount} service type${testResult.serviceTypeCount !== 1 ? 's' : ''} in your PCO account.`
+                  : `Test failed: ${testResult.error}`
+                }
+              </div>
+            )}
+
+            <div className={styles.actions}>
+              <button className={styles.btnPrimary} onClick={handleTest} disabled={testing}>
+                {testing ? 'Testing…' : 'Test connection'}
+              </button>
+              <button className={styles.disconnectBtn} onClick={handleDisconnect} disabled={disconnecting}>
+                {disconnecting ? 'Disconnecting…' : 'Disconnect'}
+              </button>
+            </div>
           </div>
         )}
 

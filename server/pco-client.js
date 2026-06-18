@@ -3,11 +3,16 @@ const db = require('./db')
 
 const PCO_BASE = 'https://api.planningcenteronline.com'
 
-async function getStoredToken() {
-  return db.getOne('SELECT * FROM pco_tokens ORDER BY id DESC LIMIT 1')
+async function getStoredToken(orgId) {
+  if (orgId) {
+    const tok = await db.getOne('SELECT * FROM pco_tokens WHERE org_id = ? ORDER BY id DESC LIMIT 1', [orgId])
+    if (tok) return tok
+  }
+  // Fallback: un-scoped token (legacy rows with no org_id)
+  return db.getOne('SELECT * FROM pco_tokens WHERE org_id IS NULL ORDER BY id DESC LIMIT 1')
 }
 
-async function refreshToken(token) {
+async function refreshToken(token, orgId) {
   const res = await fetch(`${PCO_BASE}/oauth/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -28,20 +33,20 @@ async function refreshToken(token) {
   return { ...token, access_token: data.access_token, expires_at: expiresAt }
 }
 
-async function getAccessToken() {
-  let token = await getStoredToken()
+async function getAccessToken(orgId) {
+  let token = await getStoredToken(orgId)
   if (!token) throw new Error('Not authenticated with Planning Center')
   if (new Date(token.expires_at) < new Date(Date.now() + 60_000)) {
-    token = await refreshToken(token)
+    token = await refreshToken(token, orgId)
   }
   return token.access_token
 }
 
-async function pcoGet(path) {
+async function pcoGet(path, orgId) {
   if (process.env.USE_MOCK_DATA === 'true') {
     throw new Error('Mock mode — PCO calls disabled')
   }
-  const accessToken = await getAccessToken()
+  const accessToken = await getAccessToken(orgId)
   const res = await fetch(`${PCO_BASE}${path}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,

@@ -234,29 +234,29 @@ router.get('/service-types', async (req, res) => {
 })
 router.post('/service-types', async (req, res) => {
   const orgId = req.session.orgId
-  const { name, campus_id, pco_service_type_id, mode } = req.body
+  const { name, campus_id, pco_service_type_id, pco_service_type_name, mode } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
   if (campus_id) {
     const campus = await db.getOne('SELECT id FROM campuses WHERE id = ? AND org_id = ?', [campus_id, orgId])
     if (!campus) return res.status(400).json({ error: 'Invalid campus' })
   }
   const r = await db.execute(
-    'INSERT INTO service_types (name, campus_id, pco_service_type_id, mode) VALUES (?, ?, ?, ?) RETURNING id',
-    [name, campus_id ?? null, pco_service_type_id ?? null, mode ?? 'pco']
+    'INSERT INTO service_types (name, campus_id, pco_service_type_id, pco_service_type_name, mode) VALUES (?, ?, ?, ?, ?) RETURNING id',
+    [name, campus_id ?? null, pco_service_type_id ?? null, pco_service_type_name ?? null, mode ?? 'manual']
   )
   res.json(await db.getOne('SELECT * FROM service_types WHERE id = ?', [r.lastInsertId]))
 })
 router.put('/service-types/:id', async (req, res) => {
   const orgId = req.session.orgId
-  const { name, campus_id, pco_service_type_id, mode } = req.body
+  const { name, campus_id, pco_service_type_id, pco_service_type_name, mode } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
   if (campus_id) {
     const campus = await db.getOne('SELECT id FROM campuses WHERE id = ? AND org_id = ?', [campus_id, orgId])
     if (!campus) return res.status(400).json({ error: 'Invalid campus' })
   }
   await db.execute(
-    'UPDATE service_types SET name = ?, campus_id = ?, pco_service_type_id = ?, mode = ? WHERE id = ?',
-    [name, campus_id ?? null, pco_service_type_id ?? null, mode ?? 'pco', req.params.id]
+    'UPDATE service_types SET name = ?, campus_id = ?, pco_service_type_id = ?, pco_service_type_name = ?, mode = ? WHERE id = ?',
+    [name, campus_id ?? null, pco_service_type_id ?? null, pco_service_type_name ?? null, mode ?? 'manual', req.params.id]
   )
   res.json(await db.getOne('SELECT * FROM service_types WHERE id = ?', [req.params.id]))
 })
@@ -287,7 +287,7 @@ router.post('/service-types/:id/push', requireAuth, async (req, res) => {
 
   try {
     const { pushToScreens } = require('../scheduler')
-    const result = await pushToScreens(req.params.id, validIds)
+    const result = await pushToScreens(req.params.id, validIds, { planId: req.body.plan_id ?? null })
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: err.message })

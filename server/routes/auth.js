@@ -277,18 +277,28 @@ router.get('/pco/connect', requireAdmin, (req, res) => {
   if (!process.env.PCO_CLIENT_ID || process.env.PCO_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
     return res.status(503).json({ error: 'PCO OAuth not configured. Set PCO_CLIENT_ID in .env' })
   }
+  const orgId = req.session.orgId
+  const state = Buffer.from(JSON.stringify({ orgId })).toString('base64url')
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: process.env.PCO_CLIENT_ID,
     redirect_uri: process.env.PCO_REDIRECT_URI,
     scope: 'services people',
+    state,
   })
   res.redirect(`${PCO_AUTH_URL}?${params}`)
 })
 
 router.get('/pco/callback', async (req, res) => {
-  const { code } = req.query
+  const { code, state } = req.query
   if (!code) return res.status(400).json({ error: 'Missing code' })
+  let orgId = req.session.orgId
+  try {
+    if (state) {
+      const parsed = JSON.parse(Buffer.from(state, 'base64url').toString())
+      if (parsed.orgId) orgId = parsed.orgId
+    }
+  } catch {}
   try {
     const tokenRes = await fetch(PCO_TOKEN_URL, {
       method: 'POST',
@@ -303,10 +313,10 @@ router.get('/pco/callback', async (req, res) => {
     })
     const data = await tokenRes.json()
     const expiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString()
-    await db.execute('DELETE FROM pco_tokens')
+    await db.execute('DELETE FROM pco_tokens WHERE org_id = ?', [orgId])
     await db.execute(
-      'INSERT INTO pco_tokens (access_token, refresh_token, expires_at) VALUES (?, ?, ?)',
-      [data.access_token, data.refresh_token, expiresAt]
+      'INSERT INTO pco_tokens (org_id, access_token, refresh_token, expires_at) VALUES (?, ?, ?, ?)',
+      [orgId, data.access_token, data.refresh_token, expiresAt]
     )
     res.redirect('/admin/integrations?connected=1')
   } catch (err) {
@@ -315,7 +325,11 @@ router.get('/pco/callback', async (req, res) => {
 })
 
 router.get('/pco/status', async (req, res) => {
-  const token = await db.getOne('SELECT id, expires_at FROM pco_tokens ORDER BY id DESC LIMIT 1')
+  const orgId = req.session.orgId
+  const token = await db.getOne(
+    'SELECT id, expires_at FROM pco_tokens WHERE org_id = ? ORDER BY id DESC LIMIT 1',
+    [orgId]
+  )
   res.json({
     connected: !!token,
     expiresAt: token?.expires_at ?? null,
@@ -325,7 +339,7 @@ router.get('/pco/status', async (req, res) => {
 })
 
 router.delete('/pco/disconnect', requireAdmin, async (req, res) => {
-  await db.execute('DELETE FROM pco_tokens')
+  await db.execute('DELETE FROM pco_tokens WHERE org_id = ?', [req.session.orgId])
   res.json({ ok: true })
 })
 

@@ -108,6 +108,31 @@ function SendIcon() {
   )
 }
 
+function ExternalLinkIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+  )
+}
+
+function RefreshIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+  )
+}
+
+function formatPlanDate(sortDate) {
+  if (!sortDate) return ''
+  try {
+    return new Date(sortDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  } catch { return '' }
+}
+
 // ── Toggle ────────────────────────────────────────────────────────────────────
 
 function Toggle({ checked, onChange }) {
@@ -223,6 +248,131 @@ function ManualTeamBuilder({ serviceTypeId, people }) {
           Add
         </button>
       </div>
+    </div>
+  )
+}
+
+// ── PCO card body (upcoming plans + team preview) ────────────────────────────
+
+function PcoCardBody({ st, pcoConnected }) {
+  const [plans, setPlans]               = useState(null)
+  const [plansLoading, setPlansLoading] = useState(false)
+  const [plansError, setPlansError]     = useState(null)
+  const [previewPlanId, setPreviewPlanId] = useState(null)
+  const [preview, setPreview]           = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+
+  useEffect(() => {
+    if (pcoConnected && st.pco_service_type_id) { loadPlans() }
+  }, [pcoConnected, st.pco_service_type_id])
+
+  async function loadPlans() {
+    setPlansLoading(true); setPlansError(null)
+    try {
+      const r = await fetch(`/api/pco/service-types/${st.pco_service_type_id}/plans`, { credentials: 'include' })
+      const data = await r.json()
+      if (data.error) throw new Error(data.error)
+      setPlans(data.data ?? [])
+    } catch (e) { setPlansError(e.message) }
+    setPlansLoading(false)
+  }
+
+  async function loadPreview(planId) {
+    setPreviewPlanId(planId); setPreviewLoading(true); setPreview(null)
+    try {
+      const r = await fetch(
+        `/api/pco/service-types/${st.pco_service_type_id}/plans/${planId}/team-preview?service_type_id=${st.id}`,
+        { credentials: 'include' }
+      )
+      const data = await r.json()
+      setPreview(data.preview ?? [])
+    } catch { setPreview([]) }
+    setPreviewLoading(false)
+  }
+
+  if (!pcoConnected) return null
+  if (!st.pco_service_type_id) {
+    return (
+      <div className={styles.pcoBodyEmpty}>
+        <p className={styles.emptyHint}>No PCO service type linked. Edit this service type to connect it to a Planning Center service.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.pcoBody}>
+      {st.pco_service_type_name && (
+        <p className={styles.pcoLinkedLabel}>
+          Linked to Planning Center: <strong>{st.pco_service_type_name}</strong>
+        </p>
+      )}
+
+      <p className={styles.schedSectionLabel} style={{ marginTop: st.pco_service_type_name ? 14 : 0 }}>Upcoming plans</p>
+
+      {plansLoading && <p className={styles.emptyHint}>Loading plans…</p>}
+      {plansError  && <p className={styles.emptyHint} style={{ color: 'var(--red)' }}>{plansError} <button className={styles.btnLink} onClick={loadPlans}>Retry</button></p>}
+      {plans && plans.length === 0 && <p className={styles.emptyHint}>No upcoming plans found in Planning Center for this service.</p>}
+
+      {plans && plans.length > 0 && (
+        <div className={styles.planList}>
+          {plans.map(plan => {
+            const title = plan.attributes?.title || '(No title)'
+            const date  = formatPlanDate(plan.attributes?.sort_date)
+            const isSelected = previewPlanId === plan.id
+            return (
+              <div key={plan.id} className={styles.planRow}>
+                <div className={styles.planRowLeft}>
+                  <span className={styles.planTitle}>{title}</span>
+                  {date && <span className={styles.planDate}>{date}</span>}
+                </div>
+                <button
+                  className={`${styles.btnIcon} ${isSelected ? styles.btnIconActive : ''}`}
+                  onClick={() => isSelected ? (setPreviewPlanId(null), setPreview(null)) : loadPreview(plan.id)}
+                >
+                  {isSelected ? 'Hide' : 'Preview team'}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {previewLoading && <p className={styles.emptyHint}>Loading team preview…</p>}
+
+      {preview && !previewLoading && (
+        <div className={styles.previewBox}>
+          <p className={styles.schedSectionLabel}>Team preview</p>
+          {preview.length === 0 && (
+            <p className={styles.emptyHint}>No team members found (or all declined).</p>
+          )}
+          {preview.map((m, i) => (
+            <div key={i} className={styles.previewRow}>
+              {m.photo ? (
+                <img src={m.photo} alt="" className={styles.previewAvatar} />
+              ) : (
+                <div className={styles.previewAvatarInitials}>
+                  {(m.displayName || m.name || '?')[0].toUpperCase()}
+                </div>
+              )}
+              <div className={styles.previewInfo}>
+                <span className={styles.previewName}>{m.displayName}</span>
+                <span className={styles.previewPos}>{m.position || 'No position'}</span>
+              </div>
+              {m.inBeacon && <span className={styles.previewInBeacon}>In Beacon</span>}
+              {m.matched === true && (
+                <span className={styles.previewMatched}>
+                  {m.micLabel ? `Mic: ${m.micLabel}` : ''}
+                  {m.micLabel && m.iemLabel ? ' · ' : ''}
+                  {m.iemLabel ? `IEM: ${m.iemLabel}` : ''}
+                </span>
+              )}
+              {m.matched === false && (
+                <span className={styles.previewNoMatch}>No rule matched</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -377,39 +527,55 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
 // ── Push modal ────────────────────────────────────────────────────────────────
 
 function PushModal({ st, screens, scheduleScreenIds, onClose }) {
-  // Mirror screens show their source's content — pushing to them has no effect
+  const isPco = (st.mode ?? 'manual') !== 'manual'
   const pushableScreens = screens.filter(s => !s.mirror_screen_id)
   const [selectedIds, setSelectedIds] = useState(() => {
     if (scheduleScreenIds.length > 0) {
-      // Pre-select screens from the schedule that are actually pushable
       const valid = scheduleScreenIds.filter(id => pushableScreens.some(s => s.id === id))
       if (valid.length > 0) return valid
     }
     return []
   })
-  const [pushing, setPushing] = useState(false)
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
+  const [pushing, setPushing]       = useState(false)
+  const [result, setResult]         = useState(null)
+  const [error, setError]           = useState(null)
+  // PCO plan selection
+  const [planMode, setPlanMode]     = useState('today')  // 'today' | 'pick'
+  const [plans, setPlans]           = useState(null)
+  const [plansLoading, setPlansLoading] = useState(false)
+  const [selectedPlanId, setSelectedPlanId] = useState('')
+
+  useEffect(() => {
+    if (isPco && st.pco_service_type_id && planMode === 'pick' && !plans) {
+      setPlansLoading(true)
+      fetch(`/api/pco/service-types/${st.pco_service_type_id}/plans`, { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => { setPlans(data.data ?? []); setPlansLoading(false) })
+        .catch(() => { setPlans([]); setPlansLoading(false) })
+    }
+  }, [isPco, st.pco_service_type_id, planMode, plans])
 
   function toggle(id) {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
   async function handlePush() {
-    setPushing(true)
-    setError(null)
+    setPushing(true); setError(null)
     try {
+      const body = { screen_ids: selectedIds }
+      if (isPco && planMode === 'pick' && selectedPlanId) body.plan_id = selectedPlanId
       const r = await api(`/service-types/${st.id}/push`, {
         method: 'POST',
-        body: JSON.stringify({ screen_ids: selectedIds }),
+        body: JSON.stringify(body),
       })
       if (r.error) throw new Error(r.error)
       setResult(r)
-    } catch (err) {
-      setError(err.message)
-    }
+    } catch (err) { setError(err.message) }
     setPushing(false)
   }
+
+  const canPush = selectedIds.length > 0 && pushableScreens.length > 0
+    && (!isPco || planMode === 'today' || !!selectedPlanId)
 
   return (
     <Modal
@@ -424,7 +590,7 @@ function PushModal({ st, screens, scheduleScreenIds, onClose }) {
             <button
               className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`}
               onClick={handlePush}
-              disabled={pushing || selectedIds.length === 0 || pushableScreens.length === 0}
+              disabled={pushing || !canPush}
             >
               {pushing ? 'Pushing…' : `Push to ${selectedIds.length} screen${selectedIds.length !== 1 ? 's' : ''}`}
             </button>
@@ -435,7 +601,7 @@ function PushModal({ st, screens, scheduleScreenIds, onClose }) {
       {result ? (
         result.pushed === 0 ? (
           <p className={styles.pushError}>
-            Push succeeded but no musicians were sent — this service type has no team members or no automation rules matched anyone. Add people on the Services page first.
+            Push succeeded but no musicians were sent — no team members matched any automation rules. Check your rules on the Automation page.
           </p>
         ) : (
           <p className={styles.pushSuccess}>
@@ -445,6 +611,46 @@ function PushModal({ st, screens, scheduleScreenIds, onClose }) {
       ) : (
         <>
           {error && <p className={styles.pushError}>{error}</p>}
+
+          {isPco && (
+            <div className={styles.pushPlanSection}>
+              <p className={styles.pushSectionLabel}>Which plan?</p>
+              <div className={styles.pushPlanTabs}>
+                <button
+                  className={`${styles.pushPlanTab} ${planMode === 'today' ? styles.pushPlanTabActive : ''}`}
+                  onClick={() => setPlanMode('today')}
+                >Today&apos;s plan</button>
+                <button
+                  className={`${styles.pushPlanTab} ${planMode === 'pick' ? styles.pushPlanTabActive : ''}`}
+                  onClick={() => setPlanMode('pick')}
+                >Choose a plan</button>
+              </div>
+              {planMode === 'pick' && (
+                <div style={{ marginTop: 10 }}>
+                  {plansLoading && <p className={styles.pushHint}>Loading plans…</p>}
+                  {!plansLoading && plans && plans.length === 0 && (
+                    <p className={styles.pushHint}>No upcoming plans found in Planning Center.</p>
+                  )}
+                  {!plansLoading && plans && plans.length > 0 && (
+                    <select
+                      className={styles.formSelect}
+                      value={selectedPlanId}
+                      onChange={e => setSelectedPlanId(e.target.value)}
+                    >
+                      <option value="">Select a plan…</option>
+                      {plans.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.attributes?.title || '(No title)'} — {formatPlanDate(p.attributes?.sort_date)}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <p className={styles.pushSectionLabel}>Screens</p>
           <p className={styles.pushHint}>
             {scheduleScreenIds.length > 0
               ? 'Screens from your schedule are pre-selected. Add or remove as needed.'
@@ -480,19 +686,40 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
   const [editingSt, setEditingSt] = useState(false)
   const [stName, setStName] = useState(st.name)
   const [stCampus, setStCampus] = useState(st.campus_id ?? '')
-  const [stMode, setStMode] = useState(st.mode ?? 'pco')
+  const [stMode, setStMode] = useState(st.mode ?? 'manual')
+  const [stPcoId, setStPcoId] = useState(st.pco_service_type_id ?? '')
+  const [stPcoName, setStPcoName] = useState(st.pco_service_type_name ?? '')
+  const [pcoTypes, setPcoTypes] = useState(null)
+  const [pcoTypesLoading, setPcoTypesLoading] = useState(false)
   const [savingSt, setSavingSt] = useState(false)
   const [pushOpen, setPushOpen] = useState(false)
 
   const mySchedules = schedules.filter(s => s.service_type_id === st.id)
   const campus = campuses.find(c => c.id === st.campus_id)
-  const isManual = (st.mode ?? 'pco') === 'manual'
+  const isManual = (st.mode ?? 'manual') === 'manual'
+
+  async function loadPcoTypesForEdit() {
+    if (pcoTypes !== null) return
+    setPcoTypesLoading(true)
+    try {
+      const r = await fetch('/api/pco/service-types', { credentials: 'include' })
+      const data = await r.json()
+      setPcoTypes(data.data ?? [])
+    } catch { setPcoTypes([]) }
+    setPcoTypesLoading(false)
+  }
 
   async function saveStEdit() {
     setSavingSt(true)
     await api(`/service-types/${st.id}`, {
       method: 'PUT',
-      body: JSON.stringify({ name: stName, campus_id: stCampus || null, pco_service_type_id: st.pco_service_type_id, mode: stMode }),
+      body: JSON.stringify({
+        name: stName,
+        campus_id: stCampus || null,
+        pco_service_type_id: stMode === 'pco' ? (stPcoId || null) : null,
+        pco_service_type_name: stMode === 'pco' ? (stPcoName || null) : null,
+        mode: stMode,
+      }),
     })
     setSavingSt(false)
     setEditingSt(false)
@@ -561,11 +788,47 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
               </div>
               <div className={styles.formGroup}>
                 <span className={styles.formLabel}>Mode</span>
-                <select className={styles.formSelect} value={stMode} onChange={e => setStMode(e.target.value)}>
-                  <option value="pco">PCO Sync</option>
+                <select className={styles.formSelect} value={stMode} onChange={e => {
+                  setStMode(e.target.value)
+                  if (e.target.value === 'pco' && pcoConnected) loadPcoTypesForEdit()
+                }}>
                   <option value="manual">Manual</option>
+                  {pcoConnected && <option value="pco">PCO Sync</option>}
                 </select>
               </div>
+              {stMode === 'pco' && pcoConnected && (
+                <div className={styles.formGroup} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+                  <span className={styles.formLabel}>PCO service type</span>
+                  {pcoTypesLoading && <span className={styles.formLabel}>Loading…</span>}
+                  {!pcoTypesLoading && pcoTypes && pcoTypes.length > 0 && (
+                    <select
+                      className={styles.formSelect}
+                      value={stPcoId}
+                      onChange={e => {
+                        const picked = pcoTypes.find(t => t.id === e.target.value)
+                        setStPcoId(e.target.value)
+                        setStPcoName(picked?.attributes?.name ?? '')
+                        if (picked && !stName) setStName(picked.attributes?.name ?? '')
+                      }}
+                    >
+                      <option value="">Select from PCO…</option>
+                      {pcoTypes.map(t => <option key={t.id} value={t.id}>{t.attributes?.name}</option>)}
+                    </select>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+                    <input
+                      className={styles.addStInput}
+                      value={stPcoId}
+                      onChange={e => { setStPcoId(e.target.value); setStPcoName('') }}
+                      placeholder="Or type PCO service type ID…"
+                      style={{ flex: 1 }}
+                    />
+                    <a href="/docs#pco-service-id" target="_blank" rel="noreferrer" className={styles.btnLink} title="Where to find the PCO service type ID">
+                      ? <ExternalLinkIcon />
+                    </a>
+                  </div>
+                </div>
+              )}
               {campuses.length > 0 && (
                 <div className={styles.formGroup}>
                   <span className={styles.formLabel}>Campus</span>
@@ -581,7 +844,7 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
                   <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={saveStEdit} disabled={savingSt}>
                     {savingSt ? 'Saving…' : 'Save'}
                   </button>
-                  <button className={`${styles.btn} ${styles.btnSmall}`} onClick={() => { setEditingSt(false); setStName(st.name); setStCampus(st.campus_id ?? ''); setStMode(st.mode ?? 'pco') }}>
+                  <button className={`${styles.btn} ${styles.btnSmall}`} onClick={() => { setEditingSt(false); setStName(st.name); setStCampus(st.campus_id ?? ''); setStMode(st.mode ?? 'manual'); setStPcoId(st.pco_service_type_id ?? ''); setStPcoName(st.pco_service_type_name ?? '') }}>
                     Cancel
                   </button>
                 </div>
@@ -621,14 +884,18 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
 
       {open && (
         <div className={styles.schedBody}>
-          {!isManual && !pcoConnected && st.pco_service_type_id && (
+          {!isManual && !pcoConnected && (
             <div className={styles.pcoNotice}>
               <div className={styles.pcoNoticeDot} />
               <div>
                 <p className={styles.pcoNoticeTitle}>PCO not connected</p>
-                <p className={styles.pcoNoticeHint}>This service type has a PCO ID but PCO is not connected. Connect it in Integrations to enable sync.</p>
+                <p className={styles.pcoNoticeHint}>Connect your Planning Center account in the Integrations page to enable sync.</p>
               </div>
             </div>
+          )}
+
+          {!isManual && pcoConnected && (
+            <PcoCardBody st={st} pcoConnected={pcoConnected} />
           )}
 
           {isManual && (
@@ -686,55 +953,169 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
   )
 }
 
-// ── Add service type form ─────────────────────────────────────────────────────
+// ── Add service type modal ────────────────────────────────────────────────────
 
-function AddServiceTypeForm({ campuses, onAdd, onCancel }) {
+function AddServiceTypeModal({ campuses, pcoConnected, onAdd, onCancel }) {
+  const [mode, setMode] = useState(pcoConnected ? 'pco' : 'manual')
   const [name, setName] = useState('')
   const [campusId, setCampusId] = useState(campuses[0]?.id ?? '')
-  const [mode, setMode] = useState('pco')
   const [saving, setSaving] = useState(false)
+  // PCO tab
+  const [pcoTypes, setPcoTypes] = useState(null)
+  const [pcoLoading, setPcoLoading] = useState(false)
+  const [pcoError, setPcoError] = useState(null)
+  const [selectedPcoType, setSelectedPcoType] = useState(null)
+  const [manualPcoId, setManualPcoId] = useState('')
 
-  async function handleAdd() {
-    if (!name.trim()) return
+  useEffect(() => {
+    if (mode === 'pco' && pcoConnected && !pcoTypes) { loadPcoTypes() }
+  }, [mode, pcoConnected])
+
+  async function loadPcoTypes() {
+    setPcoLoading(true); setPcoError(null)
+    try {
+      const r = await fetch('/api/pco/service-types', { credentials: 'include' })
+      const data = await r.json()
+      if (data.error) throw new Error(data.error)
+      setPcoTypes(data.data ?? [])
+    } catch (e) { setPcoError(e.message) }
+    setPcoLoading(false)
+  }
+
+  function selectPcoType(t) {
+    setSelectedPcoType(t)
+    setManualPcoId('')
+    if (!name) setName(t.attributes?.name ?? '')
+  }
+
+  const canSave = mode === 'manual'
+    ? !!name.trim()
+    : !!(selectedPcoType || manualPcoId.trim())
+
+  async function handleSave() {
+    if (!canSave) return
+    const pcoId   = mode === 'pco' ? (selectedPcoType?.id ?? (manualPcoId || null)) : null
+    const pcoName = mode === 'pco' ? (selectedPcoType?.attributes?.name ?? null) : null
+    const finalName = name.trim() || pcoName || ''
+    if (!finalName) return
     setSaving(true)
-    await onAdd({ name: name.trim(), campus_id: campusId || null, mode })
+    await onAdd({ name: finalName, campus_id: campusId || null, mode, pco_service_type_id: pcoId, pco_service_type_name: pcoName })
     setSaving(false)
   }
 
   return (
-    <div className={styles.addStForm}>
-      <div className={styles.formGroup}>
-        <span className={styles.formLabel}>Name</span>
-        <input
-          className={styles.addStInput}
-          placeholder="e.g. Sunday Morning"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleAdd()}
-          autoFocus
-        />
+    <Modal
+      title="New service type"
+      onClose={onCancel}
+      width={560}
+      footer={
+        <>
+          <button className={`${styles.btn} ${styles.btnSmall}`} onClick={onCancel}>Cancel</button>
+          <button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`} onClick={handleSave} disabled={saving || !canSave}>
+            {saving ? 'Adding…' : 'Add service type'}
+          </button>
+        </>
+      }
+    >
+      {/* Mode tabs */}
+      <div className={styles.modalModeTabs}>
+        <button
+          className={`${styles.modeTab} ${mode === 'manual' ? styles.modeTabActive : ''}`}
+          onClick={() => setMode('manual')}
+        >Manual</button>
+        <button
+          className={`${styles.modeTab} ${mode === 'pco' ? styles.modeTabActive : ''}`}
+          onClick={() => setMode('pco')}
+          disabled={!pcoConnected}
+          title={!pcoConnected ? 'Connect Planning Center in Integrations first' : ''}
+        >PCO Sync{!pcoConnected && ' (not connected)'}</button>
       </div>
-      <div className={styles.formGroup}>
-        <span className={styles.formLabel}>Mode</span>
-        <select className={styles.formSelect} value={mode} onChange={e => setMode(e.target.value)}>
-          <option value="pco">PCO Sync</option>
-          <option value="manual">Manual</option>
-        </select>
-      </div>
+
+      {mode === 'manual' && (
+        <div className={styles.modalSection}>
+          <label className={styles.modalLabel}>Service name</label>
+          <input
+            className={styles.addStInput}
+            placeholder="e.g. Sunday Morning"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSave()}
+            autoFocus
+          />
+        </div>
+      )}
+
+      {mode === 'pco' && (
+        <div className={styles.modalSection}>
+          <label className={styles.modalLabel}>Choose a Planning Center service</label>
+          {pcoLoading && <p className={styles.emptyHint}>Loading your PCO services…</p>}
+          {pcoError && (
+            <p className={styles.emptyHint} style={{ color: 'var(--red)' }}>
+              {pcoError} <button className={styles.btnLink} onClick={loadPcoTypes}><RefreshIcon /> Retry</button>
+            </p>
+          )}
+          {!pcoLoading && pcoTypes && pcoTypes.length === 0 && (
+            <p className={styles.emptyHint}>No service types found in Planning Center.</p>
+          )}
+          {!pcoLoading && pcoTypes && pcoTypes.length > 0 && (
+            <div className={styles.pcoTypeList}>
+              {pcoTypes.map(t => (
+                <button
+                  key={t.id}
+                  className={`${styles.pcoTypeRow} ${selectedPcoType?.id === t.id ? styles.pcoTypeRowSelected : ''}`}
+                  onClick={() => selectPcoType(t)}
+                >
+                  <span className={styles.pcoTypeName}>{t.attributes?.name}</span>
+                  {selectedPcoType?.id === t.id && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className={styles.modalDivider}>
+            <span>or enter PCO ID manually</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              className={styles.addStInput}
+              placeholder="PCO service type ID (numbers only)"
+              value={manualPcoId}
+              onChange={e => { setManualPcoId(e.target.value); setSelectedPcoType(null) }}
+              style={{ flex: 1 }}
+            />
+            <a href="/docs#pco-service-id" target="_blank" rel="noreferrer" className={styles.pcoIdHelpLink} title="Where to find your PCO service type ID">
+              ? <ExternalLinkIcon />
+            </a>
+          </div>
+
+          {(selectedPcoType || manualPcoId.trim()) && (
+            <div className={styles.modalSection} style={{ marginTop: 16 }}>
+              <label className={styles.modalLabel}>Service name in Beacon</label>
+              <input
+                className={styles.addStInput}
+                placeholder={selectedPcoType?.attributes?.name ?? 'e.g. Sunday Morning'}
+                value={name}
+                onChange={e => setName(e.target.value)}
+              />
+              <p className={styles.modalHint}>Leave blank to use the PCO service name.</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {campuses.length > 0 && (
-        <div className={styles.formGroup}>
-          <span className={styles.formLabel}>Campus</span>
+        <div className={styles.modalSection}>
+          <label className={styles.modalLabel}>Campus (optional)</label>
           <select className={styles.formSelect} value={campusId} onChange={e => setCampusId(e.target.value)}>
-            <option value="">None</option>
+            <option value="">No campus</option>
             {campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
       )}
-      <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleAdd} disabled={saving || !name.trim()}>
-        {saving ? 'Adding…' : 'Add'}
-      </button>
-      <button className={styles.btn} onClick={onCancel}>Cancel</button>
-    </div>
+    </Modal>
   )
 }
 
@@ -776,10 +1157,10 @@ export default function Schedules() {
 
   useEffect(() => { load() }, [load])
 
-  async function addServiceType({ name, campus_id, mode }) {
+  async function addServiceType({ name, campus_id, mode, pco_service_type_id, pco_service_type_name }) {
     await api('/service-types', {
       method: 'POST',
-      body: JSON.stringify({ name, campus_id, mode }),
+      body: JSON.stringify({ name, campus_id, mode, pco_service_type_id, pco_service_type_name }),
     })
     setAddingType(false)
     load()
@@ -809,11 +1190,9 @@ export default function Schedules() {
             <p>Each service type can have an <strong>auto-push schedule</strong> — pick a day and time and Beacon will load the team, run your automation rules to assign mics and IEMs, and push assignments to your selected screens automatically. Use the <strong>Push</strong> button at any time to trigger it manually.</p>
           </InfoPopover>
         </div>
-        {!addingType && (
-          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setAddingType(true)}>
-            <PlusIcon /> New service type
-          </button>
-        )}
+        <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setAddingType(true)}>
+          <PlusIcon /> New service type
+        </button>
       </div>
 
       {!pcoConnected && hasPcoTypes && (
@@ -828,19 +1207,22 @@ export default function Schedules() {
         </div>
       )}
 
+      {addingType && (
+        <AddServiceTypeModal
+          campuses={campuses}
+          pcoConnected={pcoConnected}
+          onAdd={addServiceType}
+          onCancel={() => setAddingType(false)}
+        />
+      )}
+
       {loading ? (
         <p className={styles.stateMsg}>Loading…</p>
       ) : error ? (
         <p className={styles.stateMsg} style={{ color: '#f87171' }}>{error}</p>
       ) : (
         <div className={styles.stList}>
-          {addingType && (
-            <AddServiceTypeForm
-              campuses={campuses}
-              onAdd={addServiceType}
-              onCancel={() => setAddingType(false)}
-            />
-          )}
+          {false && null /* add modal renders outside list */}
 
           {serviceTypes.length === 0 && !addingType && (
             <p className={styles.stateMsg}>

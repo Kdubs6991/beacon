@@ -102,9 +102,9 @@ async function runSchedule(scheduleId) {
       await db.execute('UPDATE schedules SET last_run = NOW() WHERE id = ?', [scheduleId])
       return
     }
-    const pcoToken = await db.getOne('SELECT id FROM pco_tokens LIMIT 1')
+    const pcoToken = await db.getOne('SELECT id FROM pco_tokens WHERE org_id = ? LIMIT 1', [orgId])
     if (!pcoToken) {
-      console.log(`${stamp} PCO not connected — skipping`)
+      console.log(`${stamp} PCO not connected for org ${orgId} — skipping`)
       await db.execute('UPDATE schedules SET last_run = NOW() WHERE id = ?', [scheduleId])
       return
     }
@@ -213,7 +213,8 @@ async function runSchedule(scheduleId) {
     console.log(`${stamp} looking for PCO plans on ${today} (tz: ${tz})`)
 
     const plansRes = await pcoGet(
-      `/services/v2/service_types/${pco_service_type_id}/plans?per_page=15&order=sort_date`
+      `/services/v2/service_types/${pco_service_type_id}/plans?per_page=15&order=sort_date`,
+      orgId
     )
 
     const todayPlan = (plansRes.data ?? []).find(p => {
@@ -235,7 +236,8 @@ async function runSchedule(scheduleId) {
     console.log(`${stamp} found plan ${todayPlan.id} "${planTitle}"`)
 
     const teamRes = await pcoGet(
-      `/services/v2/service_types/${pco_service_type_id}/plans/${todayPlan.id}/team_members?per_page=100&include=person`
+      `/services/v2/service_types/${pco_service_type_id}/plans/${todayPlan.id}/team_members?per_page=100&include=person`,
+      orgId
     )
 
     const members  = teamRes.data     ?? []
@@ -331,7 +333,7 @@ async function runSchedule(scheduleId) {
   }
 }
 
-async function pushToScreens(serviceTypeId, screenIds) {
+async function pushToScreens(serviceTypeId, screenIds, opts = {}) {
   const serviceType = await db.getOne(`
     SELECT st.*, c.org_id, o.timezone
     FROM service_types st
@@ -349,7 +351,7 @@ async function pushToScreens(serviceTypeId, screenIds) {
   const labels = await db.getAll('SELECT * FROM labels WHERE org_id = ? ORDER BY type, sort_order', [orgId])
   const assignments = []
 
-  if ((mode ?? 'pco') === 'manual') {
+  if ((mode ?? 'manual') === 'manual') {
     const usedMicIds = new Set()
     const usedIemIds = new Set()
     const rows = await db.getAll(`
@@ -382,19 +384,23 @@ async function pushToScreens(serviceTypeId, screenIds) {
       })
     }
   } else {
-    const pcoToken = await db.getOne('SELECT id FROM pco_tokens LIMIT 1')
+    const pcoToken = await db.getOne('SELECT id FROM pco_tokens WHERE org_id = ? LIMIT 1', [orgId])
     if (!pcoToken) throw new Error('Planning Center is not connected. Go to Integrations to connect it.')
     if (!pco_service_type_id) throw new Error('This service type has no Planning Center ID configured.')
 
     const { pcoGet } = require('./pco-client')
-    const plansRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans?per_page=15&order=sort_date`)
-    const todayPlan = (plansRes.data ?? []).find(p => {
-      const sd = p.attributes?.sort_date
-      return sd && new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(sd)) === today
-    })
-    if (!todayPlan) throw new Error(`No plan found for today (${today}) in Planning Center.`)
+    let planId = opts.planId ?? null
+    if (!planId) {
+      const plansRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans?per_page=15&order=sort_date`, orgId)
+      const todayPlan = (plansRes.data ?? []).find(p => {
+        const sd = p.attributes?.sort_date
+        return sd && new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(sd)) === today
+      })
+      if (!todayPlan) throw new Error(`No plan found for today (${today}) in Planning Center.`)
+      planId = todayPlan.id
+    }
 
-    const teamRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans/${todayPlan.id}/team_members?per_page=100&include=person`)
+    const teamRes = await pcoGet(`/services/v2/service_types/${pco_service_type_id}/plans/${planId}/team_members?per_page=100&include=person`, orgId)
     const pcoPersonById = {}
     for (const p of teamRes.included ?? []) { if (p.type === 'Person') pcoPersonById[p.id] = p }
 

@@ -667,6 +667,211 @@
   white-space: nowrap;
 }
 
+/* ── Plan / push plan section ──────────────────────────────── */
+
+.pushPlanSection { margin-bottom: 18px; }
+.pushSectionLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.pushPlanTabs {
+  display: flex;
+  gap: 6px;
+}
+.pushPlanTab {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-sec);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.pushPlanTabActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb, 99,102,241), 0.08);
+}
+
+/* ── PCO card body ─────────────────────────────────────────── */
+
+.pcoBody { padding: 4px 0 8px; }
+.pcoBodyEmpty { padding: 4px 0 8px; }
+.pcoLinkedLabel {
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  margin-bottom: 4px;
+}
+.planList { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.planRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.planRowLeft { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.planTitle { font-size: 0.85rem; font-weight: 600; color: var(--text-pri); }
+.planDate  { font-size: 0.78rem; color: var(--text-muted); }
+.btnIconActive { color: var(--accent); }
+
+.previewBox {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 10px;
+}
+.previewRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.previewRow:last-child { border-bottom: none; }
+.previewAvatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.previewAvatarInitials {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--bg-main); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+  flex-shrink: 0;
+}
+.previewInfo { flex: 1; min-width: 0; }
+.previewName { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-pri); }
+.previewPos  { font-size: 0.75rem; color: var(--text-muted); }
+.previewInBeacon {
+  font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+  border-radius: 999px; background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.25); color: var(--accent);
+  white-space: nowrap;
+}
+.previewMatched {
+  font-size: 0.75rem; color: #4ade80; white-space: nowrap;
+}
+.previewNoMatch {
+  font-size: 0.75rem; color: #fbbf24; white-space: nowrap;
+}
+
+/* ── Add service type modal ────────────────────────────────── */
+
+.modalModeTabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.modeTab {
+  flex: 1;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  background: none;
+  color: var(--text-sec);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+  border-right: 1px solid var(--border);
+}
+.modeTab:last-child { border-right: none; }
+.modeTab:disabled { opacity: 0.45; cursor: not-allowed; }
+.modeTabActive {
+  background: var(--accent);
+  color: #fff;
+}
+.modalSection { margin-bottom: 16px; }
+.modalLabel {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.modalHint { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; }
+.modalDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.modalDivider::before, .modalDivider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.pcoTypeList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+.pcoTypeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+  transition: background 0.1s;
+  color: var(--text-pri);
+}
+.pcoTypeRow:hover { background: rgba(255,255,255,0.05); }
+.pcoTypeRowSelected { background: rgba(var(--accent-rgb, 99,102,241), 0.12); }
+.pcoTypeName { font-size: 0.85rem; font-weight: 500; }
+.pcoIdHelpLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.pcoIdHelpLink:hover { color: var(--accent); border-color: var(--accent); }
+.btnLink {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
 /* ── Touch devices: larger tap targets ─────────────────────── */
 @media (hover: none) and (pointer: coarse) {
   .btn, .btnPrimary, .btnDanger { padding: 12px 18px; font-size: 0.9rem; }

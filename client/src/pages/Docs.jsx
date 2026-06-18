@@ -428,14 +428,33 @@ export default function Docs() {
               <p>A <strong>service type</strong> is a recurring kind of service at a campus. Each service type has a <strong>mode</strong> that determines where its team roster comes from:</p>
               <ul className={styles.ul}>
                 <li><strong>Manual</strong> — you define a fixed team roster in the app. Add your people, assign positions, and let Beacon handle assignments automatically via your automation rules.</li>
-                <li><strong>PCO</strong> — Planning Center Online sync. <em>Not available in this version — coming in a future release.</em></li>
+                <li><strong>PCO</strong> — Planning Center Online sync. When your PCO account is connected, Beacon pulls the team roster from the matching plan automatically.</li>
               </ul>
-              <p>The mode badge on each service type card shows which mode is active.</p>
+              <p>The mode badge on each service type card shows which mode is active. You can use both modes in the same organization — some service types can be PCO-synced while others are manual.</p>
             </SubSection>
 
             <SubSection id="service-pco-mode" title="PCO Mode">
-              <Callout type="warning">
-                PCO mode is <strong>not available in this version</strong> of Beacon. The option exists in the UI but will not sync. Use Manual mode instead. PCO integration is planned for a future release.
+              <p>PCO mode pulls the team roster for a specific Planning Center service type. When a schedule fires (or you press Push), Beacon finds the plan matching today's date, fetches the confirmed team members, runs your automation rules to assign mic and IEM labels, and pushes to your screens.</p>
+              <p><strong>Setting up a PCO service type:</strong></p>
+              <ol className={styles.ol}>
+                <li>Go to Admin → Integrations and connect your Planning Center account.</li>
+                <li>On the Services page, click <em>New service type</em> and choose <strong>PCO Sync</strong>.</li>
+                <li>Pick your service from the list of Planning Center services — Beacon will fetch them automatically. Or enter the PCO service type ID manually (see below).</li>
+                <li>Add a schedule and pick your screens.</li>
+              </ol>
+              <SubSection id="pco-service-id" title="Finding your PCO service type ID">
+                <p>If you prefer to enter the PCO service type ID manually, here's how to find it:</p>
+                <ol className={styles.ol}>
+                  <li>Log in to Planning Center at <strong>services.planningcenteronline.com</strong>.</li>
+                  <li>Click on any service type (e.g. "Sunday Morning Worship").</li>
+                  <li>Look at the URL — it will look like: <code>services.planningcenteronline.com/service_types/<strong>123456</strong>/plans</code></li>
+                  <li>The number after <code>/service_types/</code> is the PCO service type ID. Copy and paste that number into Beacon.</li>
+                </ol>
+              </SubSection>
+              <p><strong>PCO push behavior:</strong> The Push button shows a plan picker — you can push today's plan or choose any upcoming plan by date. Schedules always fire on today's plan automatically.</p>
+              <p>Team members with a "Declined" status in PCO are skipped. Only confirmed team members are included.</p>
+              <Callout type="info">
+                PCO people are matched to Beacon people by their PCO person ID. If a team member is in your Beacon roster (imported via Import from PCO on the People page), their Beacon photo and name overrides are used instead of the PCO photo. If they're not yet in Beacon, their PCO name and thumbnail photo are used directly.
               </Callout>
             </SubSection>
 
@@ -741,25 +760,27 @@ export default function Docs() {
           </Section>
 
           {/* ── PCO Integration ── */}
-          <Section id="pco-integration" title="Planning Center OAuth">
-            <Callout type="warning">
-              PCO OAuth connection is <strong>not yet available</strong> in this version. The Admin → Integrations page shows a "coming soon" notice. Use <strong>Manual service types</strong> for now — they give you the full display experience without needing a PCO connection. PCO sync will be enabled in a future release.
-            </Callout>
-            <p>When PCO integration ships, the app will connect to Planning Center Online using OAuth 2.0. Once connected, it will:</p>
-            <ul className={styles.ul}>
-              <li>Pull upcoming service plans</li>
-              <li>Get the team roster for each plan (names, positions, confirmation status)</li>
-              <li>Fetch profile photos</li>
-            </ul>
-            <p><strong>Future connection steps:</strong></p>
+          <Section id="pco-integration" title="Planning Center Integration">
+            <p>Beacon connects to Planning Center Online using OAuth 2.0. Once connected, each organization can independently link its own PCO account.</p>
+            <p><strong>To connect:</strong></p>
             <ol className={styles.ol}>
-              <li>Go to <code>api.planningcenteronline.com/oauth/applications</code> and create a new OAuth app.</li>
-              <li>Request scopes: <code>services</code> and <code>people</code>.</li>
-              <li>Set the redirect URI to <code>http://your-domain/api/auth/pco/callback</code>.</li>
-              <li>Add <code>PCO_CLIENT_ID</code> and <code>PCO_CLIENT_SECRET</code> to <code>server/.env</code>.</li>
-              <li>Go to Admin → Integrations and click "Connect to Planning Center."</li>
+              <li>Go to Admin → <strong>Integrations</strong>.</li>
+              <li>Click <em>Connect to Planning Center</em> — you'll be redirected to PCO to authorize Beacon.</li>
+              <li>After authorizing, you're redirected back to the Integrations page showing "Connected."</li>
+              <li>Click <em>Test connection</em> to verify it's working — Beacon will fetch your service type list and confirm the count.</li>
             </ol>
-            <p>PCO access tokens expire every 2 hours. The app will automatically refresh them in the background using the stored refresh token.</p>
+            <p>PCO access tokens expire every 2 hours. Beacon automatically refreshes them in the background using the stored refresh token — you won't need to reconnect unless you explicitly disconnect.</p>
+            <p><strong>What PCO connection enables:</strong></p>
+            <ul className={styles.ul}>
+              <li>PCO Sync service types on the Services page</li>
+              <li>Import from PCO on the People page</li>
+              <li>Upcoming plan preview inside each PCO service type card</li>
+              <li>Plan picker on the Push button (push any upcoming plan, not just today's)</li>
+            </ul>
+            <p><strong>Importing people from PCO:</strong> Go to Admin → People and click <em>Import from PCO</em>. Choose a service and plan, preview the team, and import. People already in Beacon (matched by PCO person ID) are skipped — your overrides are never touched by import.</p>
+            <Callout type="info">
+              Each organization has its own independent PCO connection. If you're using multiple organizations in one Beacon install, each can connect to a different PCO account.
+            </Callout>
           </Section>
 
           {/* ── Hosting ── */}

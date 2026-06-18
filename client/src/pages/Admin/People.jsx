@@ -616,6 +616,188 @@ function GridView({ people, onSelect }) {
   )
 }
 
+// ── Magic wand / sparkles icon ────────────────────────────────────────────────
+function SparklesIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+      <path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/>
+    </svg>
+  )
+}
+
+// ── PCO Import Modal ──────────────────────────────────────────────────────────
+function PcoImportModal({ onClose, onImported }) {
+  const [step, setStep]                 = useState('service') // 'service' | 'plan' | 'preview' | 'done'
+  const [pcoTypes, setPcoTypes]         = useState(null)
+  const [typesLoading, setTypesLoading] = useState(true)
+  const [typesError, setTypesError]     = useState(null)
+  const [selectedType, setSelectedType] = useState(null)
+  const [plans, setPlans]               = useState(null)
+  const [plansLoading, setPlansLoading] = useState(false)
+  const [plansError, setPlansError]     = useState(null)
+  const [selectedPlan, setSelectedPlan] = useState(null)
+  const [preview, setPreview]           = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [importing, setImporting]       = useState(false)
+  const [importResult, setImportResult] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/pco/service-types', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => { setPcoTypes(data.data ?? []); setTypesLoading(false) })
+      .catch(e => { setTypesError(e.message); setTypesLoading(false) })
+  }, [])
+
+  async function selectType(t) {
+    setSelectedType(t); setPlansLoading(true); setPlansError(null); setPlans(null)
+    try {
+      const r = await fetch(`/api/pco/service-types/${t.id}/plans`, { credentials: 'include' })
+      const data = await r.json()
+      if (data.error) throw new Error(data.error)
+      setPlans(data.data ?? [])
+    } catch (e) { setPlansError(e.message) }
+    setPlansLoading(false)
+    setStep('plan')
+  }
+
+  async function selectPlan(p) {
+    setSelectedPlan(p); setPreviewLoading(true); setPreview(null)
+    try {
+      const r = await fetch(
+        `/api/pco/service-types/${selectedType.id}/plans/${p.id}/team-preview`,
+        { credentials: 'include' }
+      )
+      const data = await r.json()
+      setPreview(data.preview ?? [])
+    } catch { setPreview([]) }
+    setPreviewLoading(false)
+    setStep('preview')
+  }
+
+  async function handleImport() {
+    setImporting(true)
+    try {
+      const r = await fetch('/api/pco/import-people', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pco_service_type_id: selectedType.id, plan_id: selectedPlan.id }),
+      })
+      const data = await r.json()
+      setImportResult(data)
+      setStep('done')
+      if (data.imported > 0) onImported()
+    } catch (e) { setImportResult({ error: e.message }) }
+    setImporting(false)
+  }
+
+  const Modal = ({ children, footer }) => (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', maxWidth: 540, width: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <strong style={{ fontSize: '0.95rem', color: 'var(--text-pri)' }}>Import from Planning Center</strong>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.1rem' }}>✕</button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>{children}</div>
+        {footer && <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>{footer}</div>}
+      </div>
+    </div>
+  )
+
+  if (step === 'service') return (
+    <Modal footer={<button onClick={onClose} style={{ padding: '7px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem' }}>Cancel</button>}>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', marginBottom: 14 }}>Choose a Planning Center service to import team members from:</p>
+      {typesLoading && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading services…</p>}
+      {typesError  && <p style={{ color: '#f87171', fontSize: '0.85rem' }}>{typesError}</p>}
+      {pcoTypes && pcoTypes.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No services found in Planning Center.</p>}
+      {pcoTypes && pcoTypes.map(t => (
+        <button key={t.id} onClick={() => selectType(t)}
+          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', marginBottom: 6, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'none', color: 'var(--text-pri)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 600, transition: 'background 0.1s' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}
+        >{t.attributes?.name}</button>
+      ))}
+    </Modal>
+  )
+
+  if (step === 'plan') return (
+    <Modal footer={<>
+      <button onClick={() => setStep('service')} style={{ padding: '7px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem' }}>Back</button>
+      <button onClick={onClose} style={{ padding: '7px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem' }}>Cancel</button>
+    </>}>
+      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 4 }}>{selectedType.attributes?.name}</p>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', marginBottom: 14 }}>Choose a plan to import team members from:</p>
+      {plansLoading && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading plans…</p>}
+      {plansError   && <p style={{ color: '#f87171', fontSize: '0.85rem' }}>{plansError}</p>}
+      {plans && plans.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No upcoming plans found.</p>}
+      {plans && plans.map(p => {
+        const date = p.attributes?.sort_date ? new Date(p.attributes.sort_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : ''
+        return (
+          <button key={p.id} onClick={() => selectPlan(p)}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', marginBottom: 6, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'none', color: 'var(--text-pri)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 600 }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+          >
+            {p.attributes?.title || '(No title)'}
+            {date && <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: 8 }}>{date}</span>}
+          </button>
+        )
+      })}
+    </Modal>
+  )
+
+  if (step === 'preview') return (
+    <Modal footer={<>
+      <button onClick={() => setStep('plan')} style={{ padding: '7px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'none', color: 'var(--text-sec)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem' }}>Back</button>
+      <button onClick={handleImport} disabled={importing || !preview || preview.length === 0}
+        style={{ padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: importing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600, opacity: importing ? 0.7 : 1 }}>
+        {importing ? 'Importing…' : `Import ${(preview ?? []).filter(m => !m.inBeacon).length} new people`}
+      </button>
+    </>}>
+      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 4 }}>{selectedType.attributes?.name} — {selectedPlan.attributes?.title}</p>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', marginBottom: 14 }}>
+        People already in Beacon will be skipped. Only new people will be imported.
+      </p>
+      {previewLoading && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading team…</p>}
+      {preview && preview.map((m, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
+          {m.photo
+            ? <img src={m.photo} alt="" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            : <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--bg-main)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
+                {(m.name || '?')[0].toUpperCase()}
+              </div>
+          }
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-pri)' }}>{m.name}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.position || 'No position'}</div>
+          </div>
+          {m.inBeacon
+            ? <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '999px', padding: '2px 8px' }}>Already in Beacon</span>
+            : <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '999px', padding: '2px 8px' }}>New</span>
+          }
+        </div>
+      ))}
+    </Modal>
+  )
+
+  if (step === 'done') return (
+    <Modal footer={<button onClick={onClose} style={{ padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600 }}>Done</button>}>
+      {importResult?.error
+        ? <p style={{ color: '#f87171', fontSize: '0.88rem' }}>Import failed: {importResult.error}</p>
+        : <p style={{ fontSize: '0.88rem', color: 'var(--text-pri)' }}>
+            Imported <strong>{importResult?.imported ?? 0}</strong> new {importResult?.imported === 1 ? 'person' : 'people'}.
+            {importResult?.skipped > 0 && ` ${importResult.skipped} already in Beacon were skipped.`}
+          </p>
+      }
+    </Modal>
+  )
+
+  return null
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function People() {
   const { user } = useAuth()
@@ -626,16 +808,22 @@ export default function People() {
   const [loadError,    setLoadError]    = useState(null)
   const [search,       setSearch]       = useState('')
   const [viewMode,     setViewMode]     = useState(() => localStorage.getItem('beacon-people-view') || 'list')
-  const [filterSource, setFilterSource] = useState('')         // '' | 'pco' | 'manual'
-  const [filterCats,   setFilterCats]   = useState([])         // [] = all
+  const [filterSource, setFilterSource] = useState('')
+  const [filterCats,   setFilterCats]   = useState([])
   const [modal,        setModal]        = useState(null)
   const [pcoBanner,    setPcoBanner]    = useState(false)
+  const [pcoConnected, setPcoConnected] = useState(false)
+  const [showImport,   setShowImport]   = useState(false)
 
   useEffect(() => {
     api('/people')
       .then(setPeople)
       .catch(err => setLoadError(err.message))
       .finally(() => setLoading(false))
+    fetch('/api/auth/pco/status', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setPcoConnected(!!d.connected))
+      .catch(() => {})
   }, [])
 
   function switchView(mode) {
@@ -647,14 +835,15 @@ export default function People() {
     setFilterCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
   }
 
-  const hasActiveFilters = filterSource !== '' || filterCats.length > 0
+  const hasActiveFilters = (pcoConnected && filterSource !== '') || filterCats.length > 0
 
-  async function handlePcoSync() {
-    try {
-      const status = await fetch('/api/auth/pco/status', { credentials: 'include' }).then(r => r.json())
-      if (!status.connected) { setPcoBanner(true); return }
-      setPcoBanner(false)
-    } catch { setPcoBanner(true) }
+  function handlePcoSync() {
+    if (!pcoConnected) { setPcoBanner(true); return }
+    setShowImport(true)
+  }
+
+  function reloadPeople() {
+    api('/people').then(setPeople).catch(() => {})
   }
 
   async function deletePerson(id) {
@@ -712,7 +901,11 @@ export default function People() {
           <p>A person's <strong>position</strong> (e.g. Singer, Electric Guitar) is what your automation rules match against to assign them the right mic and IEM each week. Make sure it's set and matches your rule conditions.</p>
         </InfoPopover>
         <div className={styles.toolbarBtns}>
-          <button className={styles.btnGhost} onClick={handlePcoSync}>Sync from PCO</button>
+          {pcoConnected && (
+            <button className={styles.btnGhost} onClick={handlePcoSync}>
+              <SparklesIcon /> Import from PCO
+            </button>
+          )}
           <button className={styles.btnPrimary} onClick={() => setModal({ type: 'edit', person: null })}>+ Add Person</button>
         </div>
       </div>
@@ -755,16 +948,18 @@ export default function People() {
           </svg>
           Filters
         </div>
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Source</span>
-          {[['', 'All'], ['pco', 'PCO'], ['manual', 'Manual']].map(([v, label]) => (
-            <button
-              key={v}
-              className={`${styles.filterPill} ${filterSource === v ? styles.filterPillActive : ''}`}
-              onClick={() => setFilterSource(v)}
-            >{label}</button>
-          ))}
-        </div>
+        {pcoConnected && (
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Source</span>
+            {[['', 'All'], ['pco', 'PCO'], ['manual', 'Manual']].map(([v, label]) => (
+              <button
+                key={v}
+                className={`${styles.filterPill} ${filterSource === v ? styles.filterPillActive : ''}`}
+                onClick={() => setFilterSource(v)}
+              >{label}</button>
+            ))}
+          </div>
+        )}
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>Category</span>
           {CATEGORIES.map(c => (
@@ -781,6 +976,10 @@ export default function People() {
           </button>
         )}
       </div>
+
+      {showImport && (
+        <PcoImportModal onClose={() => setShowImport(false)} onImported={reloadPeople} />
+      )}
 
       {loading && <p className={styles.muted}>Loading…</p>}
 
