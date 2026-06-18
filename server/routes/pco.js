@@ -134,7 +134,7 @@ router.get('/service-types/:typeId/plans/:planId/team-preview', async (req, res)
         position,
         teamId,
         teamName,
-        photo:        beaconPerson?.photo_override ?? beaconPerson?.photo_url ?? pcoPerson?.attributes?.photo_thumbnail ?? null,
+        photo:        beaconPerson?.photo_override ?? beaconPerson?.photo_url ?? pcoPerson?.attributes?.photo_thumbnail_url ?? null,
         inBeacon:     !!beaconPerson,
         beaconId:     beaconPerson?.id ?? null,
         matched:      rules.length > 0 ? matched : null,
@@ -195,7 +195,7 @@ router.post('/import-people', async (req, res) => {
       const pcoPerson = pcoPersonById[pcoPId]
       const name     = member.attributes?.name               ?? pcoPerson?.attributes?.full_name ?? 'Unknown'
       const position = member.attributes?.team_position_name ?? null
-      const photoUrl = pcoPerson?.attributes?.photo_thumbnail ?? null
+      const photoUrl = pcoPerson?.attributes?.photo_thumbnail_url ?? null
 
       if (name.trim().length > 60) { skipped++; continue }
 
@@ -214,7 +214,7 @@ router.post('/import-people', async (req, res) => {
             const uploadRes = await cloudinary.uploader.upload(photoUrl, {
               folder:        `beacon/${orgSlug}/photos/${newId}`,
               resource_type: 'image',
-              transformation: [{ width: 800, crop: 'limit' }],
+              transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
             })
             finalPhotoUrl = uploadRes.secure_url
           } catch { /* fall back to PCO URL */ }
