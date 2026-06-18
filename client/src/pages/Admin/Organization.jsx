@@ -318,7 +318,7 @@ export default function Organization() {
       if (!res.ok) { setInviteStatus({ error: data.error || 'Failed to send invite' }); return }
       setInviteStatus({ sent: data.sent, email: data.email, link: data.link, error: data.error })
       setInviteEmail('')
-      setInvites(prev => [{ ...data, role: inviteRole }, ...prev])
+      setInvites(prev => [{ ...data, expires_at: data.expiresAt, role: inviteRole }, ...prev])
     } catch {
       setInviteStatus({ error: 'Connection error. Please try again.' })
     } finally {
