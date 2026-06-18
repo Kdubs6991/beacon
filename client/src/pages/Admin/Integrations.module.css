@@ -131,6 +131,99 @@
 
 .muted { color: var(--text-muted); font-size: 0.85rem; }
 
+.cardMeta { flex: 1; min-width: 0; }
+
+.body {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  line-height: 1.6;
+}
+
+/* ── Connected state ── */
+.connectedBadge {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.readyBadge {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.connectedState {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.connectedIcon {
+  color: #4ade80;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.connectedLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  margin-bottom: 4px;
+}
+
+.connectBtn {
+  display: inline-block;
+  margin-top: 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 22px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+.connectBtn:hover { opacity: 0.85; }
+
+.disconnectBtn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: var(--radius-sm);
+  padding: 8px 18px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+.disconnectBtn:hover { background: rgba(239, 68, 68, 0.18); }
+.disconnectBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ── Coming soon state ── */
 .comingSoonBadge {
   margin-left: auto;
