@@ -30,28 +30,25 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 10px 14px 12px;
+  padding: 8px 14px;
   margin-bottom: 24px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
-.filterHead {
+.filterGroup {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin-bottom: 2px;
 }
-.filterRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+.filterSep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 4px;
 }
 .filterLabel {
   font-size: 0.68rem;
@@ -59,8 +56,8 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  width: 64px;
   flex-shrink: 0;
+  margin-right: 2px;
 }
 .filterPill {
   background: none;
@@ -189,9 +186,51 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.liveBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: #4ade80;
-  background: rgba(74, 222, 128, 0.08);
-  padding: 3px 8px;
+  background: rgba(74,222,128,0.08);
+  border: 1px solid rgba(74,222,128,0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.offlineBadge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
   border-radius: 10px;
 }
 

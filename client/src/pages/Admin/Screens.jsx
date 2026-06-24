@@ -340,6 +340,10 @@ function ScreenCard({ screen, onEdit, onDelete, onAssignments }) {
       </div>
 
       <div className={styles.cardBadges}>
+        {screen.is_active
+          ? <div className={styles.liveBadge}><span className={styles.liveDot} />Live</div>
+          : <div className={styles.offlineBadge}>Offline</div>
+        }
         {screen.mirror_screen_name ? (
           <div className={styles.mirrorBadge}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -470,13 +474,7 @@ export default function Screens() {
 
       {!loading && screens.length > 0 && (
         <div className={styles.filterBar}>
-          <div className={styles.filterHead}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-            </svg>
-            Filters
-          </div>
-          <div className={styles.filterRow}>
+          <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Location</span>
             <button className={`${styles.filterPill} ${filterCampus === 'all' ? styles.filterPillActive : ''}`} onClick={() => setFilterCampus('all')}>All</button>
             {campuses.map(c => (
@@ -486,15 +484,17 @@ export default function Screens() {
               <button className={`${styles.filterPill} ${filterCampus === '__none__' ? styles.filterPillActive : ''}`} onClick={() => setFilterCampus('__none__')}>No Location</button>
             )}
           </div>
-          <div className={styles.filterRow}>
+          <div className={styles.filterSep} />
+          <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Type</span>
             {[['all','All'],['independent','Independent'],['mirror','Mirror']].map(([val, label]) => (
               <button key={val} className={`${styles.filterPill} ${filterType === val ? styles.filterPillActive : ''}`} onClick={() => setFilterType(val)}>{label}</button>
             ))}
           </div>
-          <div className={styles.filterRow}>
+          <div className={styles.filterSep} />
+          <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Status</span>
-            {[['all','All'],['active','Active'],['inactive','Inactive']].map(([val, label]) => (
+            {[['all','All'],['active','Live'],['inactive','Offline']].map(([val, label]) => (
               <button key={val} className={`${styles.filterPill} ${filterStatus === val ? styles.filterPillActive : ''}`} onClick={() => setFilterStatus(val)}>{label}</button>
             ))}
           </div>
