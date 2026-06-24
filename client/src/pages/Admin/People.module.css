@@ -552,6 +552,8 @@
 }
 .formHint { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
 
+.customPosRow { display: flex; gap: 8px; align-items: center; }
+
 .pcoNote {
   display: flex;
   align-items: flex-start;

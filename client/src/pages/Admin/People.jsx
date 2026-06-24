@@ -287,6 +287,7 @@ function PersonModal({ initial, onSave, onClose }) {
   const [error,    setError]    = useState(null)
   const [showCrop, setShowCrop] = useState(false)
   const [positionTypes, setPositionTypes] = useState([])
+  const [customPos, setCustomPos] = useState(false)
   const [pendingBlobs,   setPendingBlobs]   = useState(null)
   const [sqImgErr,       setSqImgErr]       = useState(false)
   const [ptImgErr,       setPtImgErr]       = useState(false)
@@ -295,7 +296,12 @@ function PersonModal({ initial, onSave, onClose }) {
   useEffect(() => {
     fetch('/api/admin/position-types', { credentials: 'include' })
       .then(r => r.json())
-      .then(data => setPositionTypes(Array.isArray(data) ? data : []))
+      .then(data => {
+        setPositionTypes(Array.isArray(data) ? data : [])
+        // If editing and position isn't in the list, switch to custom input
+        const pos = e.position ?? ''
+        if (pos && !data.some(p => p.name === pos)) setCustomPos(true)
+      })
       .catch(() => {})
   }, [])
 
@@ -405,13 +411,31 @@ function PersonModal({ initial, onSave, onClose }) {
 
       <div className={styles.formField}>
         <label className={styles.formLabel}>Position <span className={styles.opt}>(optional)</span></label>
-        <select className={styles.formInput} value={position} onChange={e => setPosition(e.target.value)}>
-          <option value="">— None —</option>
-          {positionTypes.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-          {position && !positionTypes.some(p => p.name === position) && (
-            <option value={position}>{position}</option>
-          )}
-        </select>
+        {customPos ? (
+          <div className={styles.customPosRow}>
+            <input
+              className={styles.formInput}
+              style={{ flex: 1 }}
+              value={position}
+              onChange={e => setPosition(e.target.value)}
+              placeholder="Type a custom position…"
+              maxLength={80}
+            />
+            <button type="button" className={styles.btnGhost} style={{ flexShrink: 0 }}
+              onClick={() => { setCustomPos(false); setPosition('') }}>
+              ← List
+            </button>
+          </div>
+        ) : (
+          <select className={styles.formInput} value={position} onChange={e => {
+            if (e.target.value === '__other__') { setCustomPos(true); setPosition('') }
+            else setPosition(e.target.value)
+          }}>
+            <option value="">— None —</option>
+            {positionTypes.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            <option value="__other__">Other…</option>
+          </select>
+        )}
         <p className={styles.formHint}>Used by automation rules to auto-assign mics and IEMs. Manage positions in the Labels page.</p>
       </div>
 
@@ -542,10 +566,11 @@ function PersonDetailModal({ person, onEdit, onDelete, onClose, isAdmin }) {
 
 // ── Bulk edit modal (category + position) ────────────────────────────────────
 function BulkEditModal({ count, onSave, onClose }) {
-  const [categories, setCategories]     = useState(['Worship'])
-  const [position, setPosition]         = useState('')
+  const [categories, setCategories]       = useState(['Worship'])
+  const [position, setPosition]           = useState('')
+  const [customPos, setCustomPos]         = useState(false)
   const [positionTypes, setPositionTypes] = useState([])
-  const [saving, setSaving]             = useState(false)
+  const [saving, setSaving]               = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/position-types', { credentials: 'include' })
@@ -595,10 +620,31 @@ function BulkEditModal({ count, onSave, onClose }) {
       </div>
       <div className={styles.formField} style={{ marginTop: 16 }}>
         <label className={styles.formLabel}>Position <span className={styles.opt}>(leave blank for no change)</span></label>
-        <select className={styles.formInput} value={position} onChange={e => setPosition(e.target.value)} style={{ width: '100%' }}>
-          <option value="">— No change —</option>
-          {positionTypes.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-        </select>
+        {customPos ? (
+          <div className={styles.customPosRow}>
+            <input
+              className={styles.formInput}
+              style={{ flex: 1 }}
+              value={position}
+              onChange={e => setPosition(e.target.value)}
+              placeholder="Type a custom position…"
+              maxLength={80}
+            />
+            <button type="button" className={styles.btnGhost} style={{ flexShrink: 0 }}
+              onClick={() => { setCustomPos(false); setPosition('') }}>
+              ← List
+            </button>
+          </div>
+        ) : (
+          <select className={styles.formInput} value={position} onChange={e => {
+            if (e.target.value === '__other__') { setCustomPos(true); setPosition('') }
+            else setPosition(e.target.value)
+          }} style={{ width: '100%' }}>
+            <option value="">— No change —</option>
+            {positionTypes.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            <option value="__other__">Other…</option>
+          </select>
+        )}
       </div>
     </Modal>
   )
@@ -1209,7 +1255,7 @@ export default function People() {
           {viewMode === 'list'
             ? <ListView
                 people={filtered}
-                onEdit={p => setModal({ type: 'edit', person: p })}
+                onEdit={p => { setBulkSelected(new Set()); setModal({ type: 'edit', person: p }) }}
                 onDelete={deletePerson}
                 isAdmin={isAdmin}
                 bulkSelected={bulkSelected}
