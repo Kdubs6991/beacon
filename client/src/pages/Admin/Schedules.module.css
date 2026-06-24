@@ -240,6 +240,16 @@
   white-space: nowrap;
 }
 
+.schedTzBadge {
+  font-size: 0.7rem;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
 .schedRowActions {
   display: flex;
   align-items: center;

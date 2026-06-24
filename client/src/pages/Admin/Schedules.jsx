@@ -398,7 +398,23 @@ function PcoCardBody({ st, pcoConnected }) {
 
 // ── Schedule form (shared for add & edit) ─────────────────────────────────────
 
-function ScheduleForm({ initial, screens, onSave, onCancel, formClass }) {
+const TIMEZONES = [
+  ['', 'Use org default'],
+  ['America/New_York',    'Eastern Time (ET)'],
+  ['America/Chicago',     'Central Time (CT)'],
+  ['America/Denver',      'Mountain Time (MT)'],
+  ['America/Phoenix',     'Mountain Time – no DST (Phoenix)'],
+  ['America/Los_Angeles', 'Pacific Time (PT)'],
+  ['America/Anchorage',   'Alaska Time'],
+  ['Pacific/Honolulu',    'Hawaii Time'],
+  ['America/Puerto_Rico', 'Atlantic Time (Puerto Rico)'],
+  ['Europe/London',       'GMT / London'],
+  ['Europe/Paris',        'Central European Time (CET)'],
+  ['Asia/Tokyo',          'Japan Time (JST)'],
+  ['Australia/Sydney',    'Australia Eastern Time (AEST)'],
+]
+
+function ScheduleForm({ initial, screens, orgTimezone, onSave, onCancel, formClass }) {
   const { day: initDay, hour24, minute: initMin } = parseCron(initial?.cron_expr)
   const initAmpm = hour24 < 12 ? 'AM' : 'PM'
   const initHour = String(hour24 % 12 === 0 ? 12 : hour24 % 12)
@@ -408,6 +424,7 @@ function ScheduleForm({ initial, screens, onSave, onCancel, formClass }) {
   const [hour, setHour] = useState(initHour)
   const [minute, setMinute] = useState(initMinute)
   const [ampm, setAmpm] = useState(initAmpm)
+  const [timezone, setTimezone] = useState(initial?.timezone ?? '')
   const [selectedScreenIds, setSelectedScreenIds] = useState(() => {
     try { return initial?.screen_ids ? JSON.parse(initial.screen_ids) : [] } catch { return [] }
   })
@@ -420,9 +437,13 @@ function ScheduleForm({ initial, screens, onSave, onCancel, formClass }) {
   async function handleSave() {
     setSaving(true)
     const cron_expr = makeCronExpr(day, hour, minute, ampm)
-    await onSave({ cron_expr, screen_ids: selectedScreenIds })
+    await onSave({ cron_expr, screen_ids: selectedScreenIds, timezone: timezone || null })
     setSaving(false)
   }
+
+  const tzLabel = orgTimezone
+    ? TIMEZONES.find(([tz]) => tz === orgTimezone)?.[1] ?? orgTimezone
+    : 'org default'
 
   return (
     <div className={formClass ?? styles.addSchedForm}>
@@ -449,6 +470,14 @@ function ScheduleForm({ initial, screens, onSave, onCancel, formClass }) {
         <select className={styles.formSelect} value={ampm} onChange={e => setAmpm(e.target.value)} style={{ minWidth: 58 }}>
           <option value="AM">AM</option>
           <option value="PM">PM</option>
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <span className={styles.formLabel}>Timezone</span>
+        <select className={styles.formSelect} value={timezone} onChange={e => setTimezone(e.target.value)}>
+          {TIMEZONES.map(([tz, label]) => (
+            <option key={tz} value={tz}>{tz === '' ? `Use org default (${tzLabel})` : label}</option>
+          ))}
         </select>
       </div>
       {screens.length > 0 && (
@@ -494,6 +523,9 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
 
   const screenIds = (() => { try { return schedule.screen_ids ? JSON.parse(schedule.screen_ids) : [] } catch { return [] } })()
   const screenCount = screenIds.length
+  const tzLabel = schedule.timezone
+    ? (TIMEZONES.find(([tz]) => tz === schedule.timezone)?.[1] ?? schedule.timezone)
+    : null
 
   async function handleRun() {
     setRunning(true)
@@ -508,6 +540,7 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
       <ScheduleForm
         initial={schedule}
         screens={screens}
+        orgTimezone={schedule.org_timezone}
         formClass={styles.editSchedForm}
         onSave={async (data) => { await onUpdate(schedule.id, data); setEditing(false) }}
         onCancel={() => setEditing(false)}
@@ -523,6 +556,7 @@ function ScheduleRow({ schedule, screens, onToggle, onRun, onDelete, onUpdate })
         <span className={screenCount > 0 ? styles.schedScreens : styles.schedScreensNone}>
           {screenCount > 0 ? `${screenCount} screen${screenCount !== 1 ? 's' : ''}` : 'No screens'}
         </span>
+        {tzLabel && <span className={styles.schedTzBadge}>{tzLabel}</span>}
         {schedule.last_run && (
           <span className={styles.schedLastRun}>Last: {formatLastRun(schedule.last_run)}</span>
         )}
@@ -784,10 +818,10 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
     onRefreshSchedules()
   }
 
-  async function addSchedule({ cron_expr, screen_ids }) {
+  async function addSchedule({ cron_expr, screen_ids, timezone }) {
     await api('/schedules', {
       method: 'POST',
-      body: JSON.stringify({ service_type_id: st.id, cron_expr, enabled: 1, screen_ids }),
+      body: JSON.stringify({ service_type_id: st.id, cron_expr, enabled: 1, screen_ids, timezone }),
     })
     setAdding(false)
     onRefreshSchedules()
@@ -797,16 +831,16 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
     const sched = mySchedules.find(s => s.id === id)
     await api(`/schedules/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ cron_expr: sched.cron_expr, enabled: enabled ? 1 : 0, screen_ids: sched.screen_ids }),
+      body: JSON.stringify({ cron_expr: sched.cron_expr, enabled: enabled ? 1 : 0, screen_ids: sched.screen_ids, timezone: sched.timezone }),
     })
     onRefreshSchedules()
   }
 
-  async function updateSchedule(id, { cron_expr, screen_ids }) {
+  async function updateSchedule(id, { cron_expr, screen_ids, timezone }) {
     const sched = mySchedules.find(s => s.id === id)
     await api(`/schedules/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ cron_expr, enabled: sched.enabled, screen_ids }),
+      body: JSON.stringify({ cron_expr, enabled: sched.enabled, screen_ids, timezone }),
     })
     onRefreshSchedules()
   }
@@ -1021,6 +1055,7 @@ function ServiceTypeCard({ st, schedules, campuses, screens, people, pcoConnecte
               {adding && (
                 <ScheduleForm
                   screens={screens}
+                  orgTimezone={mySchedules[0]?.org_timezone ?? null}
                   onSave={addSchedule}
                   onCancel={() => setAdding(false)}
                 />

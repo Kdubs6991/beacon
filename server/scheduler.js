@@ -5,7 +5,7 @@ const activeTasks = new Map()
 
 async function startScheduler() {
   const schedules = await db.getAll(`
-    SELECT s.*, st.name as service_type_name, st.pco_service_type_id, o.timezone
+    SELECT s.*, st.name as service_type_name, st.pco_service_type_id, o.timezone AS org_timezone
     FROM schedules s
     JOIN service_types st ON s.service_type_id = st.id
     JOIN campuses     c  ON st.campus_id = c.id
@@ -30,7 +30,7 @@ function registerSchedule(schedule) {
     return
   }
 
-  const tz = schedule.timezone || 'America/Chicago'
+  const tz = schedule.timezone || schedule.org_timezone || 'America/Chicago'
   const task = cron.schedule(schedule.cron_expr, () => runSchedule(schedule.id), { timezone: tz })
   activeTasks.set(schedule.id, task)
   console.log(`Registered schedule ${schedule.id} (${schedule.service_type_name}): ${schedule.cron_expr} [tz: ${tz}]`)
@@ -82,7 +82,7 @@ async function runSchedule(scheduleId) {
            st.pco_team_ids,
            st.mode               AS service_type_mode,
            c.org_id,
-           o.timezone
+           o.timezone            AS org_timezone
     FROM schedules s
     JOIN service_types st ON s.service_type_id = st.id
     JOIN campuses     c  ON st.campus_id = c.id
@@ -92,7 +92,7 @@ async function runSchedule(scheduleId) {
 
   if (!schedule) return
 
-  const { org_id: orgId, timezone, service_type_name, pco_service_type_id, pco_team_ids, service_type_mode } = schedule
+  const { org_id: orgId, timezone, org_timezone, service_type_name, pco_service_type_id, pco_team_ids, service_type_mode } = schedule
   const scheduleAllowedTeamIds = pco_team_ids ? (() => { try { return JSON.parse(pco_team_ids) } catch { return null } })() : null
   const mode = service_type_mode ?? 'pco'
   const stamp = `[schedule ${scheduleId} · ${service_type_name}]`
@@ -139,7 +139,7 @@ async function runSchedule(scheduleId) {
 
   if (mode === 'manual') {
     try {
-      const tz = timezone || 'America/Chicago'
+      const tz = timezone || org_timezone || 'America/Chicago'
       const today = todayInTz(tz)
 
       const manualRows = await db.getAll(`
@@ -209,7 +209,7 @@ async function runSchedule(scheduleId) {
 
   try {
     const { pcoGet } = require('./pco-client')
-    const tz = timezone || 'America/Chicago'
+    const tz = timezone || org_timezone || 'America/Chicago'
     const today = todayInTz(tz)
 
     console.log(`${stamp} looking for PCO plans on ${today} (tz: ${tz})`)

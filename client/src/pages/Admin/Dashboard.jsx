@@ -222,7 +222,7 @@ function ScreensCard({ screens }) {
                   </div>
                   <span className={styles.itemSub}>
                     {s.event_name
-                      ? `${s.event_name}${s.musicians?.length ? ` · ${s.musicians.length} musicians` : ''}`
+                      ? `${s.event_name}${s.musicians?.length ? ` · ${s.musicians.length} ${s.musicians.length === 1 ? 'person' : 'people'}` : ''}`
                       : 'No assignments'
                     }
                   </span>
@@ -250,7 +250,7 @@ function ServicesCard({ screens, pcoConnected }) {
 
       {tab === 'manual' && (
         manualServices.length === 0 ? (
-          <p className={styles.emptyMsg}>No active assignments. Push musicians to a screen to see them here.</p>
+          <p className={styles.emptyMsg}>No active assignments. Push people to a screen to see them here.</p>
         ) : (
           <ul className={styles.itemList}>
             {manualServices.slice(0, 4).map(s => (
@@ -260,7 +260,7 @@ function ServicesCard({ screens, pcoConnected }) {
                   {s.event_date && <span className={styles.dateChip}>{formatDate(s.event_date)}</span>}
                 </div>
                 <span className={styles.itemSub}>
-                  {s.name}{s.campus_name ? ` · ${s.campus_name}` : ''} · {s.musicians.length} musician{s.musicians.length !== 1 ? 's' : ''}
+                  {s.name}{s.campus_name ? ` · ${s.campus_name}` : ''} · {s.musicians.length} {s.musicians.length !== 1 ? 'people' : 'person'}
                 </span>
               </li>
             ))}
@@ -491,8 +491,8 @@ function QuickActionsCard({ serviceTypes, screens }) {
       const result = await api(`/service-types/${st.id}/push`, { method: 'POST', body: JSON.stringify({ screen_ids: screenIds }) })
       if (result.error) throw new Error(result.error)
       const msg = result.pushed > 0
-        ? `✓ ${result.pushed} musician${result.pushed !== 1 ? 's' : ''} pushed`
-        : '⚠ Pushed but no musicians found'
+        ? `✓ ${result.pushed} ${result.pushed !== 1 ? 'people' : 'person'} pushed`
+        : '⚠ Pushed but no people found'
       setResultId(st.id)
       setPushMsg(msg)
       setTimeout(() => { setResultId(null); setPushMsg(null) }, 4000)

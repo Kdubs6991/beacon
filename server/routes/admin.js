@@ -435,6 +435,49 @@ async function cleanupPhoto(url) {
   }
 }
 
+router.post('/people/bulk-delete', requireAdmin, async (req, res) => {
+  const orgId = req.session.orgId
+  const { ids } = req.body
+  if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' })
+  const validIds = ids.filter(id => Number.isInteger(Number(id))).map(Number)
+  if (!validIds.length) return res.status(400).json({ error: 'invalid ids' })
+  // Only delete non-PCO people
+  const rows = await db.getAll(
+    `SELECT id, photo_url, photo_url_portrait FROM people WHERE id IN (${validIds.map(() => '?').join(',')}) AND org_id = ? AND pco_person_id IS NULL`,
+    [...validIds, orgId]
+  )
+  await Promise.all(rows.flatMap(r => [cleanupPhoto(r.photo_url), cleanupPhoto(r.photo_url_portrait)]))
+  if (rows.length) {
+    const deleteIds = rows.map(r => r.id)
+    await db.execute(
+      `DELETE FROM people WHERE id IN (${deleteIds.map(() => '?').join(',')}) AND org_id = ?`,
+      [...deleteIds, orgId]
+    )
+  }
+  res.json({ deleted: rows.length })
+})
+
+router.put('/people/bulk-update', requireAdmin, async (req, res) => {
+  const orgId = req.session.orgId
+  const { ids, category } = req.body
+  if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' })
+  const validIds = ids.filter(id => Number.isInteger(Number(id))).map(Number)
+  if (!validIds.length) return res.status(400).json({ error: 'invalid ids' })
+  const catJson = Array.isArray(category) ? JSON.stringify(category) : null
+  if (!catJson) return res.status(400).json({ error: 'category required' })
+  const ph = validIds.map(() => '?').join(',')
+  // PCO people: use override field; manual people: use base field
+  await db.execute(
+    `UPDATE people SET category_override = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NOT NULL`,
+    [catJson, ...validIds, orgId]
+  )
+  await db.execute(
+    `UPDATE people SET category = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NULL`,
+    [catJson, ...validIds, orgId]
+  )
+  res.json({ updated: validIds.length })
+})
+
 router.put('/people/:id', async (req, res) => {
   const orgId = req.session.orgId
   const { name, photo_url, photo_url_portrait, category, email, pco_person_id, position } = req.body
@@ -916,40 +959,50 @@ router.delete('/templates/:id', async (req, res) => {
 router.get('/schedules', async (req, res) => {
   const orgId = req.session.orgId
   res.json(await db.getAll(`
-    SELECT s.*, st.name as service_type_name
+    SELECT s.*, st.name as service_type_name, o.timezone AS org_timezone
     FROM schedules s
     JOIN service_types st ON s.service_type_id = st.id
-    WHERE st.campus_id IN (SELECT id FROM campuses WHERE org_id = ?)
+    JOIN campuses c ON st.campus_id = c.id
+    JOIN organizations o ON c.org_id = o.id
+    WHERE c.org_id = ?
     ORDER BY s.id
   `, [orgId]))
 })
 router.post('/schedules', async (req, res) => {
-  const { service_type_id, cron_expr, enabled, screen_ids } = req.body
+  const { service_type_id, cron_expr, enabled, screen_ids, timezone } = req.body
   if (!service_type_id || !cron_expr) return res.status(400).json({ error: 'service_type_id and cron_expr required' })
   const screenIdsJson = Array.isArray(screen_ids) ? JSON.stringify(screen_ids) : (screen_ids ?? null)
   const r = await db.execute(
-    'INSERT INTO schedules (service_type_id, cron_expr, enabled, screen_ids) VALUES (?, ?, ?, ?) RETURNING id',
-    [service_type_id, cron_expr, enabled ?? 1, screenIdsJson]
+    'INSERT INTO schedules (service_type_id, cron_expr, enabled, screen_ids, timezone) VALUES (?, ?, ?, ?, ?) RETURNING id',
+    [service_type_id, cron_expr, enabled ?? 1, screenIdsJson, timezone ?? null]
   )
-  const schedule = await db.getOne(
-    'SELECT s.*, st.name as service_type_name FROM schedules s LEFT JOIN service_types st ON s.service_type_id = st.id WHERE s.id = ?',
-    [r.lastInsertId]
-  )
+  const schedule = await db.getOne(`
+    SELECT s.*, st.name as service_type_name, o.timezone AS org_timezone
+    FROM schedules s
+    JOIN service_types st ON s.service_type_id = st.id
+    JOIN campuses c ON st.campus_id = c.id
+    JOIN organizations o ON c.org_id = o.id
+    WHERE s.id = ?
+  `, [r.lastInsertId])
   const { registerSchedule } = require('../scheduler')
   if (schedule.enabled) registerSchedule(schedule)
   res.json(schedule)
 })
 router.put('/schedules/:id', async (req, res) => {
-  const { cron_expr, enabled, screen_ids } = req.body
+  const { cron_expr, enabled, screen_ids, timezone } = req.body
   const screenIdsJson = Array.isArray(screen_ids) ? JSON.stringify(screen_ids) : (screen_ids ?? null)
   await db.execute(
-    'UPDATE schedules SET cron_expr = ?, enabled = ?, screen_ids = ? WHERE id = ?',
-    [cron_expr, enabled, screenIdsJson, req.params.id]
+    'UPDATE schedules SET cron_expr = ?, enabled = ?, screen_ids = ?, timezone = ? WHERE id = ?',
+    [cron_expr, enabled, screenIdsJson, timezone ?? null, req.params.id]
   )
-  const schedule = await db.getOne(
-    'SELECT s.*, st.name as service_type_name FROM schedules s LEFT JOIN service_types st ON s.service_type_id = st.id WHERE s.id = ?',
-    [req.params.id]
-  )
+  const schedule = await db.getOne(`
+    SELECT s.*, st.name as service_type_name, o.timezone AS org_timezone
+    FROM schedules s
+    JOIN service_types st ON s.service_type_id = st.id
+    JOIN campuses c ON st.campus_id = c.id
+    JOIN organizations o ON c.org_id = o.id
+    WHERE s.id = ?
+  `, [req.params.id])
   const { registerSchedule, unregisterSchedule } = require('../scheduler')
   if (schedule.enabled) registerSchedule(schedule)
   else unregisterSchedule(schedule.id)

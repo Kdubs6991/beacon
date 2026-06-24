@@ -540,13 +540,74 @@ function PersonDetailModal({ person, onEdit, onDelete, onClose, isAdmin }) {
   )
 }
 
+// ── Bulk category edit modal ──────────────────────────────────────────────────
+function BulkCategoryModal({ count, onSave, onClose }) {
+  const [categories, setCategories] = useState(['Worship'])
+  const [saving, setSaving] = useState(false)
+
+  function toggleCategory(cat) {
+    setCategories(prev =>
+      prev.includes(cat)
+        ? prev.length > 1 ? prev.filter(c => c !== cat) : prev
+        : [...prev, cat]
+    )
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    await onSave(categories)
+    setSaving(false)
+  }
+
+  return (
+    <Modal title={`Edit Category — ${count} ${count === 1 ? 'person' : 'people'}`} onClose={onClose}
+      footer={
+        <>
+          <button className={styles.btnGhost} onClick={onClose}>Cancel</button>
+          <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Apply to all selected'}
+          </button>
+        </>
+      }
+    >
+      <p style={{ fontSize: '0.84rem', color: 'var(--text-sec)', marginBottom: 14 }}>
+        This will overwrite the category for all {count} selected {count === 1 ? 'person' : 'people'}.
+      </p>
+      <div className={styles.categoryCheckboxes}>
+        {CATEGORIES.map(c => (
+          <label key={c} className={`${styles.catCheckbox} ${categories.includes(c) ? styles.catCheckboxActive : ''}`}>
+            <input type="checkbox" className={styles.catCheckboxInput} checked={categories.includes(c)} onChange={() => toggleCategory(c)} />
+            <span className={`${styles.badge} ${CAT_CLASS[c] || styles.catOther}`}>{c}</span>
+          </label>
+        ))}
+      </div>
+    </Modal>
+  )
+}
+
 // ── List view ─────────────────────────────────────────────────────────────────
-function ListView({ people, onEdit, onDelete, isAdmin }) {
+function ListView({ people, onEdit, onDelete, isAdmin, bulkSelected, onBulkToggle, onBulkToggleAll }) {
+  const selectableIds = people.filter(p => !p.pco_person_id).map(p => p.id)
+  const allSelected = selectableIds.length > 0 && selectableIds.every(id => bulkSelected.has(id))
+  const someSelected = selectableIds.some(id => bulkSelected.has(id))
+
   return (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
+            {isAdmin && (
+              <th className={styles.th} style={{ width: 36, paddingRight: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={el => { if (el) el.indeterminate = someSelected && !allSelected }}
+                  onChange={() => onBulkToggleAll(selectableIds, allSelected)}
+                  title="Select all non-PCO people"
+                  className={styles.bulkCheckbox}
+                />
+              </th>
+            )}
             <th className={styles.th} style={{ width: 44 }} />
             <th className={styles.th}>Name</th>
             <th className={styles.th}>Position</th>
@@ -559,8 +620,21 @@ function ListView({ people, onEdit, onDelete, isAdmin }) {
           {people.map(p => {
             const e = eff(p)
             const canDelete = isAdmin && !p.pco_person_id
+            const isSelected = bulkSelected.has(p.id)
             return (
-              <tr key={p.id} className={styles.row}>
+              <tr key={p.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`}>
+                {isAdmin && (
+                  <td className={styles.checkCell}>
+                    {!p.pco_person_id && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => onBulkToggle(p.id)}
+                        className={styles.bulkCheckbox}
+                      />
+                    )}
+                  </td>
+                )}
                 <td className={styles.avatarCell}>
                   <Avatar photo={e.photo} name={e.name} />
                 </td>
@@ -860,6 +934,8 @@ export default function People() {
   const [pcoBanner,    setPcoBanner]    = useState(false)
   const [pcoConnected, setPcoConnected] = useState(false)
   const [showImport,   setShowImport]   = useState(false)
+  const [bulkSelected, setBulkSelected] = useState(new Set())
+  const [showBulkCat,  setShowBulkCat]  = useState(false)
 
   useEffect(() => {
     api('/people')
@@ -890,6 +966,45 @@ export default function People() {
 
   function reloadPeople() {
     api('/people').then(setPeople).catch(() => {})
+  }
+
+  function toggleBulk(id) {
+    setBulkSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleBulkAll(ids, allSelected) {
+    setBulkSelected(prev => {
+      const next = new Set(prev)
+      if (allSelected) { ids.forEach(id => next.delete(id)) }
+      else { ids.forEach(id => next.add(id)) }
+      return next
+    })
+  }
+
+  async function bulkDelete() {
+    const ids = [...bulkSelected]
+    const deletable = people.filter(p => ids.includes(p.id) && !p.pco_person_id)
+    if (deletable.length === 0) return
+    if (!confirm(`Delete ${deletable.length} ${deletable.length === 1 ? 'person' : 'people'}? This cannot be undone.`)) return
+    const result = await api('/people/bulk-delete', { method: 'POST', body: JSON.stringify({ ids: deletable.map(p => p.id) }) })
+    setPeople(prev => prev.filter(p => !deletable.some(d => d.id === p.id)))
+    setBulkSelected(new Set())
+  }
+
+  async function bulkUpdateCategory(categories) {
+    const ids = [...bulkSelected]
+    await api('/people/bulk-update', { method: 'PUT', body: JSON.stringify({ ids, category: categories }) })
+    setPeople(prev => prev.map(p => {
+      if (!ids.includes(p.id)) return p
+      const catJson = JSON.stringify(categories)
+      return p.pco_person_id ? { ...p, category_override: catJson } : { ...p, category: catJson }
+    }))
+    setBulkSelected(new Set())
+    setShowBulkCat(false)
   }
 
   async function deletePerson(id) {
@@ -1059,11 +1174,36 @@ export default function People() {
       {!loading && filtered.length > 0 && (
         <>
           {viewMode === 'list'
-            ? <ListView people={filtered} onEdit={p => setModal({ type: 'edit', person: p })} onDelete={deletePerson} isAdmin={isAdmin} />
+            ? <ListView
+                people={filtered}
+                onEdit={p => setModal({ type: 'edit', person: p })}
+                onDelete={deletePerson}
+                isAdmin={isAdmin}
+                bulkSelected={bulkSelected}
+                onBulkToggle={toggleBulk}
+                onBulkToggleAll={toggleBulkAll}
+              />
             : <GridView people={filtered} onSelect={p => setModal({ type: 'detail', person: p })} />
           }
           <p className={styles.count}>{filtered.length} of {people.length} {people.length === 1 ? 'person' : 'people'}</p>
         </>
+      )}
+
+      {isAdmin && bulkSelected.size > 0 && (
+        <div className={styles.bulkBar}>
+          <span className={styles.bulkCount}>{bulkSelected.size} selected</span>
+          <button className={styles.bulkBtn} onClick={() => setShowBulkCat(true)}>Edit Category</button>
+          <button className={`${styles.bulkBtn} ${styles.bulkBtnDanger}`} onClick={bulkDelete}>Delete</button>
+          <button className={styles.bulkBtnGhost} onClick={() => setBulkSelected(new Set())}>Clear</button>
+        </div>
+      )}
+
+      {showBulkCat && (
+        <BulkCategoryModal
+          count={bulkSelected.size}
+          onSave={bulkUpdateCategory}
+          onClose={() => setShowBulkCat(false)}
+        />
       )}
 
       {modal?.type === 'edit' && (

@@ -687,6 +687,82 @@
 }
 .changePhotoBtn:hover { color: var(--text-sec); }
 
+/* ── Bulk selection ────────────────────────────────────────────────────────── */
+.checkCell {
+  width: 36px;
+  padding: 0 0 0 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.bulkCheckbox {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.rowSelected {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.bulkBar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 200;
+  white-space: nowrap;
+}
+
+.bulkCount {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-pri);
+  margin-right: 4px;
+}
+
+.bulkBtn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.bulkBtn:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+.bulkBtnDanger {
+  border-color: #f87171;
+  color: #f87171;
+}
+.bulkBtnDanger:hover { background: rgba(248,113,113,0.1); }
+
+.bulkBtnGhost {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.12s;
+}
+.bulkBtnGhost:hover { color: var(--text-sec); }
+
 /* ── Misc ── */
 .count { font-size: 0.75rem; color: var(--text-muted); margin-top: 14px; text-align: right; }
 .muted { color: var(--text-muted); font-size: 0.85rem; }
