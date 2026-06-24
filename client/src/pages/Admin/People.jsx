@@ -520,7 +520,6 @@ function PersonModal({ initial, onSave, onClose }) {
 // ── Person detail modal (grid click) ─────────────────────────────────────────
 function PersonDetailModal({ person, onEdit, onDelete, onClose, isAdmin }) {
   const e = eff(person)
-  const canDelete = isAdmin && !person.pco_person_id
 
   return (
     <Modal title={e.name} onClose={onClose}>
@@ -555,7 +554,7 @@ function PersonDetailModal({ person, onEdit, onDelete, onClose, isAdmin }) {
 
         <div className={styles.detailActions}>
           <button className={styles.btnPrimary} onClick={() => { onClose(); onEdit(person) }}>Edit</button>
-          {canDelete && (
+          {isAdmin && (
             <button className={styles.btnDangerSolid} onClick={() => { onClose(); onDelete(person.id) }}>Delete</button>
           )}
         </div>
@@ -682,7 +681,6 @@ function ListView({ people, onEdit, onDelete, isAdmin, bulkSelected, onBulkToggl
         <tbody>
           {people.map(p => {
             const e = eff(p)
-            const canDelete = isAdmin && !p.pco_person_id
             const isSelected = bulkSelected.has(p.id)
             return (
               <tr key={p.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`}
@@ -713,7 +711,7 @@ function ListView({ people, onEdit, onDelete, isAdmin, bulkSelected, onBulkToggl
                 <td className={styles.metaCell}>{e.email ?? <span className={styles.none}>—</span>}</td>
                 <td className={styles.actionsCell} onClick={e => e.stopPropagation()}>
                   <button className={styles.actionBtn} onClick={() => onEdit(p)}>Edit</button>
-                  {canDelete && (
+                  {isAdmin && (
                     <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={() => onDelete(p.id)}>Delete</button>
                   )}
                 </td>
@@ -1051,18 +1049,10 @@ export default function People() {
 
   async function bulkDelete() {
     const ids = [...bulkSelected]
-    const deletable = people.filter(p => ids.includes(p.id) && !p.pco_person_id)
-    const pcoCount = ids.length - deletable.length
-    if (deletable.length === 0) {
-      alert('None of the selected people can be deleted — PCO-linked people must be removed from Planning Center.')
-      return
-    }
-    const msg = pcoCount > 0
-      ? `Delete ${deletable.length} ${deletable.length === 1 ? 'person' : 'people'}? (${pcoCount} PCO-linked ${pcoCount === 1 ? 'person is' : 'people are'} skipped.) This cannot be undone.`
-      : `Delete ${deletable.length} ${deletable.length === 1 ? 'person' : 'people'}? This cannot be undone.`
-    if (!confirm(msg)) return
-    await api('/people/bulk-delete', { method: 'POST', body: JSON.stringify({ ids: deletable.map(p => p.id) }) })
-    setPeople(prev => prev.filter(p => !deletable.some(d => d.id === p.id)))
+    if (!ids.length) return
+    if (!confirm(`Delete ${ids.length} ${ids.length === 1 ? 'person' : 'people'}? This cannot be undone.`)) return
+    await api('/people/bulk-delete', { method: 'POST', body: JSON.stringify({ ids }) })
+    setPeople(prev => prev.filter(p => !ids.includes(p.id)))
     setBulkSelected(new Set())
   }
 

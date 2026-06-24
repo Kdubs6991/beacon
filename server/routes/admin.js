@@ -441,12 +441,14 @@ router.post('/people/bulk-delete', requireAdmin, async (req, res) => {
   if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' })
   const validIds = ids.filter(id => Number.isInteger(Number(id))).map(Number)
   if (!validIds.length) return res.status(400).json({ error: 'invalid ids' })
-  // Only delete non-PCO people
   const rows = await db.getAll(
-    `SELECT id, photo_url, photo_url_portrait FROM people WHERE id IN (${validIds.map(() => '?').join(',')}) AND org_id = ? AND pco_person_id IS NULL`,
+    `SELECT id, photo_url, photo_url_portrait, photo_override, photo_override_portrait FROM people WHERE id IN (${validIds.map(() => '?').join(',')}) AND org_id = ?`,
     [...validIds, orgId]
   )
-  await Promise.all(rows.flatMap(r => [cleanupPhoto(r.photo_url), cleanupPhoto(r.photo_url_portrait)]))
+  await Promise.all(rows.flatMap(r => [
+    cleanupPhoto(r.photo_url), cleanupPhoto(r.photo_url_portrait),
+    cleanupPhoto(r.photo_override), cleanupPhoto(r.photo_override_portrait),
+  ]))
   if (rows.length) {
     const deleteIds = rows.map(r => r.id)
     await db.execute(
@@ -513,12 +515,11 @@ router.delete('/people/:id', async (req, res) => {
   const orgId = req.session.orgId
   const existing = await db.getOne('SELECT * FROM people WHERE id = ? AND org_id = ?', [req.params.id, orgId])
   if (!existing) return res.status(404).json({ error: 'Person not found' })
-  if (existing.pco_person_id) {
-    return res.status(400).json({ error: 'Cannot delete a person synced from Planning Center' })
-  }
   await Promise.all([
     cleanupPhoto(existing.photo_url),
     cleanupPhoto(existing.photo_url_portrait),
+    cleanupPhoto(existing.photo_override),
+    cleanupPhoto(existing.photo_override_portrait),
   ])
   await db.execute('DELETE FROM people WHERE id = ? AND org_id = ?', [req.params.id, orgId])
   res.json({ ok: true })
