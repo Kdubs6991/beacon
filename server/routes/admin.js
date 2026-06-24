@@ -459,22 +459,21 @@ router.post('/people/bulk-delete', requireAdmin, async (req, res) => {
 
 router.put('/people/bulk-update', requireAdmin, async (req, res) => {
   const orgId = req.session.orgId
-  const { ids, category } = req.body
+  const { ids, category, position } = req.body
   if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' })
   const validIds = ids.filter(id => Number.isInteger(Number(id))).map(Number)
   if (!validIds.length) return res.status(400).json({ error: 'invalid ids' })
-  const catJson = Array.isArray(category) ? JSON.stringify(category) : null
-  if (!catJson) return res.status(400).json({ error: 'category required' })
   const ph = validIds.map(() => '?').join(',')
-  // PCO people: use override field; manual people: use base field
-  await db.execute(
-    `UPDATE people SET category_override = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NOT NULL`,
-    [catJson, ...validIds, orgId]
-  )
-  await db.execute(
-    `UPDATE people SET category = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NULL`,
-    [catJson, ...validIds, orgId]
-  )
+  // PCO people: use override fields; manual people: use base fields
+  if (Array.isArray(category) && category.length > 0) {
+    const catJson = JSON.stringify(category)
+    await db.execute(`UPDATE people SET category_override = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NOT NULL`, [catJson, ...validIds, orgId])
+    await db.execute(`UPDATE people SET category = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NULL`, [catJson, ...validIds, orgId])
+  }
+  if (position !== undefined && position !== null) {
+    await db.execute(`UPDATE people SET position_override = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NOT NULL`, [position, ...validIds, orgId])
+    await db.execute(`UPDATE people SET position = ? WHERE id IN (${ph}) AND org_id = ? AND pco_person_id IS NULL`, [position, ...validIds, orgId])
+  }
   res.json({ updated: validIds.length })
 })
 

@@ -476,7 +476,9 @@ function ScheduleForm({ initial, screens, orgTimezone, onSave, onCancel, formCla
         <span className={styles.formLabel}>Timezone</span>
         <select className={styles.formSelect} value={timezone} onChange={e => setTimezone(e.target.value)}>
           {TIMEZONES.map(([tz, label]) => (
-            <option key={tz} value={tz}>{tz === '' ? `Use org default (${tzLabel})` : label}</option>
+            <option key={tz} value={tz}>
+              {tz === '' ? (orgTimezone ? `Use org default (${tzLabel})` : 'Use org default') : label}
+            </option>
           ))}
         </select>
       </div>

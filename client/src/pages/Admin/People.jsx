@@ -540,10 +540,19 @@ function PersonDetailModal({ person, onEdit, onDelete, onClose, isAdmin }) {
   )
 }
 
-// ── Bulk category edit modal ──────────────────────────────────────────────────
-function BulkCategoryModal({ count, onSave, onClose }) {
-  const [categories, setCategories] = useState(['Worship'])
-  const [saving, setSaving] = useState(false)
+// ── Bulk edit modal (category + position) ────────────────────────────────────
+function BulkEditModal({ count, onSave, onClose }) {
+  const [categories, setCategories]     = useState(['Worship'])
+  const [position, setPosition]         = useState('')
+  const [positionTypes, setPositionTypes] = useState([])
+  const [saving, setSaving]             = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/position-types', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setPositionTypes(Array.isArray(d) ? d : []))
+      .catch(() => {})
+  }, [])
 
   function toggleCategory(cat) {
     setCategories(prev =>
@@ -555,12 +564,12 @@ function BulkCategoryModal({ count, onSave, onClose }) {
 
   async function handleSave() {
     setSaving(true)
-    await onSave(categories)
+    await onSave({ categories, position: position || null })
     setSaving(false)
   }
 
   return (
-    <Modal title={`Edit Category — ${count} ${count === 1 ? 'person' : 'people'}`} onClose={onClose}
+    <Modal title={`Edit ${count} ${count === 1 ? 'person' : 'people'}`} onClose={onClose}
       footer={
         <>
           <button className={styles.btnGhost} onClick={onClose}>Cancel</button>
@@ -570,16 +579,26 @@ function BulkCategoryModal({ count, onSave, onClose }) {
         </>
       }
     >
-      <p style={{ fontSize: '0.84rem', color: 'var(--text-sec)', marginBottom: 14 }}>
-        This will overwrite the category for all {count} selected {count === 1 ? 'person' : 'people'}.
+      <p style={{ fontSize: '0.84rem', color: 'var(--text-sec)', marginBottom: 16 }}>
+        Applies to all {count} selected {count === 1 ? 'person' : 'people'}.
       </p>
-      <div className={styles.categoryCheckboxes}>
-        {CATEGORIES.map(c => (
-          <label key={c} className={`${styles.catCheckbox} ${categories.includes(c) ? styles.catCheckboxActive : ''}`}>
-            <input type="checkbox" className={styles.catCheckboxInput} checked={categories.includes(c)} onChange={() => toggleCategory(c)} />
-            <span className={`${styles.badge} ${CAT_CLASS[c] || styles.catOther}`}>{c}</span>
-          </label>
-        ))}
+      <div className={styles.formField}>
+        <label className={styles.formLabel}>Category</label>
+        <div className={styles.categoryCheckboxes}>
+          {CATEGORIES.map(c => (
+            <label key={c} className={`${styles.catCheckbox} ${categories.includes(c) ? styles.catCheckboxActive : ''}`}>
+              <input type="checkbox" className={styles.catCheckboxInput} checked={categories.includes(c)} onChange={() => toggleCategory(c)} />
+              <span className={`${styles.badge} ${CAT_CLASS[c] || styles.catOther}`}>{c}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className={styles.formField} style={{ marginTop: 16 }}>
+        <label className={styles.formLabel}>Position <span className={styles.opt}>(leave blank for no change)</span></label>
+        <select className={styles.formInput} value={position} onChange={e => setPosition(e.target.value)} style={{ width: '100%' }}>
+          <option value="">— No change —</option>
+          {positionTypes.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+        </select>
       </div>
     </Modal>
   )
@@ -587,9 +606,9 @@ function BulkCategoryModal({ count, onSave, onClose }) {
 
 // ── List view ─────────────────────────────────────────────────────────────────
 function ListView({ people, onEdit, onDelete, isAdmin, bulkSelected, onBulkToggle, onBulkToggleAll }) {
-  const selectableIds = people.filter(p => !p.pco_person_id).map(p => p.id)
-  const allSelected = selectableIds.length > 0 && selectableIds.every(id => bulkSelected.has(id))
-  const someSelected = selectableIds.some(id => bulkSelected.has(id))
+  const allIds = people.map(p => p.id)
+  const allSelected = allIds.length > 0 && allIds.every(id => bulkSelected.has(id))
+  const someSelected = allIds.some(id => bulkSelected.has(id))
 
   return (
     <div className={styles.tableWrap}>
@@ -597,15 +616,13 @@ function ListView({ people, onEdit, onDelete, isAdmin, bulkSelected, onBulkToggl
         <thead>
           <tr>
             {isAdmin && (
-              <th className={styles.th} style={{ width: 36, paddingRight: 0 }}>
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={el => { if (el) el.indeterminate = someSelected && !allSelected }}
-                  onChange={() => onBulkToggleAll(selectableIds, allSelected)}
-                  title="Select all non-PCO people"
-                  className={styles.bulkCheckbox}
-                />
+              <th className={styles.th} style={{ width: 90, paddingRight: 0 }}>
+                <button
+                  className={styles.selectAllBtn}
+                  onClick={() => onBulkToggleAll(allIds, allSelected)}
+                >
+                  {allSelected ? 'Deselect' : someSelected ? 'Select all' : 'Select all'}
+                </button>
               </th>
             )}
             <th className={styles.th} style={{ width: 44 }} />
@@ -622,17 +639,18 @@ function ListView({ people, onEdit, onDelete, isAdmin, bulkSelected, onBulkToggl
             const canDelete = isAdmin && !p.pco_person_id
             const isSelected = bulkSelected.has(p.id)
             return (
-              <tr key={p.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`}>
+              <tr key={p.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`}
+                onClick={isAdmin ? () => onBulkToggle(p.id) : undefined}
+                style={isAdmin ? { cursor: 'pointer' } : undefined}
+              >
                 {isAdmin && (
-                  <td className={styles.checkCell}>
-                    {!p.pco_person_id && (
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => onBulkToggle(p.id)}
-                        className={styles.bulkCheckbox}
-                      />
-                    )}
+                  <td className={styles.checkCell} onClick={e => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onBulkToggle(p.id)}
+                      className={styles.bulkCheckbox}
+                    />
                   </td>
                 )}
                 <td className={styles.avatarCell}>
@@ -647,7 +665,7 @@ function ListView({ people, onEdit, onDelete, isAdmin, bulkSelected, onBulkToggl
                 <td className={styles.metaCell}>{e.position ?? <span className={styles.none}>—</span>}</td>
                 <td className={styles.catCell}><CatBadges categories={e.categories} /></td>
                 <td className={styles.metaCell}>{e.email ?? <span className={styles.none}>—</span>}</td>
-                <td className={styles.actionsCell}>
+                <td className={styles.actionsCell} onClick={e => e.stopPropagation()}>
                   <button className={styles.actionBtn} onClick={() => onEdit(p)}>Edit</button>
                   {canDelete && (
                     <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={() => onDelete(p.id)}>Delete</button>
@@ -988,20 +1006,35 @@ export default function People() {
   async function bulkDelete() {
     const ids = [...bulkSelected]
     const deletable = people.filter(p => ids.includes(p.id) && !p.pco_person_id)
-    if (deletable.length === 0) return
-    if (!confirm(`Delete ${deletable.length} ${deletable.length === 1 ? 'person' : 'people'}? This cannot be undone.`)) return
-    const result = await api('/people/bulk-delete', { method: 'POST', body: JSON.stringify({ ids: deletable.map(p => p.id) }) })
+    const pcoCount = ids.length - deletable.length
+    if (deletable.length === 0) {
+      alert('None of the selected people can be deleted — PCO-linked people must be removed from Planning Center.')
+      return
+    }
+    const msg = pcoCount > 0
+      ? `Delete ${deletable.length} ${deletable.length === 1 ? 'person' : 'people'}? (${pcoCount} PCO-linked ${pcoCount === 1 ? 'person is' : 'people are'} skipped.) This cannot be undone.`
+      : `Delete ${deletable.length} ${deletable.length === 1 ? 'person' : 'people'}? This cannot be undone.`
+    if (!confirm(msg)) return
+    await api('/people/bulk-delete', { method: 'POST', body: JSON.stringify({ ids: deletable.map(p => p.id) }) })
     setPeople(prev => prev.filter(p => !deletable.some(d => d.id === p.id)))
     setBulkSelected(new Set())
   }
 
-  async function bulkUpdateCategory(categories) {
+  async function bulkEdit({ categories, position }) {
     const ids = [...bulkSelected]
-    await api('/people/bulk-update', { method: 'PUT', body: JSON.stringify({ ids, category: categories }) })
+    await api('/people/bulk-update', { method: 'PUT', body: JSON.stringify({ ids, category: categories, position }) })
     setPeople(prev => prev.map(p => {
       if (!ids.includes(p.id)) return p
       const catJson = JSON.stringify(categories)
-      return p.pco_person_id ? { ...p, category_override: catJson } : { ...p, category: catJson }
+      const updated = { ...p }
+      if (p.pco_person_id) {
+        updated.category_override = catJson
+        if (position !== null) updated.position_override = position
+      } else {
+        updated.category = catJson
+        if (position !== null) updated.position = position
+      }
+      return updated
     }))
     setBulkSelected(new Set())
     setShowBulkCat(false)
@@ -1192,16 +1225,16 @@ export default function People() {
       {isAdmin && bulkSelected.size > 0 && (
         <div className={styles.bulkBar}>
           <span className={styles.bulkCount}>{bulkSelected.size} selected</span>
-          <button className={styles.bulkBtn} onClick={() => setShowBulkCat(true)}>Edit Category</button>
+          <button className={styles.bulkBtn} onClick={() => setShowBulkCat(true)}>Edit fields</button>
           <button className={`${styles.bulkBtn} ${styles.bulkBtnDanger}`} onClick={bulkDelete}>Delete</button>
           <button className={styles.bulkBtnGhost} onClick={() => setBulkSelected(new Set())}>Clear</button>
         </div>
       )}
 
       {showBulkCat && (
-        <BulkCategoryModal
+        <BulkEditModal
           count={bulkSelected.size}
-          onSave={bulkUpdateCategory}
+          onSave={bulkEdit}
           onClose={() => setShowBulkCat(false)}
         />
       )}
