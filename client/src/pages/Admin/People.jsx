@@ -1013,6 +1013,7 @@ export default function People() {
   function switchView(mode) {
     setViewMode(mode)
     localStorage.setItem('beacon-people-view', mode)
+    setBulkSelected(new Set())
   }
 
   function toggleFilterCat(cat) {

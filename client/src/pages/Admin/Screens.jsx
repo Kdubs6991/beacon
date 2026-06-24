@@ -357,6 +357,20 @@ function ScreenCard({ screen, onEdit, onDelete, onAssignments }) {
         <div className={styles.layoutBadge}>{layoutLabel}</div>
       </div>
 
+      <div className={styles.cardAssign}>
+        {Number(screen.assignment_count) > 0 ? (
+          <span className={styles.cardAssignContent}>
+            {screen.current_event_name
+              ? <><strong>{screen.current_event_name}</strong> · </>
+              : null
+            }
+            {screen.assignment_count} {Number(screen.assignment_count) === 1 ? 'person' : 'people'}
+          </span>
+        ) : (
+          <span className={styles.cardAssignEmpty}>Nothing showing</span>
+        )}
+      </div>
+
       <div className={styles.cardLinks}>
         <button className={`${styles.linkBtn} ${copied === 'url' ? styles.linkBtnCopied : ''}`}
           onClick={() => copy(displayUrl, 'url')} title={displayUrl}>
@@ -474,6 +488,13 @@ export default function Screens() {
 
       {!loading && screens.length > 0 && (
         <div className={styles.filterBar}>
+          <div className={styles.filterHead}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            Filters
+          </div>
+          <div className={styles.filterSep} />
           <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Location</span>
             <button className={`${styles.filterPill} ${filterCampus === 'all' ? styles.filterPillActive : ''}`} onClick={() => setFilterCampus('all')}>All</button>

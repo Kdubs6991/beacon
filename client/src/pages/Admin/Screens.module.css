@@ -38,6 +38,18 @@
   align-items: center;
   gap: 6px;
 }
+.filterHead {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 .filterGroup {
   display: flex;
   align-items: center;
@@ -242,6 +254,23 @@
   border: 1px solid var(--border);
   padding: 2px 8px;
   border-radius: 10px;
+}
+
+/* ── Assignment summary line on card ── */
+.cardAssign {
+  font-size: 0.75rem;
+  color: var(--text-sec);
+  min-height: 1.2em;
+}
+
+.cardAssignContent strong {
+  color: var(--text-pri);
+  font-weight: 600;
+}
+
+.cardAssignEmpty {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* ── Link buttons ── */

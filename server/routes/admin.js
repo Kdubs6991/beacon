@@ -748,7 +748,9 @@ const SCREENS_SELECT = `
     c.name  AS campus_name,
     m.name  AS mirror_screen_name,
     m.token AS mirror_screen_token,
-    CASE WHEN s.last_heartbeat > NOW() - INTERVAL '90 seconds' THEN 1 ELSE 0 END AS is_active
+    CASE WHEN s.last_heartbeat > NOW() - INTERVAL '90 seconds' THEN 1 ELSE 0 END AS is_active,
+    (SELECT COUNT(*) FROM active_assignments WHERE screen_id = COALESCE(s.mirror_screen_id, s.id)) AS assignment_count,
+    (SELECT event_name FROM active_assignments WHERE screen_id = COALESCE(s.mirror_screen_id, s.id) ORDER BY slot LIMIT 1) AS current_event_name
   FROM screens s
   LEFT JOIN campuses c ON s.campus_id = c.id
   LEFT JOIN screens  m ON s.mirror_screen_id = m.id
@@ -912,15 +914,17 @@ router.delete('/screens/:id', async (req, res) => {
 })
 router.get('/screens/:id/assignments', requireAuth, async (req, res) => {
   const orgId = req.session.orgId
-  const screen = await db.getOne('SELECT id FROM screens WHERE id = ? AND org_id = ?', [req.params.id, orgId])
+  const screen = await db.getOne('SELECT id, mirror_screen_id FROM screens WHERE id = ? AND org_id = ?', [req.params.id, orgId])
   if (!screen) return res.status(404).json({ error: 'Screen not found' })
-  res.json(await db.getAll('SELECT * FROM active_assignments WHERE screen_id = ? ORDER BY slot', [req.params.id]))
+  const sourceId = screen.mirror_screen_id ?? screen.id
+  res.json(await db.getAll('SELECT * FROM active_assignments WHERE screen_id = ? ORDER BY slot', [sourceId]))
 })
 router.delete('/screens/:id/assignments', requireAuth, async (req, res) => {
   const orgId = req.session.orgId
-  const screen = await db.getOne('SELECT id FROM screens WHERE id = ? AND org_id = ?', [req.params.id, orgId])
+  const screen = await db.getOne('SELECT id, mirror_screen_id FROM screens WHERE id = ? AND org_id = ?', [req.params.id, orgId])
   if (!screen) return res.status(404).json({ error: 'Screen not found' })
-  await db.execute('DELETE FROM active_assignments WHERE screen_id = ?', [req.params.id])
+  const sourceId = screen.mirror_screen_id ?? screen.id
+  await db.execute('DELETE FROM active_assignments WHERE screen_id = ?', [sourceId])
   res.json({ ok: true })
 })
 
