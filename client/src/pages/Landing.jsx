@@ -134,7 +134,7 @@ export default function Landing() {
       .catch(() => {})
   }, [])
 
-  const signInHref  = isAdmin ? '/admin' : '/org'
+  const signInHref  = isAdmin ? '/studio' : '/org'
   const signInLabel = isAdmin ? 'Go to dashboard' : 'Get started'
 
   return (
@@ -352,9 +352,12 @@ export default function Landing() {
           <div className={styles.footerLinks}>
             <Link to="/docs"      className={styles.footerLink}>Documentation</Link>
             <Link to="/display"   className={styles.footerLink}>Display login</Link>
-            <Link to={signInHref} className={styles.footerLink}>Admin panel</Link>
+            <Link to={signInHref} className={styles.footerLink}>Studio</Link>
             <Link to="/contact"   className={styles.footerLink}>Contact</Link>
           </div>
+        </div>
+        <div className={styles.footerMeta}>
+          <Link to="/admin" className={styles.footerMetaLink}>Site admin</Link>
         </div>
       </footer>
 

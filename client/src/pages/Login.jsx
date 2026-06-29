@@ -33,7 +33,7 @@ export default function Login() {
     setLoading(true)
     try {
       const user = await login(email, password)
-      navigate('/admin')
+      navigate('/studio')
     } catch (err) {
       setError(err.message)
     } finally {

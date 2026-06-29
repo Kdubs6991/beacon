@@ -639,6 +639,21 @@
 }
 .footerLink:hover { color: var(--text-sec); }
 
+.footerMeta {
+  max-width: 1120px;
+  margin: 12px auto 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.footerMetaLink {
+  font-size: 0.68rem;
+  color: var(--border);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.footerMetaLink:hover { color: var(--text-muted); }
+
 /* ── Local hosting ── */
 .localSection {
   padding: 80px 0;

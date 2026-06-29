@@ -319,7 +319,7 @@ router.get('/pco/callback', async (req, res) => {
       'INSERT INTO pco_tokens (org_id, access_token, refresh_token, expires_at) VALUES (?, ?, ?, ?)',
       [orgId, data.access_token, data.refresh_token, expiresAt]
     )
-    res.redirect('/admin/integrations?connected=1&popup=1')
+    res.redirect('/studio/integrations?connected=1&popup=1')
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

@@ -10,18 +10,18 @@ function getOrgFromCookie() {
 }
 
 const NAV_ITEMS = [
-  { to: '/admin', label: 'Dashboard', end: true },
-  { to: '/admin/locations', label: 'Locations' },
-  { to: '/admin/templates', label: 'Templates' },
-  { to: '/admin/people', label: 'People' },
-  { to: '/admin/labels', label: 'Labels' },
-  { to: '/admin/automation', label: 'Automation' },
-  { to: '/admin/screens', label: 'Screens' },
-  { to: '/admin/schedules', label: 'Services' },
+  { to: '/studio', label: 'Dashboard', end: true },
+  { to: '/studio/locations', label: 'Locations' },
+  { to: '/studio/templates', label: 'Templates' },
+  { to: '/studio/people', label: 'People' },
+  { to: '/studio/labels', label: 'Labels' },
+  { to: '/studio/automation', label: 'Automation' },
+  { to: '/studio/screens', label: 'Screens' },
+  { to: '/studio/schedules', label: 'Services' },
   null,
-  { to: '/admin/organization', label: 'Organization', adminOnly: true },
-  { to: '/admin/users', label: 'Users', adminOnly: true },
-  { to: '/admin/integrations', label: 'Integrations', adminOnly: true },
+  { to: '/studio/organization', label: 'Organization', adminOnly: true },
+  { to: '/studio/users', label: 'Users', adminOnly: true },
+  { to: '/studio/integrations', label: 'Integrations', adminOnly: true },
 ]
 
 export default function AdminLayout({ title, children }) {
@@ -64,11 +64,11 @@ export default function AdminLayout({ title, children }) {
         </ul>
 
         <div className={styles.userArea}>
-          <NavLink to="/admin/profile" className={styles.userInfo} onClick={closeSidebar} title="Account settings">
+          <NavLink to="/studio/profile" className={styles.userInfo} onClick={closeSidebar} title="Account settings">
             <span className={styles.userName}>{user?.name}</span>
             <span className={styles.userRole}>{user?.role}</span>
           </NavLink>
-          <NavLink to="/admin/profile" className={styles.userIconBtn} onClick={closeSidebar} title="Settings" aria-label="Settings">
+          <NavLink to="/studio/profile" className={styles.userIconBtn} onClick={closeSidebar} title="Settings" aria-label="Settings">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </NavLink>
           <button className={styles.logoutBtn} onClick={handleLogout} title="Sign out">

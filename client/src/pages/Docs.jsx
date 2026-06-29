@@ -168,9 +168,12 @@ export default function Docs() {
         <span className={styles.brand}>Beacon</span>
         <div className={styles.topBarNav}>
           {user
-            ? <Link to="/admin" className={styles.backLink}>Dashboard</Link>
+            ? <Link to="/studio" className={styles.backLink}>Studio</Link>
             : <Link to="/login" className={styles.backLink}>Sign in</Link>
           }
+          {user?.role === 'admin' && (
+            <Link to="/admin" className={styles.backLink}>Edit site</Link>
+          )}
           <Link to="/display" className={styles.backLink}>Display login</Link>
         </div>
       </header>
@@ -243,9 +246,9 @@ export default function Docs() {
             <p>On a fresh install, visiting any page in the app will automatically redirect you to <code>/setup</code>. This one-time setup wizard walks you through:</p>
             <ol className={styles.ol}>
               <li><strong>Create your organization</strong> — set your organization name and slug. The slug is used in display screen login URLs and cannot be easily changed later.</li>
-              <li><strong>Create the first admin account</strong> — this account will have full access to the admin panel. Additional accounts can be invited after setup completes.</li>
+              <li><strong>Create the first admin account</strong> — this account will have full access to Studio. Additional accounts can be invited after setup completes.</li>
             </ol>
-            <p>Once the wizard is complete you'll be logged in automatically and taken to the admin dashboard. The <code>/setup</code> route is disabled after this point — revisiting it redirects to the dashboard.</p>
+            <p>Once the wizard is complete you'll be logged in automatically and taken to the Studio dashboard. The <code>/setup</code> route is disabled after this point — revisiting it redirects to the dashboard.</p>
             <Callout type="warning">
               Complete the setup wizard before pointing any display screens at the app. Screens that load before an organization exists will show an error.
             </Callout>
@@ -330,7 +333,7 @@ export default function Docs() {
 
           {/* ── Organization ── */}
           <Section id="organization" title="Organization">
-            <p>The <strong>Organization</strong> page (Admin → Organization) holds your top-level settings. A single Beacon installation can support multiple independent organizations — each with their own users, screens, and settings. The <strong>org slug</strong> is a short URL-safe identifier for your organization (e.g. <code>first-church</code>) and is embedded in display screen login URLs.</p>
+            <p>The <strong>Organization</strong> page (Studio → Organization) holds your top-level settings. A single Beacon installation can support multiple independent organizations — each with their own users, screens, and settings. The <strong>org slug</strong> is a short URL-safe identifier for your organization (e.g. <code>first-church</code>) and is embedded in display screen login URLs.</p>
             <p>You can also set your organization's <strong>timezone</strong> here. This ensures that schedule next-run times and other time-sensitive information display correctly for your location rather than defaulting to the server's system clock.</p>
 
             <SubSection id="display-login" title="Display Login">
@@ -346,7 +349,7 @@ export default function Docs() {
                 <li>Choose an existing screen from the list, or create a new one by typing a name.</li>
                 <li>The display loads immediately and stores both credentials as cookies for 1 year — no re-login needed even after the browser restarts.</li>
               </ol>
-              <p>Once a screen is created, go to the admin panel to assign it a template and include it in a push schedule.</p>
+              <p>Once a screen is created, go to Studio to assign it a template and include it in a push schedule.</p>
               <p>To exit a display and return to the screen picker (e.g. to switch screens), move the mouse or touch the screen — an <strong>Exit display</strong> button will appear in the top-right corner.</p>
               <p>The <strong>access code</strong> is shown on the Organization page. You can <strong>regenerate</strong> it at any time, but note that doing so will immediately invalidate the existing cookie on every screen — all displays will be redirected to the login page and will need to re-enter the new code.</p>
               <Callout type="warning">
@@ -364,7 +367,7 @@ export default function Docs() {
                 <li>The TV detects the completed setup and transitions to the display immediately — no interaction on the TV required.</li>
               </ol>
               <p>The QR code expires after 10 minutes. Refreshing the page generates a new one.</p>
-              <p>After creating a new screen, a separate QR code appears that links directly to the <strong>admin panel</strong> — scan it from any device to sign in and configure the screen's template and schedule.</p>
+              <p>After creating a new screen, a separate QR code appears that links directly to <strong>Studio</strong> — scan it from any device to sign in and configure the screen's template and schedule.</p>
               <Callout type="info">
                 You can also enter the org code and access code manually on any device by navigating to <code>/display?setup=1</code>.
               </Callout>
@@ -437,7 +440,7 @@ export default function Docs() {
               <p>PCO mode pulls the team roster for a specific Planning Center service type. When a schedule fires (or you press Push), Beacon finds the plan matching today's date, fetches the confirmed team members, runs your automation rules to assign mic and IEM labels, and pushes to your screens.</p>
               <p><strong>Setting up a PCO service type:</strong></p>
               <ol className={styles.ol}>
-                <li>Go to Admin → Integrations and connect your Planning Center account.</li>
+                <li>Go to Studio → Integrations and connect your Planning Center account.</li>
                 <li>On the Services page, click <em>New service type</em> and choose <strong>PCO Sync</strong>.</li>
                 <li>Pick your service from the list of Planning Center services — Beacon will fetch them automatically. Or enter the PCO service type ID manually (see below).</li>
                 <li>Add a schedule and pick your screens.</li>
@@ -588,7 +591,7 @@ export default function Docs() {
                 <li><strong>Center</strong> — the service/event name and the screen's name from the active assignments.</li>
                 <li><strong>Right</strong> — a live clock that updates every second.</li>
               </ul>
-              <p>If no logo is uploaded, only the org name appears on the left. Upload a logo at <strong>Admin → Organization → Organization Logo</strong>.</p>
+              <p>If no logo is uploaded, only the org name appears on the left. Upload a logo at <strong>Studio → Organization → Organization Logo</strong>.</p>
             </SubSection>
           </Section>
 
@@ -724,7 +727,7 @@ export default function Docs() {
             <p>Beacon has two user roles — <strong>Admin</strong> and <strong>Team Member</strong>. Anyone can register an account, but new accounts are always created as Team Member until an admin promotes them.</p>
 
             <SubSection id="user-roles" title="Roles">
-              <p><strong>Admin</strong> — full access to every page in the admin panel, including Organization settings, Users management, and Integrations.</p>
+              <p><strong>Admin</strong> — full access to every page in Studio, including Organization settings, Users management, and Integrations.</p>
               <p><strong>Team Member</strong> — access to the Dashboard and all content pages: Locations, Templates, People, Labels, Automation, Screens, and Services. They can view, add, and edit content for the organization. The three admin-only pages — <strong>Organization</strong>, <strong>Users</strong>, and <strong>Integrations</strong> — are hidden from the sidebar and redirect to an access-denied page if reached directly.</p>
               <p>All data is <strong>shared across the organization</strong> — people, screens, templates, and labels added by one user are visible to every user in the same org, regardless of role.</p>
               <p>Admins can change any account's role from the <strong>Users</strong> page — click the edit icon on any row to open the edit modal, which includes a Role dropdown. Guards prevent removing the last admin account or demoting yourself.</p>
@@ -733,7 +736,7 @@ export default function Docs() {
             </SubSection>
 
             <SubSection id="invite-links" title="Invite Links">
-              <p>Instead of asking team members to register manually, you can invite them by email. Go to <strong>Admin → Users</strong> (or <strong>Admin → Organization</strong>) and use the <strong>Invite Team Members</strong> section — enter their email address, choose a role (Admin or Team Member), and click <strong>Send invite</strong>.</p>
+              <p>Instead of asking team members to register manually, you can invite them by email. Go to <strong>Studio → Users</strong> (or <strong>Studio → Organization</strong>) and use the <strong>Invite Team Members</strong> section — enter their email address, choose a role (Admin or Team Member), and click <strong>Send invite</strong>.</p>
               <p>The recipient gets an email with a personal invite link. When they click it, their email is already pre-filled on the registration form — they only need to enter their name and a password. The link:</p>
               <ul className={styles.ul}>
                 <li>Expires after <strong>7 days</strong>.</li>
@@ -751,7 +754,7 @@ export default function Docs() {
               <ul className={styles.ul}>
                 <li><strong>Account</strong> — change your display name or email address. Your current role (Admin or Team Member) is shown as a badge. Changes take effect immediately.</li>
                 <li><strong>Security</strong> — change your password. Requires your current password first. New password must be at least 8 characters. If you've forgotten your current password, use the <strong>Forgot password?</strong> link on the sign-in page — a reset link will be emailed to you.</li>
-                <li><strong>Appearance</strong> — switch between <em>Dark</em> and <em>Light</em> theme. Preference is stored in the browser and applies across the whole admin panel.</li>
+                <li><strong>Appearance</strong> — switch between <em>Dark</em> and <em>Light</em> theme. Preference is stored in the browser and applies across the whole Studio.</li>
                 <li><strong>Connections</strong> — shows whether Planning Center is connected. Admins see a <em>Manage →</em> link to the Integrations page and a <em>Connect →</em> link if PCO is disconnected. Team members see the status only.</li>
                 <li><strong>Organization</strong> — a read-only summary of your organization's name, slug, timezone, and address. Admins see an <em>Edit settings →</em> link to the full Organization page.</li>
               </ul>
@@ -764,7 +767,7 @@ export default function Docs() {
             <p>Beacon connects to Planning Center Online using OAuth 2.0. Once connected, each organization can independently link its own PCO account.</p>
             <p><strong>To connect:</strong></p>
             <ol className={styles.ol}>
-              <li>Go to Admin → <strong>Integrations</strong>.</li>
+              <li>Go to Studio → <strong>Integrations</strong>.</li>
               <li>Click <em>Connect to Planning Center</em> — you'll be redirected to PCO to authorize Beacon.</li>
               <li>After authorizing, you're redirected back to the Integrations page showing "Connected."</li>
               <li>Click <em>Test connection</em> to verify it's working — Beacon will fetch your service type list and confirm the count.</li>
@@ -777,7 +780,7 @@ export default function Docs() {
               <li>Upcoming plan preview inside each PCO service type card</li>
               <li>Plan picker on the Push button (push any upcoming plan, not just today's)</li>
             </ul>
-            <p><strong>Importing people from PCO:</strong> Go to Admin → People and click <em>Import from PCO</em>. Choose a service and plan, preview the team, and import. People already in Beacon (matched by PCO person ID) are skipped — your overrides are never touched by import.</p>
+            <p><strong>Importing people from PCO:</strong> Go to Studio → People and click <em>Import from PCO</em>. Choose a service and plan, preview the team, and import. People already in Beacon (matched by PCO person ID) are skipped — your overrides are never touched by import.</p>
             <Callout type="info">
               Each organization has its own independent PCO connection. If you're using multiple organizations in one Beacon install, each can connect to a different PCO account.
             </Callout>

@@ -8,7 +8,7 @@ export default function NotFound() {
   const { pathname } = useLocation()
   const { user, loading } = useAuth()
 
-  const destination = user ? '/admin' : '/login'
+  const destination = user ? '/studio' : '/login'
   const label = user ? 'Go to Dashboard' : 'Go to Sign In'
 
   return (

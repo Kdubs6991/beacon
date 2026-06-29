@@ -29,7 +29,13 @@ import Integrations from './pages/Admin/Integrations'
 import Profile from './pages/Admin/Profile'
 import Organization from './pages/Admin/Organization'
 
-function AdminRoute({ children }) {
+import SiteAdmin, { SiteAdminDocs, SiteAdminLanding, SiteAdminPages } from './pages/SiteAdmin/SiteAdmin'
+
+function StudioRoute({ children }) {
+  return <ProtectedRoute>{children}</ProtectedRoute>
+}
+
+function AdminOnlyRoute({ children }) {
   return <ProtectedRoute adminOnly>{children}</ProtectedRoute>
 }
 
@@ -50,19 +56,25 @@ export default function App() {
         <Route path="/docs" element={<Docs />} />
         <Route path="/no-access" element={<ProtectedRoute><NoAccess /></ProtectedRoute>} />
 
-        {/* Admin panel — all require auth; Organization/Users/Integrations require admin role */}
-        <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/admin/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />
-        <Route path="/admin/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
-        <Route path="/admin/people" element={<ProtectedRoute><People /></ProtectedRoute>} />
-        <Route path="/admin/labels" element={<ProtectedRoute><Labels /></ProtectedRoute>} />
-        <Route path="/admin/automation" element={<ProtectedRoute><Automation /></ProtectedRoute>} />
-        <Route path="/admin/screens" element={<ProtectedRoute><Screens /></ProtectedRoute>} />
-        <Route path="/admin/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
-        <Route path="/admin/organization" element={<AdminRoute><Organization /></AdminRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><Users /></AdminRoute>} />
-        <Route path="/admin/integrations" element={<AdminRoute><Integrations /></AdminRoute>} />
-        <Route path="/admin/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        {/* Beacon Studio — all require auth; Organization/Users/Integrations require admin role */}
+        <Route path="/studio" element={<StudioRoute><Dashboard /></StudioRoute>} />
+        <Route path="/studio/locations" element={<StudioRoute><Locations /></StudioRoute>} />
+        <Route path="/studio/templates" element={<StudioRoute><Templates /></StudioRoute>} />
+        <Route path="/studio/people" element={<StudioRoute><People /></StudioRoute>} />
+        <Route path="/studio/labels" element={<StudioRoute><Labels /></StudioRoute>} />
+        <Route path="/studio/automation" element={<StudioRoute><Automation /></StudioRoute>} />
+        <Route path="/studio/screens" element={<StudioRoute><Screens /></StudioRoute>} />
+        <Route path="/studio/schedules" element={<StudioRoute><Schedules /></StudioRoute>} />
+        <Route path="/studio/organization" element={<AdminOnlyRoute><Organization /></AdminOnlyRoute>} />
+        <Route path="/studio/users" element={<AdminOnlyRoute><Users /></AdminOnlyRoute>} />
+        <Route path="/studio/integrations" element={<AdminOnlyRoute><Integrations /></AdminOnlyRoute>} />
+        <Route path="/studio/profile" element={<StudioRoute><Profile /></StudioRoute>} />
+
+        {/* Site Admin — website content management, admin role required */}
+        <Route path="/admin" element={<AdminOnlyRoute><SiteAdmin /></AdminOnlyRoute>} />
+        <Route path="/admin/docs" element={<AdminOnlyRoute><SiteAdminDocs /></AdminOnlyRoute>} />
+        <Route path="/admin/landing" element={<AdminOnlyRoute><SiteAdminLanding /></AdminOnlyRoute>} />
+        <Route path="/admin/pages" element={<AdminOnlyRoute><SiteAdminPages /></AdminOnlyRoute>} />
 
         <Route path="/" element={<Landing />} />
         <Route path="/contact" element={<Contact />} />

@@ -95,7 +95,7 @@ export default function Setup() {
       if (!res.ok) { setError(data.error || 'Setup failed'); return }
       if (data.org) setCookie('beacon_org', JSON.stringify(data.org))
       setUser(data.user)
-      navigate('/admin', { replace: true })
+      navigate('/studio', { replace: true })
     } catch {
       setError('Connection error. Please try again.')
     } finally {
@@ -124,7 +124,7 @@ export default function Setup() {
             microphone and in-ear monitor they're on — displayed live on any TV or screen
             in your building, updating itself before every service.
           </p>
-          <p className={styles.splashMeta}>Everything set up here can be changed later in your admin panel.</p>
+          <p className={styles.splashMeta}>Everything set up here can be changed later in Studio.</p>
           <p className={styles.splashRequired}><span className={styles.req}>*</span> Required fields</p>
         </div>
 

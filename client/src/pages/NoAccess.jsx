@@ -23,7 +23,7 @@ export default function NoAccess() {
             You don't have permission to view this page. Contact an admin if you think this is a mistake.
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-            <button onClick={() => navigate('/admin')} className={styles.submit} style={{ margin: 0, flex: 1 }}>
+            <button onClick={() => navigate('/studio')} className={styles.submit} style={{ margin: 0, flex: 1 }}>
               Go to dashboard
             </button>
             <button onClick={handleLogout} className={styles.submit} style={{ margin: 0, flex: 1, background: 'var(--bg-page)', color: 'var(--text-sec)', border: '1px solid var(--border)' }}>

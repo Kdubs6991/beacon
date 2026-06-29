@@ -1,0 +1,203 @@
+/* ── Page shell ── */
+.page {
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--text-pri);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top bar ── */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brandName {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-pri);
+  letter-spacing: -0.02em;
+}
+
+.brandSep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}
+
+.brandSub {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.topBarRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.userBadge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.backLink {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-sec);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+.backLink:hover { color: var(--accent); }
+
+/* ── Main content ── */
+.main {
+  flex: 1;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.pageHeader {
+  margin-bottom: 36px;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-pri);
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── Card grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.12s;
+  cursor: pointer;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.cardIconWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin: 0;
+}
+
+.cardDesc {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.cardCta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+/* ── Stub pages ── */
+.stubWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.stubBack {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.12s;
+  margin-bottom: 8px;
+}
+.stubBack:hover { color: var(--accent); }
+
+.stubTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-pri);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.stubDesc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 480px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.stubBadge {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 20px;
+  padding: 3px 12px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 540px) {
+  .topBar { padding: 0 16px; }
+  .main { padding: 32px 16px; }
+  .grid { grid-template-columns: 1fr; }
+}

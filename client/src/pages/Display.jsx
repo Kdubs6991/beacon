@@ -526,12 +526,12 @@ function CookieDisplay() {
             <button className={styles.loginBtn} type="button" onClick={() => setStep('display')}>
               Open display on this screen →
             </button>
-            <div className={styles.loginDivider}>admin access</div>
+            <div className={styles.loginDivider}>Studio access</div>
             <div className={styles.adminLinkRow}>
               {adminUser ? (
-                <a href="/admin" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Go to Dashboard →</a>
+                <a href="/studio" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Go to Dashboard →</a>
               ) : (
-                <a href="/org" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Sign in to Admin →</a>
+                <a href="/org" className={styles.loginLink} style={{ whiteSpace: 'nowrap' }}>Sign in to Studio →</a>
               )}
               {adminQrUrl && (
                 <div className={styles.adminQrWrap}>
