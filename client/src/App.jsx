@@ -70,11 +70,11 @@ export default function App() {
         <Route path="/studio/integrations" element={<AdminOnlyRoute><Integrations /></AdminOnlyRoute>} />
         <Route path="/studio/profile" element={<StudioRoute><Profile /></StudioRoute>} />
 
-        {/* Site Admin — website content management, admin role required */}
-        <Route path="/admin" element={<AdminOnlyRoute><SiteAdmin /></AdminOnlyRoute>} />
-        <Route path="/admin/docs" element={<AdminOnlyRoute><SiteAdminDocs /></AdminOnlyRoute>} />
-        <Route path="/admin/landing" element={<AdminOnlyRoute><SiteAdminLanding /></AdminOnlyRoute>} />
-        <Route path="/admin/pages" element={<AdminOnlyRoute><SiteAdminPages /></AdminOnlyRoute>} />
+        {/* Site Admin — website content management, uses its own password auth */}
+        <Route path="/admin" element={<SiteAdmin />} />
+        <Route path="/admin/docs" element={<SiteAdminDocs />} />
+        <Route path="/admin/landing" element={<SiteAdminLanding />} />
+        <Route path="/admin/pages" element={<SiteAdminPages />} />
 
         <Route path="/" element={<Landing />} />
         <Route path="/contact" element={<Contact />} />

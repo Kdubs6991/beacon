@@ -230,7 +230,7 @@ function ScreenModal({ initial, campuses, allScreens, templates, onSave, onClose
         {templates.length === 0 && (
           <p className={styles.formHint}>
             No custom templates yet.{' '}
-            <Link to="/admin/templates" className={styles.hintLink} onClick={onClose}>Create one on the Templates page.</Link>
+            <Link to="/studio/templates" className={styles.hintLink} onClick={onClose}>Create one on the Templates page.</Link>
           </p>
         )}
       </div>

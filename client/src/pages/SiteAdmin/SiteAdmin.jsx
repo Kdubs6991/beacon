@@ -1,9 +1,25 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import SiteAdminLogin from './SiteAdminLogin'
 import styles from './SiteAdmin.module.css'
 
-function TopBar() {
-  const { user } = useAuth()
+async function siteApi(path, opts = {}) {
+  const res = await fetch(`/api/site-admin${path}`, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  return data
+}
+
+function TopBar({ onLogout }) {
+  async function handleLogout() {
+    await siteApi('/logout', { method: 'POST' }).catch(() => {})
+    onLogout()
+  }
+
   return (
     <header className={styles.topBar}>
       <div className={styles.brand}>
@@ -12,8 +28,8 @@ function TopBar() {
         <span className={styles.brandSub}>Site Admin</span>
       </div>
       <div className={styles.topBarRight}>
-        {user && <span className={styles.userBadge}>{user.name}</span>}
-        <Link to="/studio" className={styles.backLink}>← Back to Studio</Link>
+        <Link to="/studio" className={styles.backLink}>Studio</Link>
+        <button className={styles.logoutBtn} onClick={handleLogout}>Sign out</button>
       </div>
     </header>
   )
@@ -61,10 +77,10 @@ const CARDS = [
   },
 ]
 
-export default function SiteAdmin() {
+function SiteAdminPanel({ onLogout }) {
   return (
     <div className={styles.page}>
-      <TopBar />
+      <TopBar onLogout={onLogout} />
       <main className={styles.main}>
         <div className={styles.pageHeader}>
           <h1 className={styles.title}>Website Management</h1>
@@ -87,11 +103,41 @@ export default function SiteAdmin() {
   )
 }
 
-// ── Stub pages for sub-routes ─────────────────────────────────────────────────
+// ── Auth wrapper ──────────────────────────────────────────────────────────────
+export default function SiteAdmin() {
+  const [authenticated, setAuthenticated] = useState(null) // null = loading
+
+  useEffect(() => {
+    siteApi('/me')
+      .then(data => setAuthenticated(data.authenticated))
+      .catch(() => setAuthenticated(false))
+  }, [])
+
+  if (authenticated === null) return null // loading — no flash
+
+  if (!authenticated) {
+    return <SiteAdminLogin onAuth={() => setAuthenticated(true)} />
+  }
+
+  return <SiteAdminPanel onLogout={() => setAuthenticated(false)} />
+}
+
+// ── Stub sub-pages ────────────────────────────────────────────────────────────
 function StubPage({ title, desc }) {
+  const [authenticated, setAuthenticated] = useState(null)
+
+  useEffect(() => {
+    siteApi('/me')
+      .then(data => setAuthenticated(data.authenticated))
+      .catch(() => setAuthenticated(false))
+  }, [])
+
+  if (authenticated === null) return null
+  if (!authenticated) return <SiteAdminLogin onAuth={() => setAuthenticated(true)} />
+
   return (
     <div className={styles.page}>
-      <TopBar />
+      <TopBar onLogout={() => setAuthenticated(false)} />
       <main className={styles.main}>
         <div className={styles.stubWrap}>
           <Link to="/admin" className={styles.stubBack}>← Site Admin</Link>

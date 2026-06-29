@@ -248,7 +248,7 @@ function ConnectionsSection({ isAdmin }) {
       <div className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>Connections</h2>
         {isAdmin && (
-          <Link to="/admin/integrations" className={styles.editLink}>Manage →</Link>
+          <Link to="/studio/integrations" className={styles.editLink}>Manage →</Link>
         )}
       </div>
       <div className={styles.connectionRow}>
@@ -260,7 +260,7 @@ function ConnectionsSection({ isAdmin }) {
           </span>
         </div>
         {!pcoConnected && pcoConnected !== null && isAdmin && (
-          <Link to="/admin/integrations" className={styles.connAction}>Connect →</Link>
+          <Link to="/studio/integrations" className={styles.connAction}>Connect →</Link>
         )}
       </div>
     </div>

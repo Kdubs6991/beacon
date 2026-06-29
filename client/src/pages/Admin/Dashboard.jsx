@@ -197,7 +197,7 @@ function ScreensCard({ screens }) {
     <DashCard
       icon={<LiveScreenIcon active={false} />}
       title="Screens"
-      to="/admin/screens"
+      to="/studio/screens"
     >
       {screens.length === 0 ? (
         <p className={styles.emptyMsg}>No screens configured yet. Head to the Screens page to add one.</p>
@@ -245,7 +245,7 @@ function ServicesCard({ screens, pcoConnected }) {
   const manualServices = screens.filter(s => s.musicians?.length > 0)
 
   return (
-    <DashCard icon={<CalendarIcon />} title="Services" to="/admin/screens">
+    <DashCard icon={<CalendarIcon />} title="Services" to="/studio/screens">
       <TabRow tabs={[['manual', 'Manual'], ['pco', 'PCO']]} active={tab} onChange={setTab} />
 
       {tab === 'manual' && (
@@ -292,7 +292,7 @@ function PeopleCard({ people, pcoConnected }) {
   const manualPreview = preview.filter(p => !p.pco_person_id)
 
   return (
-    <DashCard icon={<PeopleIcon />} title="People" to="/admin/people">
+    <DashCard icon={<PeopleIcon />} title="People" to="/studio/people">
       <TabRow tabs={[['manual', 'Manual'], ['pco', 'PCO']]} active={tab} onChange={setTab} />
 
       {tab === 'manual' && (
@@ -370,7 +370,7 @@ function LabelsCard({ labels }) {
   const { count = 0, micCount = 0, iemCount = 0, positionCount = 0, items = [], total = 0 } = labels ?? {}
 
   return (
-    <DashCard icon={<LabelIcon />} title="Labels" to="/admin/labels">
+    <DashCard icon={<LabelIcon />} title="Labels" to="/studio/labels">
       {total === 0 ? (
         <p className={styles.emptyMsg}>No labels yet. Add your mic and IEM inventory in the Labels page.</p>
       ) : (
@@ -405,7 +405,7 @@ function LabelsCard({ labels }) {
 function SchedulesCard({ schedules }) {
   const enabledCount = schedules.filter(s => s.enabled).length
   return (
-    <DashCard icon={<ClockIcon />} title="Schedules" to="/admin/schedules">
+    <DashCard icon={<ClockIcon />} title="Schedules" to="/studio/schedules">
       {schedules.length === 0 ? (
         <p className={styles.emptyMsg}>No schedules configured yet. Go to Services to set up auto-sync.</p>
       ) : (
@@ -444,7 +444,7 @@ function SchedulesCard({ schedules }) {
 function TemplatesCard({ templates }) {
   const totalScreens = templates.reduce((n, t) => n + (t.screen_count ?? 0), 0)
   return (
-    <DashCard icon={<LayersIcon />} title="Templates" to="/admin/templates">
+    <DashCard icon={<LayersIcon />} title="Templates" to="/studio/templates">
       {templates.length === 0 ? (
         <p className={styles.emptyMsg}>No templates yet. Create one to customize your display layout.</p>
       ) : (
@@ -505,7 +505,7 @@ function QuickActionsCard({ serviceTypes, screens }) {
   }
 
   return (
-    <DashCard icon={<ZapIcon />} title="Quick Push" to="/admin/schedules">
+    <DashCard icon={<ZapIcon />} title="Quick Push" to="/studio/schedules">
       {serviceTypes.length === 0 ? (
         <p className={styles.emptyMsg}>No service types configured. Add one in Services.</p>
       ) : (
@@ -548,7 +548,7 @@ function ActivityCard({ screens }) {
     .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
 
   return (
-    <DashCard icon={<ActivityIcon />} title="Recent Activity" to="/admin/screens">
+    <DashCard icon={<ActivityIcon />} title="Recent Activity" to="/studio/screens">
       {withActivity.length === 0 ? (
         <p className={styles.emptyMsg}>No recent activity. Push a service to a screen to see updates here.</p>
       ) : (
@@ -631,7 +631,7 @@ export default function Dashboard() {
         </div>
         <div className={styles.topBarRight}>
           {pcoConnected !== null && (
-            <Link to="/admin/integrations" className={`${styles.pcoStatusPill} ${pcoConnected ? styles.pcoStatusOn : styles.pcoStatusOff}`}>
+            <Link to="/studio/integrations" className={`${styles.pcoStatusPill} ${pcoConnected ? styles.pcoStatusOn : styles.pcoStatusOff}`}>
               <span className={`${styles.pcoStatusDot} ${pcoConnected ? styles.pcoStatusDotOn : ''}`} />
               PCO {pcoConnected ? 'connected' : 'not connected'}
             </Link>
@@ -651,7 +651,7 @@ export default function Dashboard() {
 
       {!loading && !error && (
         <div className={styles.bottomBar}>
-          <Link to="/admin/profile#dashboard" className={styles.customizeLink}>Customize dashboard →</Link>
+          <Link to="/studio/profile#dashboard" className={styles.customizeLink}>Customize dashboard →</Link>
         </div>
       )}
     </AdminLayout>

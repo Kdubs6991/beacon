@@ -171,9 +171,6 @@ export default function Docs() {
             ? <Link to="/studio" className={styles.backLink}>Studio</Link>
             : <Link to="/login" className={styles.backLink}>Sign in</Link>
           }
-          {user?.role === 'admin' && (
-            <Link to="/admin" className={styles.backLink}>Edit site</Link>
-          )}
           <Link to="/display" className={styles.backLink}>Display login</Link>
         </div>
       </header>
