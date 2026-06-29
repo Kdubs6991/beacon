@@ -234,7 +234,7 @@ export default function Docs() {
           {/* ── Overview ── */}
           <Section id="overview" title="Overview">
             <p>Beacon is a self-hosted app that shows a TV/kiosk-friendly card grid of your worship team's microphone and IEM assignments for a service. Think of it as a digital version of the laminated assignment sheet your sound engineer normally posts backstage.</p>
-            <p>You define your team roster directly in Beacon using <strong>Manual service types</strong> — add your people, assign positions, write automation rules, and let a schedule push assignments to your screens automatically. Planning Center Online integration is planned for a future release.</p>
+            <p>You define your team roster directly in Beacon using <strong>Manual service types</strong>, or connect to <strong>Planning Center Online</strong> (PCO) to pull team assignments directly from your existing plans. Either way, automation rules assign mic and IEM labels automatically, and a schedule pushes everything to your screens before you even arrive.</p>
             <p>The server runs anywhere Node.js runs — a laptop, a Raspberry Pi, a VPS. Any browser on any device can reach the display screens. For public access without port forwarding, run it behind a <strong>Cloudflare Tunnel</strong>.</p>
           </Section>
 
@@ -256,9 +256,9 @@ export default function Docs() {
             <p>The recommended setup order:</p>
             <ol className={styles.ol}>
               <li><strong>Create a Location</strong> — a campus or venue. Everything else belongs to a location.</li>
-              <li><strong>Add Service Types</strong> on the Services page — use Manual mode to define a fixed team roster directly in Beacon.</li>
+              <li><strong>Add Service Types</strong> on the Services page — choose <strong>Manual mode</strong> to define a fixed team roster in Beacon, or <strong>PCO mode</strong> to pull your team from Planning Center Online.</li>
               <li><strong>Create Screens</strong> — each screen gets a permanent URL you point a TV or kiosk browser at.</li>
-              <li><strong>Add People</strong> — your worship team members, added manually.</li>
+              <li><strong>Add People</strong> — add team members manually, or use <strong>Import from PCO</strong> on the People page to pull them in from Planning Center.</li>
               <li><strong>Define Labels</strong> — your mic and IEM inventory (e.g. "Vox 1", "Keys DI", "IEM 3"). Also define <strong>Positions</strong> (e.g. Singer, Worship Leader) on the Labels page — these are the role names your automation rules and Manual teams use.</li>
               <li><strong>Set up Automation Rules</strong> — write rules that tell Beacon how to assign mic and IEM labels based on a person's name or position.</li>
               <li><strong>Set a Schedule</strong> — on the Services page, add a schedule to each service type. Pick a day and time and Beacon will auto-push assignments to your screens before you even arrive.</li>
@@ -283,7 +283,7 @@ export default function Docs() {
               <p>Shows what's currently pushed to your display screens, with a toggle between two views:</p>
               <ul className={styles.ul}>
                 <li><strong>Manual</strong> — lists every screen that currently has musicians assigned to it. Shows the service name, date, screen name, and musician count. This is the live state of your displays right now.</li>
-                <li><strong>PCO</strong> — upcoming PCO-connected service functionality. If your PCO account isn't connected yet, this tab shows a "not connected" notice. See <Link to="/docs#pco-integration">Planning Center OAuth</Link> for connection instructions.</li>
+                <li><strong>PCO</strong> — shows screens that currently have PCO-sourced assignments, along with the plan name and team count. If your PCO account isn't connected yet, this tab shows a "not connected" notice. See <Link to="/docs#pco-integration">Planning Center OAuth</Link> for connection instructions.</li>
               </ul>
             </SubSection>
 
@@ -405,7 +405,7 @@ export default function Docs() {
                 Restoring is <strong>destructive and immediate</strong> — it permanently replaces all current org data. Download a fresh backup of your current state first if you may want to go back.
               </Callout>
               <Callout type="info">
-                Photo files are not included in the backup — only the file paths are stored. Photos uploaded to the same server will still work after a restore. On a new server you'll need to re-upload photos.
+                Photo files are not included in the backup — only the URLs are stored. On the hosted version, photos live on Cloudinary and their URLs remain valid after a restore with no extra steps. On a self-hosted install using local disk storage, photos are stored on the server and will still work after a restore to the same server, but will need to be re-uploaded if you move to a new machine.
               </Callout>
             </SubSection>
           </Section>
@@ -473,18 +473,18 @@ export default function Docs() {
             </SubSection>
 
             <SubSection id="service-schedules" title="Auto-Refresh Schedules">
-              <p>Each service type can have one <strong>schedule</strong>. The schedule fires a cron job at a day and time you choose and pushes the team assignments to your selected screens automatically.</p>
-              <p><strong>How to set one up:</strong> Click <em>Add Schedule</em> on a service type card, pick a day of the week and time, and choose which screens should receive the update.</p>
+              <p>Each service type can have one or more <strong>schedules</strong>. Each schedule fires a cron job at a day and time you choose and pushes the team assignments to your selected screens automatically.</p>
+              <p><strong>How to set one up:</strong> Click <em>Add Schedule</em> on a service type card, pick a day of the week and time, choose which screens should receive the update, and optionally override the timezone for that schedule.</p>
               <p>When the schedule fires:</p>
               <ol className={styles.ol}>
-                <li>Beacon loads the team from your manual roster.</li>
+                <li>For <strong>Manual</strong> service types — Beacon loads the team from your saved roster. For <strong>PCO</strong> service types — Beacon fetches today's confirmed team from Planning Center.</li>
                 <li>Runs automation rules to assign mic and IEM labels.</li>
-                <li>Pushes assignments to all selected screens that are currently active (heartbeat within 90 seconds).</li>
+                <li>Pushes assignments to all selected screens that are currently live (heartbeat within 90 seconds).</li>
               </ol>
               <p><strong>Example:</strong> Saturday at 6:00 PM — loads Sunday's team so displays are ready before anyone arrives.</p>
               <p>You can trigger a schedule manually any time by clicking <strong>Run now</strong> — useful for testing or mid-week changes.</p>
               <Callout type="info">
-                Schedules only push to <strong>active screens</strong> — screens that are currently open in a browser. If a screen isn't active when the schedule fires, it will pick up the new assignments next time it polls (every 30 seconds).
+                Schedules only push to <strong>live screens</strong> — screens that are currently open in a browser. If a screen isn't live when the schedule fires, it will pick up the new assignments next time it polls (every 30 seconds).
               </Callout>
             </SubSection>
           </Section>
@@ -548,7 +548,7 @@ export default function Docs() {
           {/* ── Screens ── */}
           <Section id="screens" title="Screens">
             <p>A <strong>screen</strong> represents a single display — a TV backstage, a monitor at the front of house, a tablet at the door. Each screen gets a permanent URL that you load in a browser (or kiosk-mode browser) and never have to change.</p>
-            <p>Use the <strong>filter bar</strong> at the top of the Screens page to narrow the list by location, screen type (independent vs. mirror), or <strong>status</strong>. A screen is <strong>Active</strong> when it is currently open in a browser and has sent a heartbeat within the last 90 seconds — the same signal shown as a pulsing dot on the <Link to="/docs#dashboard">Dashboard</Link>.</p>
+            <p>Use the <strong>filter bar</strong> at the top of the Screens page to narrow the list by location, screen type (independent vs. mirror), or <strong>status</strong>. A screen shows <strong>Live</strong> (with a pulsing green dot) when it is currently open in a browser and has sent a heartbeat within the last 90 seconds — the same signal shown on the <Link to="/docs#dashboard">Dashboard</Link>. Each card also shows a preview of what's currently assigned to that screen.</p>
 
             <SubSection id="display-url" title="Display URL">
               <p>Every screen gets a unique URL like:</p>
@@ -594,13 +594,13 @@ export default function Docs() {
 
           {/* ── People ── */}
           <Section id="people" title="People">
-            <p>The People page is where your worship team roster lives. Add team members manually with their name, photo, position, and category. Each person can have a custom photo uploaded directly in Beacon.</p>
+            <p>The People page is where your worship team roster lives. Add team members manually or import them from Planning Center Online. Each person can have a custom photo, position, and one or more categories.</p>
 
             <SubSection id="people-views" title="Grid &amp; List Views">
               <p>Use the <strong>view toggle</strong> (top-right of the toolbar) to switch between:</p>
               <ul className={styles.ul}>
                 <li><strong>Grid view</strong> — card-based layout with a square photo at the top. Click any card to open a detail popup with full info and quick Edit/Delete actions.</li>
-                <li><strong>List view</strong> — compact table rows with name, position, category, and PCO ID. Edit and Delete appear as inline buttons at the end of each row.</li>
+                <li><strong>List view</strong> — compact table rows with name, position, category, and PCO ID. Edit and Delete appear as inline buttons at the end of each row. Use the <strong>checkboxes</strong> on the left to select multiple people — a bulk action bar appears at the bottom letting you delete selected people or update their category and position in one step.</li>
               </ul>
               <p>Your preferred view is saved in the browser and restored on your next visit.</p>
             </SubSection>
