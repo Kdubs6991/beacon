@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteAdminLogin from './SiteAdminLogin'
+import _SiteAdminDocs from './SiteAdminDocs'
 import styles from './SiteAdmin.module.css'
 
 async function siteApi(path, opts = {}) {
@@ -151,7 +152,7 @@ function StubPage({ title, desc }) {
 }
 
 export function SiteAdminDocs() {
-  return <StubPage title="Documentation Editor" desc="Edit the documentation sections, add new content, and manage the sidebar navigation." />
+  return <_SiteAdminDocs />
 }
 
 export function SiteAdminLanding() {

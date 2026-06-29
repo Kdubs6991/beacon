@@ -260,6 +260,22 @@ const db = {
         sort_order INTEGER DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS site_pages (
+        id         SERIAL PRIMARY KEY,
+        slug       TEXT UNIQUE NOT NULL,
+        title      TEXT NOT NULL,
+        sort_order INTEGER DEFAULT 0,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS site_blocks (
+        id         SERIAL PRIMARY KEY,
+        page_id    INTEGER REFERENCES site_pages(id) ON DELETE CASCADE,
+        sort_order REAL NOT NULL DEFAULT 0,
+        type       TEXT NOT NULL,
+        data       JSONB NOT NULL DEFAULT '{}'
+      );
     `)
 
     // Indexes — safe to run on existing databases, IF NOT EXISTS is a no-op when already present
@@ -335,6 +351,8 @@ const db = {
         )
       }
     }
+
+    await seedDocsIfEmpty(pool)
   },
 }
 
@@ -342,6 +360,22 @@ const ACCESS_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 function generateAccessCode() {
   const bytes = randomBytes(6)
   return Array.from(bytes).map(b => ACCESS_CODE_CHARS[b % ACCESS_CODE_CHARS.length]).join('')
+}
+
+async function seedDocsIfEmpty(pool) {
+  const existing = await pool.query("SELECT id FROM site_pages WHERE slug = 'docs'")
+  if (existing.rows.length > 0) return
+  const { DOCS_SEED_BLOCKS } = require('./data/docsSeed')
+  const page = await pool.query("INSERT INTO site_pages (slug, title) VALUES ('docs', 'Documentation') RETURNING id")
+  const pageId = page.rows[0].id
+  for (let i = 0; i < DOCS_SEED_BLOCKS.length; i++) {
+    const block = DOCS_SEED_BLOCKS[i]
+    await pool.query(
+      'INSERT INTO site_blocks (page_id, sort_order, type, data) VALUES ($1, $2, $3, $4)',
+      [pageId, i, block.type, JSON.stringify(block.data)]
+    )
+  }
+  console.log(`[beacon] Seeded docs page with ${DOCS_SEED_BLOCKS.length} blocks`)
 }
 
 module.exports = db
