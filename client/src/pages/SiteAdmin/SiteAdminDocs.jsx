@@ -311,15 +311,11 @@ export default function SiteAdminDocs() {
   const [addMenuIndex, setAddMenuIndex] = useState(null)
   const [previewMode, setPreviewMode] = useState(false)
   const [focusedBlock, setFocusedBlock] = useState(null)
-  const [showShortcuts, setShowShortcuts] = useState(true)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
 
   const blockEls = useRef([])
   const dragRef = useRef(null)
   const blurTimer = useRef(null)
-
-  const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform)
-  const mod = isMac ? '⌘' : 'Ctrl'
 
   // Auth
   useEffect(() => {
@@ -467,27 +463,6 @@ export default function SiteAdminDocs() {
         </div>
       </header>
 
-      {/* ── Keyboard shortcuts bar ── */}
-      {showShortcuts && !previewMode && (
-        <div className={styles.shortcutsBar}>
-          <span className={styles.shortcutsLabel}>Shortcuts</span>
-          {[
-            [`${mod}+S`, 'Save'],
-            [`${mod}+B`, 'Bold'],
-            [`${mod}+I`, 'Italic'],
-            [`${mod}+U`, 'Underline'],
-            [`${mod}+K`, 'Link'],
-            [`${mod}+Z`, 'Undo'],
-          ].map(([key, label]) => (
-            <span key={key} className={styles.shortcut}>
-              <kbd className={styles.shortcutKey}>{key}</kbd>
-              <span className={styles.shortcutLabel}>{label}</span>
-            </span>
-          ))}
-          <button className={styles.shortcutDismiss} onClick={() => setShowShortcuts(false)} title="Dismiss">✕</button>
-        </div>
-      )}
-
       {/* ── Editor layout: blocks + outline panel ── */}
       <div className={styles.editorLayout}>
         <main className={styles.bodyArea}>
@@ -594,7 +569,7 @@ export default function SiteAdminDocs() {
         </main>
 
         {/* ── Outline panel ── */}
-        {!previewMode && outline.length > 0 && (
+        {outline.length > 0 && (
           <aside className={styles.outlinePanel}>
             <div className={styles.outlineTitle}>Outline</div>
             {outline.map(({ block, index }) => (
