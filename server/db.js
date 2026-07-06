@@ -364,11 +364,25 @@ function generateAccessCode() {
 }
 
 async function seedLandingIfEmpty(pool) {
-  const existing = await pool.query("SELECT id FROM site_pages WHERE slug = 'landing'")
-  if (existing.rows.length > 0) return
   const { LANDING_SEED_SECTIONS } = require('./data/landingSeed')
-  const page = await pool.query("INSERT INTO site_pages (slug, title) VALUES ('landing', 'Landing Page') RETURNING id")
-  const pageId = page.rows[0].id
+  let pageId
+
+  const existing = await pool.query("SELECT id FROM site_pages WHERE slug = 'landing'")
+  if (existing.rows.length > 0) {
+    pageId = existing.rows[0].id
+    // If any block uses the old specific-type format (not 'section'), re-seed with v2 format
+    const oldFormat = await pool.query(
+      "SELECT 1 FROM site_blocks WHERE page_id = $1 AND type != 'section' LIMIT 1",
+      [pageId]
+    )
+    if (oldFormat.rows.length === 0) return // Already v2 format or empty
+    await pool.query('DELETE FROM site_blocks WHERE page_id = $1', [pageId])
+    console.log('[beacon] Migrating landing page to element-based format (v2)')
+  } else {
+    const newPage = await pool.query("INSERT INTO site_pages (slug, title) VALUES ('landing', 'Landing Page') RETURNING id")
+    pageId = newPage.rows[0].id
+  }
+
   for (let i = 0; i < LANDING_SEED_SECTIONS.length; i++) {
     const s = LANDING_SEED_SECTIONS[i]
     await pool.query(
