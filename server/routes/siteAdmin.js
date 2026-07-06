@@ -1,6 +1,10 @@
 const express = require('express')
 const router = express.Router()
+const multer = require('multer')
 const db = require('../db')
+const { USE_CLOUDINARY, uploadToCloudinary } = require('../storage')
+
+const siteUpload = multer({ storage: multer.memoryStorage() })
 
 const SITE_ADMIN_PASSWORD = process.env.SITE_ADMIN_PASSWORD
 
@@ -31,6 +35,19 @@ router.post('/logout', (req, res) => {
 // GET /api/site-admin/me
 router.get('/me', (req, res) => {
   res.json({ authenticated: !!req.session.siteAdmin })
+})
+
+// POST /api/site-admin/upload — image upload to Cloudinary
+router.post('/upload', requireSiteAdmin, siteUpload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file provided' })
+  if (!USE_CLOUDINARY) return res.status(503).json({ error: 'Cloudinary not configured' })
+  try {
+    const result = await uploadToCloudinary(req.file.buffer, { folder: 'beacon/site/landing', resource_type: 'image' })
+    res.json({ url: result.secure_url })
+  } catch (err) {
+    console.error('[site-admin] upload error:', err)
+    res.status(500).json({ error: 'Upload failed' })
+  }
 })
 
 // GET /api/site-admin/pages/:slug/public — no auth, public read

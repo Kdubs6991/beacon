@@ -2,28 +2,53 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import styles from './Landing.module.css'
 
-function FeatureIcon({ type, color }) {
-  const s = { width: 34, height: 34, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' }
-  if (type === 'monitor') return (
-    <svg {...s}><rect x="2" y="3" rx="2" width="20" height="14" /><polyline points="8 21 12 17 16 21" /></svg>
-  )
-  if (type === 'bolt') return (
-    <svg {...s}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-  )
-  if (type === 'sliders') return (
-    <svg {...s}><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></svg>
-  )
-  if (type === 'calendar') return (
-    <svg {...s}><rect x="3" y="4" rx="2" width="18" height="18" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-  )
-  if (type === 'users') return (
-    <svg {...s}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-  )
-  if (type === 'server') return (
-    <svg {...s}><rect x="2" y="2" rx="2" width="20" height="8" /><rect x="2" y="14" rx="2" width="20" height="8" /><line x1="6" y1="6" x2="6.01" y2="6" /><line x1="6" y1="18" x2="6.01" y2="18" /></svg>
-  )
-  return null
+// ── Static mock display (hero visual) ────────────────────────────────────────
+
+const MOCK_MUSICIANS = [
+  { name: 'Sarah M.', mic: 'Vox 1',   iem: 'IEM 2' },
+  { name: 'James K.', mic: 'Vox 2',   iem: 'IEM 1' },
+  { name: 'Drew A.',  mic: 'Keys DI', iem: 'IEM 4' },
+  { name: 'Lily R.',  mic: 'Vox 3',   iem: 'IEM 3' },
+]
+
+function formatTime(d) {
+  let h = d.getHours(); const m = d.getMinutes().toString().padStart(2, '0')
+  const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${m} ${ampm}`
 }
+
+function MockDisplay() {
+  const [time, setTime] = useState(() => formatTime(new Date()))
+  useEffect(() => {
+    const t = setInterval(() => setTime(formatTime(new Date())), 1000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div className={styles.heroVisual}>
+      <div className={styles.mockDisplay}>
+        <div className={styles.mockHeader}>
+          <span className={styles.mockBrand}>Beacon</span>
+          <span className={styles.mockEvent}>Sunday Service</span>
+          <span className={styles.mockClock}>{time}</span>
+        </div>
+        <div className={styles.mockGrid}>
+          {MOCK_MUSICIANS.map(p => (
+            <div key={p.name} className={styles.mockCard}>
+              <div className={styles.mockPhoto}><span className={styles.mockInitial}>{p.name[0]}</span></div>
+              <div className={styles.mockName}>{p.name}</div>
+              <div className={styles.mockLabels}>
+                <span className={styles.mockMic}>{p.mic}</span>
+                <span className={styles.mockIem}>{p.iem}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className={styles.mockGlow} />
+    </div>
+  )
+}
+
+// ── Social icons ──────────────────────────────────────────────────────────────
 
 function SocialIcon({ type }) {
   const s = { width: 18, height: 18, 'aria-hidden': true }
@@ -39,93 +64,281 @@ function SocialIcon({ type }) {
   )
   if (type === 'email') return (
     <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" rx="2" width="20" height="16" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      <rect x="2" y="4" rx="2" width="20" height="16" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
   )
-  return null
+  return <span>{type}</span>
 }
 
-function formatTime(d) {
-  let h = d.getHours()
-  const m = d.getMinutes().toString().padStart(2, '0')
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  h = h % 12 || 12
-  return `${h}:${m} ${ampm}`
+// ── Section renderers ─────────────────────────────────────────────────────────
+
+function nl2br(text) {
+  if (!text) return ''
+  return (text + '').split('\n\n').map((para, i) =>
+    `<p>${para.replace(/\n/g, '<br>')}</p>`
+  ).join('')
 }
 
-const MOCK_MUSICIANS = [
-  { name: 'Sarah M.', mic: 'Vox 1',   iem: 'IEM 2', photo: '/mock-1.jpg' },
-  { name: 'James K.', mic: 'Vox 2',   iem: 'IEM 1', photo: '/mock-2.jpg' },
-  { name: 'Drew A.',  mic: 'Keys DI', iem: 'IEM 4', photo: '/mock-3.jpg' },
-  { name: 'Lily R.',  mic: 'Vox 3',   iem: 'IEM 3', photo: '/mock-4.jpg' },
-]
+function renderHero(section, signInHref, signInLabel) {
+  const d = section.data || {}
+  const align = d.align || 'left'
+  const primaryHref = d.primaryBtn?.href === '/org' ? signInHref : (d.primaryBtn?.href || signInHref)
+  const primaryLabel = d.primaryBtn?.href === '/org' ? signInLabel : (d.primaryBtn?.label || signInLabel)
+  return (
+    <section key={section._id} className={`${styles.hero}${align === 'center' ? ' ' + styles.heroCenter : ''}`}>
+      <div className={styles.heroText}>
+        {d.badge && <div className={styles.heroBadge}>{d.badge}</div>}
+        <h1 className={styles.heroHeadline}>
+          {(d.headline || '').split('\n').map((line, i, arr) => (
+            <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+          ))}
+        </h1>
+        {d.subtext && <p className={styles.heroDesc}>{d.subtext}</p>}
+        <div className={styles.heroCtas}>
+          {d.primaryBtn?.label && (
+            <Link to={primaryHref} className={styles.ctaPrimary}>{primaryLabel} →</Link>
+          )}
+          {d.secondaryBtn?.label && (
+            <Link to={d.secondaryBtn.href || '/docs'} className={styles.ctaSecondary}>{d.secondaryBtn.label}</Link>
+          )}
+        </div>
+      </div>
+      {d.showMockDisplay && <MockDisplay />}
+    </section>
+  )
+}
 
-const FEATURES = [
-  {
-    icon: 'monitor',
-    gradient: 'rgba(59,130,246,0.18)',
-    iconBg: 'rgba(59,130,246,0.16)',
-    iconColor: '#60a5fa',
-    title: 'Any screen, any device',
-    desc: 'Each display is a permanent browser URL. Point a TV, tablet, or kiosk at it and it auto-refreshes every 30 seconds — no app installs, no logins on the display.',
-  },
-  {
-    icon: 'bolt',
-    gradient: 'rgba(168,85,247,0.16)',
-    iconBg: 'rgba(168,85,247,0.15)',
-    iconColor: '#c084fc',
-    title: 'Smart automation',
-    desc: 'Write rules once. Beacon auto-assigns mic and IEM labels based on each person\'s name or position — no manual work each service.',
-  },
-  {
-    icon: 'sliders',
-    gradient: 'rgba(251,146,60,0.16)',
-    iconBg: 'rgba(251,146,60,0.14)',
-    iconColor: '#fb923c',
-    title: 'Templates & themes',
-    desc: 'Custom grid layouts with per-slot modes, label pins, and 7 colour themes. Full control over what every screen shows and how it looks.',
-  },
-  {
-    icon: 'calendar',
-    gradient: 'rgba(52,211,153,0.14)',
-    iconBg: 'rgba(52,211,153,0.13)',
-    iconColor: '#34d399',
-    title: 'Scheduled push',
-    desc: 'Set a schedule and displays update themselves before you arrive. Saturday at 6 PM, Sunday morning — it just runs.',
-  },
-  {
-    icon: 'users',
-    gradient: 'rgba(251,191,36,0.14)',
-    iconBg: 'rgba(251,191,36,0.13)',
-    iconColor: '#fbbf24',
-    title: 'Manual service teams',
-    desc: 'Build your roster in Beacon and assign each person a position. No external integrations needed — everything runs from within the app.',
-  },
-  {
-    icon: 'server',
-    gradient: 'rgba(148,163,184,0.12)',
-    iconBg: 'rgba(148,163,184,0.12)',
-    iconColor: '#94a3b8',
-    title: 'Self-hosted',
-    desc: 'Your data stays on your server. Runs on any machine with Node.js. No subscription fees, no vendor lock-in.',
-  },
-]
+function renderFeatureGrid(section) {
+  const d = section.data || {}
+  const cols = d.columns || 3
+  const cells = d.cells || []
+  return (
+    <section key={section._id} className={styles.features}>
+      {(d.heading || d.subtext) && (
+        <div className={styles.container}>
+          {d.heading && <h2 className={styles.sectionTitle}>{d.heading}</h2>}
+          {d.subtext && <p className={styles.sectionSub}>{d.subtext}</p>}
+        </div>
+      )}
+      <div className={styles.container}>
+        <div className={styles.featureGrid} style={{ '--grid-cols': cols }}>
+          {cells.map((cell, i) => {
+            const color = cell.accentColor || '#60a5fa'
+            const gradient = color + '22'
+            return (
+              <div key={i} className={styles.featureCard} style={{ background: `linear-gradient(135deg, ${gradient} 0%, transparent 70%)` }}>
+                <div className={styles.featureCardAccent} style={{ background: color }} />
+                <h3 className={styles.featureCardTitle} style={{ color }}>{cell.heading}</h3>
+                <p className={styles.featureCardText}>{cell.text}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
 
-const STEPS = [
-  { n: '01', title: 'Set up your team',       desc: 'Add your people, define your mic and IEM inventory, and write automation rules. Do it once, use it every week.' },
-  { n: '02', title: 'Create display screens', desc: 'Each screen gets a permanent URL. Point your TVs at it and assign a template to control the layout and content.' },
-  { n: '03', title: 'Set a schedule',         desc: 'Pick a day and time. Beacon pushes assignments to your screens automatically — or hit Push any time for instant updates.' },
-]
+function renderSteps(section) {
+  const d = section.data || {}
+  const steps = d.steps || []
+  return (
+    <section key={section._id} className={styles.howItWorks}>
+      <div className={styles.container}>
+        {d.heading && <h2 className={styles.sectionTitle}>{d.heading}</h2>}
+        {d.subtext && <p className={styles.sectionSub}>{d.subtext}</p>}
+        <div className={styles.steps}>
+          {steps.map((step, i) => (
+            <div key={i} className={`${styles.step}${i === 0 ? ' ' + styles.stepFirst : ''}`}>
+              <div className={styles.stepNum}>{step.number}</div>
+              <h3 className={styles.stepTitle}>{step.title}</h3>
+              <p className={styles.stepDesc}>{step.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function renderContentRow(section) {
+  const d = section.data || {}
+  const imgLeft = (d.imagePosition || 'left') === 'left'
+  const bodyHtml = nl2br(d.text)
+  return (
+    <section key={section._id} className={styles.localSection} style={d.bgColor ? { background: d.bgColor } : {}}>
+      <div className={styles.container}>
+        <div className={`${styles.contentRowCard} ${imgLeft ? '' : styles.contentRowReverse}`}>
+          {d.imageUrl && (
+            <div className={styles.contentRowImg}>
+              <img src={d.imageUrl} alt={d.imageAlt || ''} />
+            </div>
+          )}
+          <div className={styles.contentRowBody}>
+            {d.heading && <h2 className={styles.localTitle}>{d.heading}</h2>}
+            {bodyHtml && <div className={styles.localDesc} dangerouslySetInnerHTML={{ __html: bodyHtml }} />}
+            {d.btn?.label && (
+              <a href={d.btn.href} target={d.btn.href?.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className={styles.localRepoLink}>
+                {d.btn.label} →
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function renderCtaBanner(section) {
+  const d = section.data || {}
+  const align = d.align || 'center'
+  return (
+    <section key={section._id} className={`${styles.ctaBanner}${align === 'left' ? ' ' + styles.ctaBannerLeft : ''}`}
+      style={d.bgColor ? { background: d.bgColor } : {}}>
+      <div className={styles.container}>
+        {d.heading && <h2 className={styles.ctaBannerTitle}>{d.heading}</h2>}
+        {d.subtext && <p className={styles.ctaBannerSub}>{d.subtext}</p>}
+        <div className={styles.heroCtas}>
+          {d.primaryBtn?.label && <a href={d.primaryBtn.href} className={styles.ctaPrimary}>{d.primaryBtn.label} →</a>}
+          {d.secondaryBtn?.label && <a href={d.secondaryBtn.href} className={styles.ctaSecondary}>{d.secondaryBtn.label}</a>}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function renderCustomGrid(section) {
+  const d = section.data || {}
+  const cols = d.columns || 3
+  const cells = d.cells || []
+  return (
+    <section key={section._id} className={styles.customGridSection}>
+      <div className={styles.container}>
+        <div className={styles.customGrid} style={{ '--grid-cols': cols }}>
+          {cells.map((cell, i) => (
+            <div key={i} className={styles.customGridCell}>
+              {cell.imageUrl && <img src={cell.imageUrl} alt={cell.imageAlt || ''} className={styles.customGridImg} />}
+              {cell.heading && <h3 className={styles.customGridHeading}>{cell.heading}</h3>}
+              {cell.text && <p className={styles.customGridText}>{cell.text}</p>}
+              {cell.btnLabel && (
+                <a href={cell.btnHref || '#'} className={styles.ctaPrimary} style={{ marginTop: 12, display: 'inline-block' }}>{cell.btnLabel}</a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function renderPricing(section, signInHref, signInLabel) {
+  const d = section.data || {}
+  const features = d.features || []
+  const primaryHref = d.primaryBtn?.href === '/org' ? signInHref : (d.primaryBtn?.href || signInHref)
+  const primaryLabel = d.primaryBtn?.href === '/org' ? signInLabel : (d.primaryBtn?.label || signInLabel)
+  return (
+    <section key={section._id} className={styles.pricingSection}>
+      <div className={styles.container}>
+        {d.heading && <h2 className={styles.sectionTitle}>{d.heading}</h2>}
+        {d.subtext && <p className={styles.sectionSub}>{d.subtext}</p>}
+        <div className={styles.pricingCard}>
+          <div className={styles.pricingTier}>{d.tier}</div>
+          <div className={styles.pricingAmount}>{d.amount}<span className={styles.pricingPer}> {d.per}</span></div>
+          {d.tagline && <p className={styles.pricingTagline}>{d.tagline}</p>}
+          <ul className={styles.pricingFeatures}>
+            {features.map((f, i) => (
+              <li key={i} className={styles.pricingFeature}><span className={styles.pricingCheck}>✓</span>{f}</li>
+            ))}
+          </ul>
+          {d.primaryBtn?.label && (
+            <Link to={primaryHref} className={styles.ctaPrimary} style={{ display: 'block', textAlign: 'center', marginTop: '24px' }}>
+              {primaryLabel} →
+            </Link>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function renderProfile(section) {
+  const d = section.data || {}
+  const links = d.links || []
+  const supportLinks = d.supportLinks || []
+  return (
+    <section key={section._id} className={styles.devSection} id="developer">
+      <div className={styles.container}>
+        {d.badge && <div className={styles.devBadge}>{d.badge}</div>}
+        {d.heading && <h2 className={styles.devSectionTitle}>{d.heading}</h2>}
+        <div className={styles.devCard}>
+          <div className={styles.devPhotoWrap}>
+            {d.photoFallback && <div className={styles.devPhotoFallback}>{d.photoFallback}</div>}
+            {d.photoUrl && (
+              <img src={d.photoUrl} alt={d.name || ''} className={styles.devPhoto}
+                onError={e => { e.target.style.display = 'none' }} />
+            )}
+          </div>
+          <div className={styles.devInfo}>
+            {d.name && <h3 className={styles.devName}>{d.name}</h3>}
+            {d.meta && (
+              <div className={styles.devMeta}>
+                {d.meta.split('·').map((part, i, arr) => (
+                  <span key={i}>{part.trim()}{i < arr.length - 1 && <span className={styles.devMetaDot}> · </span>}</span>
+                ))}
+              </div>
+            )}
+            {d.bio && <p className={styles.devBio}>{d.bio}</p>}
+            {links.length > 0 && (
+              <div className={styles.devLinks}>
+                {links.map((link, i) => (
+                  <a key={i} href={link.href} target={link.type !== 'email' ? '_blank' : undefined} rel="noopener noreferrer" className={styles.devLink}>
+                    <SocialIcon type={link.type} /> {link.label}
+                  </a>
+                ))}
+              </div>
+            )}
+            {(d.supportText || supportLinks.length > 0) && (
+              <div className={styles.devSupport}>
+                {d.supportText && <p className={styles.devSupportText}>{d.supportText}</p>}
+                {supportLinks.length > 0 && (
+                  <div className={styles.devSupportLinks}>
+                    {supportLinks.map((sl, i) => (
+                      <a key={i} href={sl.href} target="_blank" rel="noopener noreferrer"
+                        className={styles.devSupportLink} style={{ '--support-color': sl.color || '#60a5fa' }}>
+                        {sl.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function renderSection(section, signInHref, signInLabel) {
+  switch (section.type) {
+    case 'hero':         return renderHero(section, signInHref, signInLabel)
+    case 'feature_grid': return renderFeatureGrid(section)
+    case 'steps':        return renderSteps(section)
+    case 'content_row':  return renderContentRow(section)
+    case 'cta_banner':   return renderCtaBanner(section)
+    case 'custom_grid':  return renderCustomGrid(section)
+    case 'pricing':      return renderPricing(section, signInHref, signInLabel)
+    case 'profile':      return renderProfile(section)
+    default:             return null
+  }
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function Landing() {
   const [isAdmin, setIsAdmin] = useState(false)
-  const [time, setTime] = useState(() => formatTime(new Date()))
-
-  useEffect(() => {
-    const tick = setInterval(() => setTime(formatTime(new Date())), 1000)
-    return () => clearInterval(tick)
-  }, [])
+  const [sections, setSections] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -134,13 +347,18 @@ export default function Landing() {
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    fetch('/api/site-admin/pages/landing/public')
+      .then(r => r.json())
+      .then(d => { setSections(d.blocks || []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
   const signInHref  = isAdmin ? '/studio' : '/org'
   const signInLabel = isAdmin ? 'Go to dashboard' : 'Get started'
 
   return (
     <div className={styles.page}>
-
-      {/* ── Nav ── */}
       <header className={styles.nav}>
         <Link to="/" className={styles.navBrand}>Beacon</Link>
         <div className={styles.navLinks}>
@@ -150,202 +368,9 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* ── Hero ── */}
-      <section className={styles.hero}>
-        <div className={styles.heroText}>
-          <div className={styles.heroBadge}>Worship Team Display</div>
-          <h1 className={styles.heroHeadline}>
-            The right mic,<br />on the right screen.
-          </h1>
-          <p className={styles.heroDesc}>
-            Beacon auto-assigns mics and IEMs for your worship team and pushes
-            them to any TV or kiosk in your venue — built manually or pulled
-            from your service schedule automatically.
-          </p>
-          <div className={styles.heroCtas}>
-            <Link to={signInHref} className={styles.ctaPrimary}>{signInLabel} →</Link>
-            <Link to="/docs"      className={styles.ctaSecondary}>Read the docs</Link>
-          </div>
-        </div>
+      {!loading && sections.map(s => ({ ...s, _id: s.id ? String(s.id) : String(Math.random()) }))
+        .map(section => renderSection(section, signInHref, signInLabel))}
 
-        <div className={styles.heroVisual}>
-          <div className={styles.mockDisplay}>
-            <div className={styles.mockHeader}>
-              <span className={styles.mockBrand}>Beacon</span>
-              <span className={styles.mockEvent}>Sunday Service</span>
-              <span className={styles.mockClock}>{time}</span>
-            </div>
-            <div className={styles.mockGrid}>
-              {MOCK_MUSICIANS.map(p => (
-                <div key={p.name} className={styles.mockCard}>
-                  <div className={styles.mockPhoto}>
-                    <span className={styles.mockInitial}>{p.name[0]}</span>
-                    <img src={p.photo} alt="" className={styles.mockPhotoImg} onError={e => { e.target.style.display = 'none' }} />
-                  </div>
-                  <div className={styles.mockName}>{p.name}</div>
-                  <div className={styles.mockLabels}>
-                    <span className={styles.mockMic}>{p.mic}</span>
-                    <span className={styles.mockIem}>{p.iem}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className={styles.mockGlow} />
-        </div>
-      </section>
-
-      {/* ── Features ── */}
-      <section className={styles.features}>
-        <div className={styles.container}>
-          <h2 className={styles.sectionTitle}>Everything your team needs on screen</h2>
-          <p className={styles.sectionSub}>Built specifically for worship teams. No extra apps, no laminated paper lists.</p>
-        </div>
-        {FEATURES.map(f => (
-          <div
-            key={f.title}
-            className={styles.featureStripe}
-            style={{ background: `linear-gradient(to right, ${f.gradient} 0%, transparent 60%)` }}
-          >
-            <div className={styles.featureStripeInner}>
-              <div className={styles.featureIconWrap} style={{ background: f.iconBg }}>
-                <FeatureIcon type={f.icon} color={f.iconColor} />
-              </div>
-              <div className={styles.featureBody}>
-                <h3 className={styles.featureTitle}>{f.title}</h3>
-                <p className={styles.featureDesc}>{f.desc}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* ── How it works ── */}
-      <section className={styles.howItWorks}>
-        <div className={styles.container}>
-          <h2 className={styles.sectionTitle}>Up and running in minutes</h2>
-          <p className={styles.sectionSub}>Three steps and your displays are live.</p>
-          <div className={styles.steps}>
-            {STEPS.map((step, i) => (
-              <div key={step.n} className={`${styles.step}${i === 0 ? ' ' + styles.stepFirst : ''}`}>
-                <div className={styles.stepNum}>{step.n}</div>
-                <h3 className={styles.stepTitle}>{step.title}</h3>
-                <p className={styles.stepDesc}>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Local hosting ── */}
-      <section className={styles.localSection}>
-        <div className={styles.container}>
-          <div className={styles.localCard}>
-            <div className={styles.localIcon}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" rx="2" width="20" height="8" />
-                <rect x="2" y="14" rx="2" width="20" height="8" />
-                <line x1="6" y1="6" x2="6.01" y2="6" />
-                <line x1="6" y1="18" x2="6.01" y2="18" />
-              </svg>
-            </div>
-            <div className={styles.localBody}>
-              <h2 className={styles.localTitle}>Designed for local hosting</h2>
-              <p className={styles.localDesc}>
-                Beacon runs on your own hardware — a laptop, a Raspberry Pi, a VPS, or any machine with Node.js installed.
-                There's no cloud service, no account required, and your data never leaves your network unless you choose to expose it.
-              </p>
-              <p className={styles.localDesc}>
-                Updates are distributed through the GitHub repository. When a new version is available, pull the latest code
-                and restart the server — no auto-updates, no breaking changes pushed without your knowledge.
-                We recommend checking for updates <strong>once a month</strong>, or clicking <strong>Watch → Custom → Releases</strong> on GitHub to get an email whenever a new version is out.
-              </p>
-              <a href="https://github.com/Kdubs6991/beacon" target="_blank" rel="noopener noreferrer" className={styles.localRepoLink}>
-                View repository on GitHub →
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Joke pricing ── */}
-      <section className={styles.pricingSection}>
-        <div className={styles.container}>
-          <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
-          <p className={styles.sectionSub}>We spent a long time on this.</p>
-          <div className={styles.pricingCard}>
-            <div className={styles.pricingTier}>Free</div>
-            <div className={styles.pricingAmount}>$0<span className={styles.pricingPer}> / forever</span></div>
-            <p className={styles.pricingTagline}>No catch. No credit card. No subscription. No upsell email at 3am.</p>
-            <ul className={styles.pricingFeatures}>
-              {['Every feature', 'Unlimited screens', 'Unlimited team members', 'Unlimited automations', 'Hosted on your own hardware', 'You own your data'].map(f => (
-                <li key={f} className={styles.pricingFeature}><span className={styles.pricingCheck}>✓</span>{f}</li>
-              ))}
-            </ul>
-            <Link to={signInHref} className={styles.ctaPrimary} style={{ display: 'block', textAlign: 'center', marginTop: '24px' }}>
-              {signInLabel} →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Developer section ── */}
-      <section className={styles.devSection} id="developer">
-        <div className={styles.container}>
-          <div className={styles.devBadge}>Developer</div>
-          <h2 className={styles.devSectionTitle}>Meet the Developer</h2>
-          <div className={styles.devCard}>
-            <div className={styles.devPhotoWrap}>
-              <div className={styles.devPhotoFallback}>KW</div>
-              <img
-                src="/kaleb.jpg"
-                alt="Kaleb Wrigley"
-                className={styles.devPhoto}
-                onError={e => { e.target.style.display = 'none' }}
-              />
-            </div>
-            <div className={styles.devInfo}>
-              <h3 className={styles.devName}>Kaleb Wrigley</h3>
-              <div className={styles.devMeta}>
-                <span>Software Engineering · Iowa State University</span>
-                <span className={styles.devMetaDot}>·</span>
-                <span>Ames, IA</span>
-              </div>
-              <p className={styles.devBio}>
-                I'm a student at Iowa State University majoring in Software Engineering
-                with a minor in Artificial Intelligence. Beacon is a project to sharpen
-                my development and deployment skills — and to give other churches a free,
-                polished tool to simplify their workflow.
-              </p>
-              <div className={styles.devLinks}>
-                <a href="https://github.com/Kdubs6991" target="_blank" rel="noopener noreferrer" className={styles.devLink}>
-                  <SocialIcon type="github" /> GitHub
-                </a>
-                <a href="https://www.linkedin.com/in/kaloob/" target="_blank" rel="noopener noreferrer" className={styles.devLink}>
-                  <SocialIcon type="linkedin" /> LinkedIn
-                </a>
-                <a href="mailto:kjwrigley08@gmail.com" className={styles.devLink}>
-                  <SocialIcon type="email" /> kjwrigley08@gmail.com
-                </a>
-              </div>
-              <div className={styles.devSupport}>
-                <p className={styles.devSupportText}>
-                  Beacon is completely free to use and always will be. I built it to grow as a developer and to give churches
-                  a tool that actually helps. If you'd like to help cover hosting costs, it's genuinely appreciated — but
-                  there's absolutely no obligation.
-                </p>
-                <div className={styles.devSupportLinks}>
-                  <a href="https://venmo.com/u/kdubs6991"            target="_blank" rel="noopener noreferrer" className={styles.devSupportLink} style={{ '--support-color': '#008CFF' }}>Venmo</a>
-                  <a href="https://www.paypal.com/paypalme/Kdubs6991" target="_blank" rel="noopener noreferrer" className={styles.devSupportLink} style={{ '--support-color': '#009CDE' }}>PayPal</a>
-                  <a href="https://cash.app/$boolak"                  target="_blank" rel="noopener noreferrer" className={styles.devSupportLink} style={{ '--support-color': '#00C244' }}>Cash App</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <Link to="/" className={styles.footerBrand}>Beacon</Link>
@@ -360,7 +385,6 @@ export default function Landing() {
           <Link to="/admin" className={styles.footerMetaLink}>Site admin</Link>
         </div>
       </footer>
-
     </div>
   )
 }

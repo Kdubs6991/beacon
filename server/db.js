@@ -353,6 +353,7 @@ const db = {
     }
 
     await seedDocsIfEmpty(pool)
+    await seedLandingIfEmpty(pool)
   },
 }
 
@@ -360,6 +361,22 @@ const ACCESS_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 function generateAccessCode() {
   const bytes = randomBytes(6)
   return Array.from(bytes).map(b => ACCESS_CODE_CHARS[b % ACCESS_CODE_CHARS.length]).join('')
+}
+
+async function seedLandingIfEmpty(pool) {
+  const existing = await pool.query("SELECT id FROM site_pages WHERE slug = 'landing'")
+  if (existing.rows.length > 0) return
+  const { LANDING_SEED_SECTIONS } = require('./data/landingSeed')
+  const page = await pool.query("INSERT INTO site_pages (slug, title) VALUES ('landing', 'Landing Page') RETURNING id")
+  const pageId = page.rows[0].id
+  for (let i = 0; i < LANDING_SEED_SECTIONS.length; i++) {
+    const s = LANDING_SEED_SECTIONS[i]
+    await pool.query(
+      'INSERT INTO site_blocks (page_id, sort_order, type, data) VALUES ($1, $2, $3, $4)',
+      [pageId, i, s.type, JSON.stringify(s.data)]
+    )
+  }
+  console.log(`[beacon] Seeded landing page with ${LANDING_SEED_SECTIONS.length} sections`)
 }
 
 async function seedDocsIfEmpty(pool) {

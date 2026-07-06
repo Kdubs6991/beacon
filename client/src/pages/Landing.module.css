@@ -817,3 +817,118 @@
   .footer { padding: 20px; }
   .footerInner { flex-direction: column; gap: 16px; align-items: flex-start; }
 }
+
+/* ── Feature grid (new grid-based renderer) ── */
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+.featureCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.featureCardAccent {
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 2px 0 0 2px;
+}
+.featureCardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.featureCardText {
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── Content row (new renderer) ── */
+.contentRowCard {
+  display: flex;
+  gap: 48px;
+  align-items: center;
+}
+.contentRowReverse { flex-direction: row-reverse; }
+.contentRowImg {
+  flex-shrink: 0;
+  width: 42%;
+}
+.contentRowImg img {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.contentRowBody { flex: 1; }
+.contentRowBody .localDesc p { margin: 0 0 12px; }
+.contentRowBody .localDesc p:last-child { margin-bottom: 0; }
+
+/* ── CTA banner (new renderer) ── */
+.ctaBannerLeft { text-align: left !important; }
+.ctaBannerLeft .heroCtas { justify-content: flex-start; }
+.ctaBannerSub {
+  font-size: 1rem;
+  color: var(--text-sec);
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+
+/* ── Custom grid (new renderer) ── */
+.customGridSection { padding: 64px 0; }
+.customGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
+  gap: 20px;
+}
+.customGridCell {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+.customGridImg {
+  width: 100%;
+  border-radius: calc(var(--radius) - 4px);
+  margin-bottom: 16px;
+  max-height: 200px;
+  object-fit: cover;
+}
+.customGridHeading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin: 0 0 8px;
+}
+.customGridText {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  line-height: 1.7;
+  margin: 0;
+  flex: 1;
+}
+
+/* ── Hero center variant ── */
+.heroCenter {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.heroCenter .heroText { max-width: 680px; }
+.heroCenter .heroCtas { justify-content: center; }
+
+@media (max-width: 768px) {
+  .featureGrid { grid-template-columns: 1fr; }
+  .customGrid { grid-template-columns: 1fr; }
+  .contentRowCard { flex-direction: column; }
+  .contentRowImg { width: 100%; }
+}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteAdminLogin from './SiteAdminLogin'
 import _SiteAdminDocs from './SiteAdminDocs'
+import _SiteAdminLanding from './SiteAdminLanding'
 import styles from './SiteAdmin.module.css'
 
 async function siteApi(path, opts = {}) {
@@ -156,7 +157,7 @@ export function SiteAdminDocs() {
 }
 
 export function SiteAdminLanding() {
-  return <StubPage title="Landing Page Editor" desc="Edit the hero text, feature cards, how-it-works steps, and other homepage content." />
+  return <_SiteAdminLanding />
 }
 
 export function SiteAdminPages() {
