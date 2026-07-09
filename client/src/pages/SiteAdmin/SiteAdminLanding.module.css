@@ -74,7 +74,7 @@
   background: var(--bg-card);
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  min-height: 80px;
+  min-height: 48px;
   display: flex;
   align-items: stretch;
   cursor: pointer;
@@ -131,15 +131,25 @@
 .prevText { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .prevText strong { color: var(--text-sec); }
 .prevText a { color: var(--accent); }
-.prevImage { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; display: block; }
-.prevImageEmpty { height: 80px; background: rgba(255,255,255,0.04); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-muted); font-size: 0.72rem; }
+.prevImage { width: 100%; height: auto; max-height: 200px; object-fit: cover; border-radius: 4px; display: block; }
+.prevImageEmpty { min-height: 72px; background: rgba(255,255,255,0.04); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-muted); font-size: 0.72rem; padding: 12px 0; }
 .prevBtnPri { display: inline-flex; padding: 6px 14px; background: var(--accent); border-radius: 6px; font-size: 0.78rem; font-weight: 600; color: #fff; }
 .prevBtnSec { display: inline-flex; padding: 5px 13px; background: none; border: 1px solid var(--accent); border-radius: 6px; font-size: 0.78rem; font-weight: 600; color: var(--accent); }
 .prevBadge { display: inline-flex; padding: 3px 10px; background: color-mix(in srgb, var(--badge-color, #60a5fa) 15%, transparent); border: 1px solid color-mix(in srgb, var(--badge-color, #60a5fa) 35%, transparent); border-radius: 20px; font-size: 0.7rem; font-weight: 700; color: var(--badge-color, #60a5fa); }
 .prevSpacer { width: 100%; background: repeating-linear-gradient(45deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 4px, transparent 4px, transparent 12px); border: 1px dashed var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; }
 .prevSpacer span { font-size: 0.65rem; color: var(--text-muted); }
 .prevDivider { border-top: 1px solid var(--border); margin: 8px 0; }
-.prevMock { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-muted); padding: 8px 0; }
+.prevMockWrap { background: #0c0c14; border-radius: 6px; padding: 8px; width: 100%; }
+.prevMockHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.prevMockBrand { font-size: 0.6rem; font-weight: 800; color: #60a5fa; letter-spacing: -0.01em; }
+.prevMockEvent { font-size: 0.58rem; color: rgba(255,255,255,0.45); }
+.prevMockGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+.prevMockCard { background: rgba(255,255,255,0.05); border-radius: 4px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.prevMockPhoto { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.prevMockInitial { font-size: 0.6rem; font-weight: 700; color: rgba(255,255,255,0.7); }
+.prevMockPhotoImg { width: 100%; height: 100%; object-fit: cover; }
+.prevMockName { font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.85); text-align: center; line-height: 1.2; }
+.prevMockLabels { font-size: 0.52rem; color: rgba(255,255,255,0.4); text-align: center; }
 .prevUnknown { font-size: 0.72rem; color: #f87171; font-family: monospace; }
 
 /* ── Modals ── */
@@ -193,6 +203,45 @@
 .uploadBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .imageThumb { width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 8px; }
 .noSettings { font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+
+/* ── Mock display editor ── */
+.mockPeopleList { display: flex; flex-direction: column; gap: 6px; }
+.mockPersonRow {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px; background: var(--bg-page);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.mockPersonPhoto {
+  width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08);
+  flex-shrink: 0; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.mockPersonPhotoImg { width: 100%; height: 100%; object-fit: cover; }
+.mockPersonInitial { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+.mockPersonPhotoBadge {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; color: #fff;
+  opacity: 0; transition: opacity 0.12s;
+}
+.mockPersonPhoto:hover .mockPersonPhotoBadge { opacity: 1; }
+.mockPersonFields { flex: 1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; min-width: 0; }
+.mockPersonRemove {
+  background: none; border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text-muted); padding: 5px 6px; cursor: pointer;
+  display: flex; align-items: center; flex-shrink: 0;
+  transition: color 0.12s, border-color 0.12s;
+}
+.mockPersonRemove:hover { color: #f87171; border-color: #f87171; }
+.mockAddPersonBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  color: var(--text-muted); font-size: 0.78rem; font-family: inherit;
+  padding: 7px 12px; cursor: pointer; width: 100%;
+  transition: border-color 0.12s, color 0.12s;
+}
+.mockAddPersonBtn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── Responsive ── */
 @media (max-width: 640px) {

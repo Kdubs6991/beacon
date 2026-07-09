@@ -3,6 +3,15 @@ import { Link } from 'react-router-dom'
 import SiteAdminLogin from './SiteAdminLogin'
 import styles from './SiteAdminLanding.module.css'
 
+// ── Shared default people for mock display ────────────────────────────────────
+
+const DEFAULT_MOCK_PEOPLE = [
+  { name: 'Sarah M.', micLabel: 'Vox 1',   iemLabel: 'IEM 2', photoUrl: '' },
+  { name: 'James K.', micLabel: 'Vox 2',   iemLabel: 'IEM 1', photoUrl: '' },
+  { name: 'Drew A.',  micLabel: 'Keys DI', iemLabel: 'IEM 4', photoUrl: '' },
+  { name: 'Lily R.',  micLabel: 'Vox 3',   iemLabel: 'IEM 3', photoUrl: '' },
+]
+
 // ── Element type definitions ──────────────────────────────────────────────────
 
 const EL_TYPES = [
@@ -25,7 +34,7 @@ function newElement(type) {
     badge:        { text: 'Badge', color: '#60a5fa', fullWidth: false },
     spacer:       { height: 40, fullWidth: true },
     divider:      { fullWidth: true },
-    mock_display: { fullWidth: false },
+    mock_display: { fullWidth: false, eventName: 'Sunday Service', people: DEFAULT_MOCK_PEOPLE.map(p => ({ ...p })) },
   }
   return { _id: crypto.randomUUID(), type, data: { ...(defaults[type] ?? {}) } }
 }
@@ -58,7 +67,7 @@ function ElPreview({ el }) {
     case 'image':
       return el.data.url
         ? <img src={el.data.url} alt={el.data.alt} className={styles.prevImage} />
-        : <div className={styles.prevImageEmpty}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>No image</span></div>
+        : <div className={styles.prevImageEmpty}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>No image — click Edit to add one</span></div>
     case 'button':
       return (
         <div className={el.data.variant === 'secondary' ? styles.prevBtnSec : styles.prevBtnPri}>
@@ -79,8 +88,32 @@ function ElPreview({ el }) {
       )
     case 'divider':
       return <div className={styles.prevDivider} />
-    case 'mock_display':
-      return <div className={styles.prevMock}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="2" y="3" rx="2" width="20" height="14"/><polyline points="8 21 12 17 16 21"/></svg> Beacon UI Mockup</div>
+    case 'mock_display': {
+      const mockPeople = el.data.people || DEFAULT_MOCK_PEOPLE
+      const mockEvent = el.data.eventName || 'Sunday Service'
+      return (
+        <div className={styles.prevMockWrap}>
+          <div className={styles.prevMockHeader}>
+            <span className={styles.prevMockBrand}>Beacon</span>
+            <span className={styles.prevMockEvent}>{mockEvent}</span>
+          </div>
+          <div className={styles.prevMockGrid}>
+            {mockPeople.slice(0, 4).map((p, i) => (
+              <div key={i} className={styles.prevMockCard}>
+                <div className={styles.prevMockPhoto}>
+                  {p.photoUrl
+                    ? <img src={p.photoUrl} alt={p.name} className={styles.prevMockPhotoImg} />
+                    : <span className={styles.prevMockInitial}>{(p.name || '?')[0]}</span>
+                  }
+                </div>
+                <div className={styles.prevMockName}>{p.name}</div>
+                <div className={styles.prevMockLabels}>{[p.micLabel, p.iemLabel].filter(Boolean).join(' · ')}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
     default:
       return <div className={styles.prevUnknown}>{el.type}</div>
   }
@@ -211,11 +244,81 @@ function ElEditForm({ el, onChange, onUpload }) {
         </div>
       )
     case 'divider':
-    case 'mock_display':
       return <div className={styles.noSettings}>No settings for this element type.</div>
+    case 'mock_display':
+      return <MockDisplayEditForm data={el.data} onChange={onChange} onUpload={onUpload} />
     default:
       return null
   }
+}
+
+// ── Mock display sub-components ───────────────────────────────────────────────
+
+function MockPersonEditor({ person, onChange, onRemove, onUpload }) {
+  const fileRef = useRef(null)
+  const [uploading, setUploading] = useState(false)
+  const u = (k, v) => onChange({ ...person, [k]: v })
+  async function handleFile(e) {
+    const file = e.target.files[0]; if (!file) return
+    setUploading(true)
+    const url = await onUpload(file)
+    if (url) u('photoUrl', url)
+    setUploading(false); e.target.value = ''
+  }
+  return (
+    <div className={styles.mockPersonRow}>
+      <div className={styles.mockPersonPhoto} onClick={() => fileRef.current?.click()} title="Upload photo">
+        {person.photoUrl
+          ? <img src={person.photoUrl} alt="" className={styles.mockPersonPhotoImg} />
+          : <span className={styles.mockPersonInitial}>{(person.name || '?')[0]}</span>
+        }
+        <div className={styles.mockPersonPhotoBadge}>{uploading ? '…' : '↑'}</div>
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+      </div>
+      <div className={styles.mockPersonFields}>
+        <input className={styles.editInput} value={person.name || ''} onChange={e => u('name', e.target.value)} placeholder="Name" />
+        <input className={styles.editInput} value={person.micLabel || ''} onChange={e => u('micLabel', e.target.value)} placeholder="Mic" />
+        <input className={styles.editInput} value={person.iemLabel || ''} onChange={e => u('iemLabel', e.target.value)} placeholder="IEM" />
+      </div>
+      <button className={styles.mockPersonRemove} onClick={onRemove} title="Remove">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  )
+}
+
+function MockDisplayEditForm({ data, onChange, onUpload }) {
+  const people = data.people || DEFAULT_MOCK_PEOPLE.map(p => ({ ...p }))
+  function updatePerson(idx, updated) {
+    onChange({ ...data, people: people.map((p, i) => i === idx ? updated : p) })
+  }
+  function removePerson(idx) {
+    onChange({ ...data, people: people.filter((_, i) => i !== idx) })
+  }
+  function addPerson() {
+    onChange({ ...data, people: [...people, { name: 'New Person', micLabel: '', iemLabel: '', photoUrl: '' }] })
+  }
+  return (
+    <div className={styles.editFormFields}>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Event name</label>
+        <input className={styles.editInput} value={data.eventName || ''} onChange={e => onChange({ ...data, eventName: e.target.value })} placeholder="Sunday Service" />
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>People</label>
+        <div className={styles.mockPeopleList}>
+          {people.map((p, i) => (
+            <MockPersonEditor key={i} person={p} onChange={u => updatePerson(i, u)} onRemove={() => removePerson(i)} onUpload={onUpload} />
+          ))}
+          <button className={styles.mockAddPersonBtn} onClick={addPerson}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add person
+          </button>
+        </div>
+      </div>
+      <FullWidthToggle value={data.fullWidth} onChange={v => onChange({ ...data, fullWidth: v })} />
+    </div>
+  )
 }
 
 // ── Element edit modal ────────────────────────────────────────────────────────

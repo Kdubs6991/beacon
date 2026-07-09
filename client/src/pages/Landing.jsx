@@ -4,33 +4,42 @@ import styles from './Landing.module.css'
 
 // ── Mock display (animated, hero visual) ──────────────────────────────────────
 
-const MOCK_MUSICIANS = [
-  { name: 'Sarah M.', mic: 'Vox 1',   iem: 'IEM 2' },
-  { name: 'James K.', mic: 'Vox 2',   iem: 'IEM 1' },
-  { name: 'Drew A.',  mic: 'Keys DI', iem: 'IEM 4' },
-  { name: 'Lily R.',  mic: 'Vox 3',   iem: 'IEM 3' },
+const DEFAULT_MOCK_MUSICIANS = [
+  { name: 'Sarah M.', mic: 'Vox 1',   iem: 'IEM 2', photoUrl: '' },
+  { name: 'James K.', mic: 'Vox 2',   iem: 'IEM 1', photoUrl: '' },
+  { name: 'Drew A.',  mic: 'Keys DI', iem: 'IEM 4', photoUrl: '' },
+  { name: 'Lily R.',  mic: 'Vox 3',   iem: 'IEM 3', photoUrl: '' },
 ]
 function formatTime(d) {
   let h = d.getHours(); const m = d.getMinutes().toString().padStart(2, '0')
   const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${m} ${ampm}`
 }
-function MockDisplay() {
+function MockDisplay({ people: peopleProp, eventName: eventNameProp }) {
   const [time, setTime] = useState(() => formatTime(new Date()))
   useEffect(() => {
     const t = setInterval(() => setTime(formatTime(new Date())), 1000)
     return () => clearInterval(t)
   }, [])
+  const musicians = peopleProp
+    ? peopleProp.map(p => ({ name: p.name, mic: p.micLabel || '', iem: p.iemLabel || '', photoUrl: p.photoUrl || '' }))
+    : DEFAULT_MOCK_MUSICIANS
+  const eventName = eventNameProp || 'Sunday Service'
   return (
     <div className={styles.mockDisplay}>
       <div className={styles.mockHeader}>
         <span className={styles.mockBrand}>Beacon</span>
-        <span className={styles.mockEvent}>Sunday Service</span>
+        <span className={styles.mockEvent}>{eventName}</span>
         <span className={styles.mockClock}>{time}</span>
       </div>
       <div className={styles.mockGrid}>
-        {MOCK_MUSICIANS.map(p => (
-          <div key={p.name} className={styles.mockCard}>
-            <div className={styles.mockPhoto}><span className={styles.mockInitial}>{p.name[0]}</span></div>
+        {musicians.map((p, i) => (
+          <div key={i} className={styles.mockCard}>
+            <div className={styles.mockPhoto}>
+              {p.photoUrl
+                ? <img src={p.photoUrl} alt={p.name} className={styles.mockPhotoImg} />
+                : <span className={styles.mockInitial}>{p.name[0]}</span>
+              }
+            </div>
             <div className={styles.mockName}>{p.name}</div>
             <div className={styles.mockLabels}>
               <span className={styles.mockMic}>{p.mic}</span>
@@ -102,7 +111,7 @@ function renderElement(el, signInHref, signInLabel) {
     case 'divider':
       return <hr className={styles.elDivider} />
     case 'mock_display':
-      return <div className={styles.elMockWrap}><MockDisplay /><div className={styles.mockGlow} /></div>
+      return <div className={styles.elMockWrap}><MockDisplay people={el.data.people} eventName={el.data.eventName} /><div className={styles.mockGlow} /></div>
     default:
       return null
   }

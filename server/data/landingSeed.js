@@ -10,7 +10,12 @@ const LANDING_SEED_SECTIONS = [
       elements: [
         { _id: 'h-badge',   type: 'badge',        data: { text: 'Worship Team Display', color: '#60a5fa', fullWidth: true } },
         { _id: 'h-heading', type: 'heading',       data: { level: 1, text: 'The right mic,\non the right screen.', fullWidth: false } },
-        { _id: 'h-mock',    type: 'mock_display',  data: { fullWidth: false } },
+        { _id: 'h-mock',    type: 'mock_display',  data: { fullWidth: false, eventName: 'Sunday Service', people: [
+          { name: 'Sarah M.', micLabel: 'Vox 1',   iemLabel: 'IEM 2', photoUrl: '' },
+          { name: 'James K.', micLabel: 'Vox 2',   iemLabel: 'IEM 1', photoUrl: '' },
+          { name: 'Drew A.',  micLabel: 'Keys DI', iemLabel: 'IEM 4', photoUrl: '' },
+          { name: 'Lily R.',  micLabel: 'Vox 3',   iemLabel: 'IEM 3', photoUrl: '' },
+        ] } },
         { _id: 'h-text',    type: 'text',          data: { html: 'Beacon auto-assigns mics and IEMs for your worship team and pushes them to any TV or kiosk in your venue — built manually or pulled from your service schedule automatically.', fullWidth: false } },
         { _id: 'h-btn1',    type: 'button',        data: { label: 'Get started', href: '/org',   variant: 'primary',   fullWidth: false } },
         { _id: 'h-btn2',    type: 'button',        data: { label: 'Read the docs', href: '/docs', variant: 'secondary', fullWidth: false } },
