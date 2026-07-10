@@ -108,8 +108,17 @@ function renderElement(el, signInHref, signInLabel) {
       )
     case 'spacer':
       return <div style={{ height: el.data.height || 40 }} />
-    case 'divider':
-      return <hr className={styles.elDivider} />
+    case 'divider': {
+      const thickMap = { thin: '1px', md: '2px', thick: '4px' }
+      const spanMap = { full: '100%', half: '50%', quarter: '25%' }
+      return (
+        <hr className={styles.elDivider} style={{
+          borderTopWidth: thickMap[el.data?.thickness || 'md'] || '2px',
+          borderTopColor: el.data?.color || undefined,
+          width: spanMap[el.data?.span || 'full'] || '100%',
+        }} />
+      )
+    }
     case 'mock_display':
       return <div className={styles.elMockWrap}><MockDisplay people={el.data.people} eventName={el.data.eventName} /><div className={styles.mockGlow} /></div>
     default:

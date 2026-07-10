@@ -966,7 +966,7 @@
   color: var(--badge-color, #60a5fa);
   letter-spacing: 0.04em;
 }
-.elDivider { border: none; border-top: 1px solid var(--border); margin: 0; }
+.elDivider { border: none; border-top-style: solid; border-top-width: 1px; border-top-color: var(--border); margin: 0 auto; width: 100%; display: block; }
 .elMockWrap { position: relative; display: flex; justify-content: center; }
 
 @media (max-width: 768px) {

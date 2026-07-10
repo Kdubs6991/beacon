@@ -204,6 +204,41 @@
 .imageThumb { width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 8px; }
 .noSettings { font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
 
+/* ── Theme color swatches ── */
+.themeSwatches { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.themeSwatch {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+  flex-shrink: 0; outline: 2px solid rgba(255,255,255,0.07); outline-offset: 1px;
+}
+.themeSwatch:hover { transform: scale(1.2); }
+.themeSwatchActive { border-color: #fff !important; outline-color: var(--accent) !important; }
+
+/* ── Accent color field ── */
+.accentColorField { display: flex; flex-direction: column; gap: 6px; }
+
+/* ── Bg color field ── */
+.bgColorField { display: flex; flex-direction: column; gap: 8px; }
+.bgTypeRow { display: flex; gap: 4px; align-items: center; }
+
+/* Gradient presets strip */
+.gradPresets { display: flex; gap: 5px; flex-wrap: wrap; }
+.gradPreset {
+  width: 44px; height: 28px; border-radius: 4px; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.06); transition: border-color 0.1s; flex-shrink: 0;
+}
+.gradPreset:hover { border-color: rgba(255,255,255,0.3); }
+.gradPresetActive { border-color: var(--accent) !important; }
+
+/* Gradient color pair */
+.gradColorPair { display: flex; align-items: flex-end; gap: 10px; }
+.gradArrow { font-size: 1rem; color: var(--text-muted); padding-bottom: 5px; flex-shrink: 0; }
+.gradColorSwatch { width: 48px !important; height: 34px !important; flex-shrink: 0; }
+
+/* Live gradient preview */
+.gradPreview { height: 32px; border-radius: 4px; border: 1px solid var(--border); margin-top: 2px; }
+
 /* ── Mock display editor ── */
 .mockPeopleList { display: flex; flex-direction: column; gap: 6px; }
 .mockPersonRow {

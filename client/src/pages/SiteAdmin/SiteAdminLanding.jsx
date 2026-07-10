@@ -12,6 +12,55 @@ const DEFAULT_MOCK_PEOPLE = [
   { name: 'Lily R.',  micLabel: 'Vox 3',   iemLabel: 'IEM 3', photoUrl: '' },
 ]
 
+// ── Theme color presets ───────────────────────────────────────────────────────
+
+const THEME_BG_PRESETS = [
+  { hex: '#09090f', label: 'Darkest' },
+  { hex: '#0f0f1a', label: 'Dark navy' },
+  { hex: '#141420', label: 'Dark' },
+  { hex: '#0d1628', label: 'Blue tint' },
+  { hex: '#0f1a12', label: 'Green tint' },
+  { hex: '#1a0f1a', label: 'Purple tint' },
+  { hex: '#1a100d', label: 'Warm' },
+  { hex: '#1c1c1c', label: 'Charcoal' },
+]
+
+const THEME_ACCENT_PRESETS = [
+  { hex: '#60a5fa', label: 'Blue' },
+  { hex: '#3b82f6', label: 'Blue deep' },
+  { hex: '#a78bfa', label: 'Purple' },
+  { hex: '#34d399', label: 'Green' },
+  { hex: '#f472b6', label: 'Pink' },
+  { hex: '#fb923c', label: 'Orange' },
+  { hex: '#fbbf24', label: 'Amber' },
+  { hex: '#94a3b8', label: 'Slate' },
+  { hex: '#f87171', label: 'Red' },
+  { hex: '#e2e8f0', label: 'Light' },
+]
+
+const GRADIENT_PRESETS = [
+  { label: 'Navy sweep',   css: 'linear-gradient(135deg, #09090f 0%, #0d1628 100%)' },
+  { label: 'Purple shift', css: 'linear-gradient(135deg, #0f0f1a 0%, #1a0f2e 100%)' },
+  { label: 'Subtle depth', css: 'linear-gradient(to bottom, #141420 0%, #09090f 100%)' },
+  { label: 'Green tint',   css: 'linear-gradient(135deg, #09090f 0%, #0f1a12 100%)' },
+  { label: 'Blue-purple',  css: 'linear-gradient(135deg, #0d1628 0%, #1a0f2e 100%)' },
+  { label: 'Warm dark',    css: 'linear-gradient(135deg, #09090f 0%, #1a100d 100%)' },
+]
+
+const GRADIENT_DIRS = [
+  { value: 'to right',  label: '→' },
+  { value: 'to bottom', label: '↓' },
+  { value: '135deg',    label: '↘' },
+  { value: '45deg',     label: '↗' },
+]
+
+function isGradient(v) { return typeof v === 'string' && v.startsWith('linear-gradient(') }
+function parseGradient(v) {
+  const m = v?.match(/linear-gradient\(([^,]+),\s*(#[0-9a-fA-F]{3,8})[^,]*,\s*(#[0-9a-fA-F]{3,8})/)
+  return { dir: m?.[1]?.trim() || '135deg', c1: m?.[2] || '#09090f', c2: m?.[3] || '#0d1628' }
+}
+function buildGradient(dir, c1, c2) { return `linear-gradient(${dir}, ${c1} 0%, ${c2} 100%)` }
+
 // ── Element type definitions ──────────────────────────────────────────────────
 
 const EL_TYPES = [
@@ -33,7 +82,7 @@ function newElement(type) {
     button:       { label: 'Click here', href: '/', variant: 'primary', fullWidth: false },
     badge:        { text: 'Badge', color: '#60a5fa', fullWidth: false },
     spacer:       { height: 40, fullWidth: true },
-    divider:      { fullWidth: true },
+    divider:      { fullWidth: true, color: '', thickness: 'md', span: 'full' },
     mock_display: { fullWidth: false, eventName: 'Sunday Service', people: DEFAULT_MOCK_PEOPLE.map(p => ({ ...p })) },
   }
   return { _id: crypto.randomUUID(), type, data: { ...(defaults[type] ?? {}) } }
@@ -86,8 +135,15 @@ function ElPreview({ el }) {
           <span>{el.data.height || 40}px</span>
         </div>
       )
-    case 'divider':
-      return <div className={styles.prevDivider} />
+    case 'divider': {
+      const dt = { thin: '1px', md: '2px', thick: '4px' }[el.data.thickness || 'md'] || '2px'
+      const dw = { full: '100%', half: '50%', quarter: '25%' }[el.data.span || 'full'] || '100%'
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 0' }}>
+          <div style={{ width: dw, borderTop: `${dt} solid ${el.data.color || 'var(--border)'}` }} />
+        </div>
+      )
+    }
     case 'mock_display': {
       const mockPeople = el.data.people || DEFAULT_MOCK_PEOPLE
       const mockEvent = el.data.eventName || 'Sunday Service'
@@ -127,6 +183,97 @@ function FullWidthToggle({ value, onChange }) {
       <input type="checkbox" checked={!!value} onChange={e => onChange(e.target.checked)} />
       <span>Span full width</span>
     </label>
+  )
+}
+
+function ThemeSwatches({ presets, value, onChange }) {
+  return (
+    <div className={styles.themeSwatches}>
+      {presets.map(p => (
+        <button key={p.hex}
+          className={`${styles.themeSwatch}${value === p.hex ? ' ' + styles.themeSwatchActive : ''}`}
+          style={{ background: p.hex }}
+          onClick={() => onChange(p.hex)}
+          title={p.label}
+        />
+      ))}
+    </div>
+  )
+}
+
+function AccentColorField({ value, onChange }) {
+  return (
+    <div className={styles.accentColorField}>
+      <ThemeSwatches presets={THEME_ACCENT_PRESETS} value={value} onChange={onChange} />
+      <div className={styles.colorRow}>
+        <input type="color" className={styles.colorSwatch}
+          value={value || '#60a5fa'} onChange={e => onChange(e.target.value)} />
+        <input className={styles.editInput} value={value || ''}
+          onChange={e => onChange(e.target.value)} placeholder="#60a5fa" />
+        {value && <button className={styles.clearBtn} onClick={() => onChange('')}>Default</button>}
+      </div>
+    </div>
+  )
+}
+
+function BgColorField({ value, onChange }) {
+  const gradMode = isGradient(value)
+  const { dir, c1, c2 } = gradMode ? parseGradient(value) : { dir: '135deg', c1: '#09090f', c2: '#0d1628' }
+  return (
+    <div className={styles.bgColorField}>
+      <div className={styles.bgTypeRow}>
+        <button className={!gradMode ? styles.toggleActive : styles.toggleBtn}
+          onClick={() => { if (gradMode) onChange('#0f0f1a') }}>Solid</button>
+        <button className={gradMode ? styles.toggleActive : styles.toggleBtn}
+          onClick={() => { if (!gradMode) onChange(buildGradient('135deg', '#09090f', '#0d1628')) }}>Gradient</button>
+        {value && <button className={styles.clearBtn} onClick={() => onChange('')}>Clear</button>}
+      </div>
+      {gradMode ? (
+        <>
+          <div className={styles.gradPresets}>
+            {GRADIENT_PRESETS.map(p => (
+              <button key={p.label}
+                className={`${styles.gradPreset}${value === p.css ? ' ' + styles.gradPresetActive : ''}`}
+                style={{ background: p.css }} onClick={() => onChange(p.css)} title={p.label} />
+            ))}
+          </div>
+          <div className={styles.editField}>
+            <label className={styles.editLabel}>Direction</label>
+            <div className={styles.toggleRow}>
+              {GRADIENT_DIRS.map(d => (
+                <button key={d.value}
+                  className={dir === d.value ? styles.toggleActive : styles.toggleBtn}
+                  onClick={() => onChange(buildGradient(d.value, c1, c2))}>{d.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.gradColorPair}>
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>Start</label>
+              <input type="color" className={`${styles.colorSwatch} ${styles.gradColorSwatch}`}
+                value={c1} onChange={e => onChange(buildGradient(dir, e.target.value, c2))} />
+            </div>
+            <div className={styles.gradArrow}>→</div>
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>End</label>
+              <input type="color" className={`${styles.colorSwatch} ${styles.gradColorSwatch}`}
+                value={c2} onChange={e => onChange(buildGradient(dir, c1, e.target.value))} />
+            </div>
+          </div>
+          <div className={styles.gradPreview} style={{ background: value }} />
+        </>
+      ) : (
+        <>
+          <ThemeSwatches presets={THEME_BG_PRESETS} value={value} onChange={onChange} />
+          <div className={styles.colorRow}>
+            <input type="color" className={styles.colorSwatch}
+              value={value || '#000000'} onChange={e => onChange(e.target.value)} />
+            <input className={styles.editInput} value={value || ''}
+              onChange={e => onChange(e.target.value)} placeholder="Transparent (leave blank)" />
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -225,10 +372,7 @@ function ElEditForm({ el, onChange, onUpload }) {
           </div>
           <div className={styles.editField}>
             <label className={styles.editLabel}>Color</label>
-            <div className={styles.colorRow}>
-              <input type="color" className={styles.colorSwatch} value={el.data.color || '#60a5fa'} onChange={e => u('color', e.target.value)} />
-              <input className={styles.editInput} value={el.data.color || ''} onChange={e => u('color', e.target.value)} placeholder="#60a5fa" />
-            </div>
+            <AccentColorField value={el.data.color || ''} onChange={v => u('color', v)} />
           </div>
           <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
         </div>
@@ -244,7 +388,32 @@ function ElEditForm({ el, onChange, onUpload }) {
         </div>
       )
     case 'divider':
-      return <div className={styles.noSettings}>No settings for this element type.</div>
+      return (
+        <div className={styles.editFormFields}>
+          <div className={styles.editField}>
+            <label className={styles.editLabel}>Color</label>
+            <AccentColorField value={el.data.color || ''} onChange={v => u('color', v)} />
+          </div>
+          <div className={styles.editField}>
+            <label className={styles.editLabel}>Thickness</label>
+            <div className={styles.toggleRow}>
+              {[['thin','Thin'], ['md','Medium'], ['thick','Thick']].map(([v, l]) => (
+                <button key={v} className={(el.data.thickness || 'md') === v ? styles.toggleActive : styles.toggleBtn}
+                  onClick={() => u('thickness', v)}>{l}</button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.editField}>
+            <label className={styles.editLabel}>Width</label>
+            <div className={styles.toggleRow}>
+              {[['full','Full'], ['half','Half'], ['quarter','Quarter']].map(([v, l]) => (
+                <button key={v} className={(el.data.span || 'full') === v ? styles.toggleActive : styles.toggleBtn}
+                  onClick={() => u('span', v)}>{l}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
     case 'mock_display':
       return <MockDisplayEditForm data={el.data} onChange={onChange} onUpload={onUpload} />
     default:
@@ -405,14 +574,8 @@ function SectionSettingsModal({ section, onSave, onClose }) {
               </div>
             </div>
             <div className={styles.editField}>
-              <label className={styles.editLabel}>Background color</label>
-              <div className={styles.colorRow}>
-                <input type="color" className={styles.colorSwatch}
-                  value={draft.bgColor || '#000000'} onChange={e => u('bgColor', e.target.value)} />
-                <input className={styles.editInput} value={draft.bgColor || ''}
-                  onChange={e => u('bgColor', e.target.value)} placeholder="Transparent (leave blank)" />
-                {draft.bgColor && <button className={styles.clearBtn} onClick={() => u('bgColor', '')}>Clear</button>}
-              </div>
+              <label className={styles.editLabel}>Background</label>
+              <BgColorField value={draft.bgColor || ''} onChange={v => u('bgColor', v)} />
             </div>
           </div>
         </div>
