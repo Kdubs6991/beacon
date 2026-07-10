@@ -967,7 +967,7 @@
   letter-spacing: 0.04em;
 }
 .elDivider { border: none; border-top-style: solid; border-top-width: 1px; border-top-color: var(--border); margin: 0 auto; width: 100%; display: block; }
-.elMockWrap { position: relative; display: flex; justify-content: center; }
+.elMockWrap { position: relative; display: flex; justify-content: flex-start; }
 
 @media (max-width: 768px) {
   .dynGrid { grid-template-columns: 1fr !important; }

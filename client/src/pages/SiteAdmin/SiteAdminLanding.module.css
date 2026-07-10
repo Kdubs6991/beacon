@@ -92,7 +92,17 @@
 }
 .elTile:hover .elDragHandle { opacity: 1; }
 
-.elContent { flex: 1; padding: 12px; min-width: 0; overflow: hidden; }
+.elContent { flex: 1; padding: 10px 12px 12px; min-width: 0; overflow: hidden; }
+
+.elTypeChip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--el-color, #94a3b8); margin-bottom: 6px; opacity: 0.85;
+}
+.elTypeChip::before {
+  content: ''; display: inline-block; width: 5px; height: 5px;
+  border-radius: 50%; background: var(--el-color, #94a3b8); flex-shrink: 0;
+}
 
 /* Selected overlay */
 .elOverlay {
@@ -131,7 +141,7 @@
 .prevText { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .prevText strong { color: var(--text-sec); }
 .prevText a { color: var(--accent); }
-.prevImage { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; display: block; }
+.prevImage { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px; display: block; }
 .prevImageEmpty { height: 80px; background: rgba(255,255,255,0.04); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-muted); font-size: 0.72rem; }
 .prevBtnPri { display: inline-flex; padding: 6px 14px; background: var(--accent); border-radius: 6px; font-size: 0.78rem; font-weight: 600; color: #fff; }
 .prevBtnSec { display: inline-flex; padding: 5px 13px; background: none; border: 1px solid var(--accent); border-radius: 6px; font-size: 0.78rem; font-weight: 600; color: var(--accent); }
@@ -139,17 +149,20 @@
 .prevSpacer { width: 100%; background: repeating-linear-gradient(45deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 4px, transparent 4px, transparent 12px); border: 1px dashed var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; }
 .prevSpacer span { font-size: 0.65rem; color: var(--text-muted); }
 .prevDivider { border-top: 1px solid var(--border); margin: 8px 0; }
-.prevMockWrap { background: #0c0c14; border-radius: 6px; padding: 8px; width: 100%; }
-.prevMockHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-.prevMockBrand { font-size: 0.6rem; font-weight: 800; color: #60a5fa; letter-spacing: -0.01em; }
-.prevMockEvent { font-size: 0.58rem; color: rgba(255,255,255,0.45); }
-.prevMockGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
-.prevMockCard { background: rgba(255,255,255,0.05); border-radius: 4px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.prevMockPhoto { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
-.prevMockInitial { font-size: 0.6rem; font-weight: 700; color: rgba(255,255,255,0.7); }
+.prevMockWrap { background: #0d1424; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; width: 100%; overflow: hidden; }
+.prevMockHeader { background: #1e2433; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
+.prevMockBrand { font-size: 0.52rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.1em; }
+.prevMockEvent { font-size: 0.52rem; color: rgba(255,255,255,0.5); font-weight: 500; }
+.prevMockClock { font-size: 0.5rem; color: rgba(255,255,255,0.35); }
+.prevMockGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 7px; }
+.prevMockCard { background: #111827; border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; padding: 5px 4px 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.prevMockPhoto { width: 100%; aspect-ratio: 3/4; background: linear-gradient(160deg, rgba(59,130,246,0.18) 0%, rgba(30,36,51,0.9) 100%); border-radius: 3px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 2px; }
+.prevMockInitial { font-size: 1rem; font-weight: 800; color: rgba(96,165,250,0.7); }
 .prevMockPhotoImg { width: 100%; height: 100%; object-fit: cover; }
-.prevMockName { font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.85); text-align: center; line-height: 1.2; }
-.prevMockLabels { font-size: 0.52rem; color: rgba(255,255,255,0.4); text-align: center; }
+.prevMockName { font-size: 0.5rem; font-weight: 600; color: rgba(255,255,255,0.88); text-align: center; line-height: 1.2; }
+.prevMockLabels { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+.prevMockMic { background: rgba(59,130,246,0.14); color: #60a5fa; font-size: 0.42rem; font-weight: 700; padding: 1px 3px; border-radius: 2px; }
+.prevMockIem { background: rgba(52,211,153,0.1); color: #34d399; font-size: 0.42rem; font-weight: 700; padding: 1px 3px; border-radius: 2px; }
 .prevUnknown { font-size: 0.72rem; color: #f87171; font-family: monospace; }
 
 /* ── Modals ── */
@@ -182,10 +195,18 @@
 .editTextarea:focus { border-color: var(--accent); }
 
 .toggleRow { display: flex; gap: 4px; flex-wrap: wrap; }
-.toggleBtn { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-muted); font-size: 0.78rem; font-weight: 600; font-family: inherit; padding: 4px 12px; cursor: pointer; transition: all 0.1s; }
+.toggleBtn {
+  background: none; border: 1px solid var(--border); border-radius: 5px;
+  color: var(--text-muted); font-size: 0.78rem; font-weight: 600; font-family: inherit;
+  padding: 4px 12px; cursor: pointer; transition: all 0.1s;
+}
 .toggleBtn:hover { border-color: var(--text-muted); color: var(--text-sec); }
-.toggleActive { background: rgba(59,130,246,0.12); border-color: var(--accent); color: var(--accent); }
-.toggleActive:hover { border-color: var(--accent); color: var(--accent); }
+.toggleActive {
+  background: rgba(59,130,246,0.12); border: 1px solid var(--accent); border-radius: 5px;
+  color: var(--accent); font-size: 0.78rem; font-weight: 600; font-family: inherit;
+  padding: 4px 12px; cursor: pointer; transition: all 0.1s;
+}
+.toggleActive:hover { opacity: 0.9; }
 
 .checkRow { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; color: var(--text-sec); }
 .checkRow input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
@@ -277,6 +298,13 @@
   transition: border-color 0.12s, color 0.12s;
 }
 .mockAddPersonBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Section divider settings ── */
+.sectionDividerFields {
+  padding: 10px; background: var(--bg-page); border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; gap: 10px; margin-top: 6px;
+  border: 1px solid var(--border);
+}
 
 /* ── Responsive ── */
 @media (max-width: 640px) {

@@ -83,7 +83,7 @@ function newElement(type) {
     badge:        { text: 'Badge', color: '#60a5fa', fullWidth: false },
     spacer:       { height: 40, fullWidth: true },
     divider:      { fullWidth: true, color: '', thickness: 'md', span: 'full' },
-    mock_display: { fullWidth: false, eventName: 'Sunday Service', people: DEFAULT_MOCK_PEOPLE.map(p => ({ ...p })) },
+    mock_display: { fullWidth: false, eventName: 'Sunday Service', size: 'lg', align: 'left', people: DEFAULT_MOCK_PEOPLE.map(p => ({ ...p })) },
   }
   return { _id: crypto.randomUUID(), type, data: { ...(defaults[type] ?? {}) } }
 }
@@ -150,8 +150,9 @@ function ElPreview({ el }) {
       return (
         <div className={styles.prevMockWrap}>
           <div className={styles.prevMockHeader}>
-            <span className={styles.prevMockBrand}>Beacon</span>
+            <span className={styles.prevMockBrand}>BEACON</span>
             <span className={styles.prevMockEvent}>{mockEvent}</span>
+            <span className={styles.prevMockClock}>9:00 AM</span>
           </div>
           <div className={styles.prevMockGrid}>
             {mockPeople.slice(0, 4).map((p, i) => (
@@ -163,7 +164,10 @@ function ElPreview({ el }) {
                   }
                 </div>
                 <div className={styles.prevMockName}>{p.name}</div>
-                <div className={styles.prevMockLabels}>{[p.micLabel, p.iemLabel].filter(Boolean).join(' · ')}</div>
+                <div className={styles.prevMockLabels}>
+                  {p.micLabel && <span className={styles.prevMockMic}>{p.micLabel}</span>}
+                  {p.iemLabel && <span className={styles.prevMockIem}>{p.iemLabel}</span>}
+                </div>
               </div>
             ))}
           </div>
@@ -474,6 +478,24 @@ function MockDisplayEditForm({ data, onChange, onUpload }) {
         <input className={styles.editInput} value={data.eventName || ''} onChange={e => onChange({ ...data, eventName: e.target.value })} placeholder="Sunday Service" />
       </div>
       <div className={styles.editField}>
+        <label className={styles.editLabel}>Size</label>
+        <div className={styles.toggleRow}>
+          {[['sm','S'], ['md','M'], ['lg','L'], ['xl','XL']].map(([v, l]) => (
+            <button key={v} className={(data.size || 'lg') === v ? styles.toggleActive : styles.toggleBtn}
+              onClick={() => onChange({ ...data, size: v })}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Alignment</label>
+        <div className={styles.toggleRow}>
+          {[['left','Left'], ['center','Center'], ['right','Right']].map(([v, l]) => (
+            <button key={v} className={(data.align || 'left') === v ? styles.toggleActive : styles.toggleBtn}
+              onClick={() => onChange({ ...data, align: v })}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.editField}>
         <label className={styles.editLabel}>People</label>
         <div className={styles.mockPeopleList}>
           {people.map((p, i) => (
@@ -576,6 +598,38 @@ function SectionSettingsModal({ section, onSave, onClose }) {
             <div className={styles.editField}>
               <label className={styles.editLabel}>Background</label>
               <BgColorField value={draft.bgColor || ''} onChange={v => u('bgColor', v)} />
+            </div>
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>Section divider</label>
+              <label className={styles.checkRow}>
+                <input type="checkbox"
+                  checked={!!(draft.bottomDivider?.enabled)}
+                  onChange={e => u('bottomDivider', { ...(draft.bottomDivider || {}), enabled: e.target.checked })}
+                />
+                <span>Divider at section boundary</span>
+              </label>
+              {draft.bottomDivider?.enabled && (
+                <div className={styles.sectionDividerFields}>
+                  <div className={styles.editField}>
+                    <label className={styles.editLabel}>Color</label>
+                    <AccentColorField
+                      value={draft.bottomDivider?.color || ''}
+                      onChange={v => u('bottomDivider', { ...(draft.bottomDivider || {}), color: v })}
+                    />
+                  </div>
+                  <div className={styles.editField}>
+                    <label className={styles.editLabel}>Thickness</label>
+                    <div className={styles.toggleRow}>
+                      {[['thin','Thin'], ['md','Medium'], ['thick','Thick']].map(([v, l]) => (
+                        <button key={v}
+                          className={(draft.bottomDivider?.thickness || 'md') === v ? styles.toggleActive : styles.toggleBtn}
+                          onClick={() => u('bottomDivider', { ...(draft.bottomDivider || {}), thickness: v })}
+                        >{l}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -713,6 +767,9 @@ function SectionCanvas({ section, onUpdateSection, onBack, onUpload }) {
 
                 {/* Preview */}
                 <div className={styles.elContent}>
+                  <div className={styles.elTypeChip} style={{ '--el-color': EL_TYPES.find(t => t.id === el.type)?.color || '#94a3b8' }}>
+                    {EL_TYPES.find(t => t.id === el.type)?.label || el.type}
+                  </div>
                   <ElPreview el={el} />
                 </div>
 

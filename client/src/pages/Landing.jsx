@@ -119,8 +119,20 @@ function renderElement(el, signInHref, signInLabel) {
         }} />
       )
     }
-    case 'mock_display':
-      return <div className={styles.elMockWrap}><MockDisplay people={el.data.people} eventName={el.data.eventName} /><div className={styles.mockGlow} /></div>
+    case 'mock_display': {
+      const sizeMap = { sm: '340px', md: '480px', lg: '620px', xl: '820px' }
+      const alignMap = { left: 'flex-start', center: 'center', right: 'flex-end' }
+      const mockMaxWidth = sizeMap[el.data?.size] || sizeMap.lg
+      const mockJustify = alignMap[el.data?.align] || 'flex-start'
+      return (
+        <div className={styles.elMockWrap} style={{ justifyContent: mockJustify }}>
+          <div style={{ width: '100%', maxWidth: mockMaxWidth }}>
+            <MockDisplay people={el.data.people} eventName={el.data.eventName} />
+          </div>
+          <div className={styles.mockGlow} />
+        </div>
+      )
+    }
     default:
       return null
   }
@@ -135,12 +147,15 @@ function renderSection(section, signInHref, signInLabel) {
   const elements = d.elements || []
   const cols = d.columns || 3
   const padding = PADDING_MAP[d.padding] || PADDING_MAP.lg
+  const bd = d.bottomDivider
+  const bdPxMap = { thin: 1, md: 2, thick: 4 }
+  const bdPx = bdPxMap[bd?.thickness] || 2
 
   return (
     <section
       key={section._id || section.id}
       className={styles.dynSection}
-      style={{ background: d.bgColor || '', padding }}
+      style={{ background: d.bgColor || '', padding, position: 'relative' }}
     >
       <div className={styles.container}>
         <div className={styles.dynGrid} style={{ '--cols': cols }}>
@@ -159,6 +174,18 @@ function renderSection(section, signInHref, signInLabel) {
           })}
         </div>
       </div>
+      {bd?.enabled && (
+        <div style={{
+          position: 'absolute',
+          bottom: -(bdPx / 2),
+          left: 0,
+          right: 0,
+          height: bdPx,
+          background: bd.color || 'rgba(255,255,255,0.15)',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }} />
+      )}
     </section>
   )
 }
