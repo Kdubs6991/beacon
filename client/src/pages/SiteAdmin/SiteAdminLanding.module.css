@@ -164,6 +164,18 @@
 .prevMockLabels { display: flex; flex-direction: column; gap: 1px; width: 100%; }
 .prevMockMic { background: rgba(59,130,246,0.14); color: #60a5fa; font-size: 0.4rem; font-weight: 700; padding: 1px 2px; border-radius: 2px; text-align: center; display: block; }
 .prevMockIem { background: rgba(52,211,153,0.1); color: #34d399; font-size: 0.4rem; font-weight: 700; padding: 1px 2px; border-radius: 2px; text-align: center; display: block; }
+.prevCard {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-top: 2px solid transparent;
+  border-radius: 8px;
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.prevCardIcon { font-size: 1.2rem; line-height: 1; }
+.prevCardTitle { font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.3; }
+.prevCardBody { font-size: 0.7rem; color: rgba(255,255,255,0.5); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .prevUnknown { font-size: 0.72rem; color: #f87171; font-family: monospace; }
 
 /* ── Modals ── */
@@ -299,6 +311,25 @@
   transition: border-color 0.12s, color 0.12s;
 }
 .mockAddPersonBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Confirm delete modal ── */
+.confirmBox {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px 24px 20px; width: min(360px, 90vw);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+.confirmMsg { font-size: 0.9rem; color: var(--text-pri); margin: 0 0 18px; line-height: 1.5; }
+.confirmActions { display: flex; gap: 8px; justify-content: flex-end; }
+.confirmCancel {
+  background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-muted); font-size: 0.82rem; font-family: inherit; padding: 7px 16px; cursor: pointer; transition: color 0.12s;
+}
+.confirmCancel:hover { color: var(--text-pri); }
+.confirmDelete {
+  background: #f87171; border: none; border-radius: var(--radius-sm);
+  color: #fff; font-size: 0.82rem; font-weight: 600; font-family: inherit; padding: 7px 16px; cursor: pointer; transition: opacity 0.12s;
+}
+.confirmDelete:hover { opacity: 0.85; }
 
 /* ── Section divider settings ── */
 .sectionDividerFields {

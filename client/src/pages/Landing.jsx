@@ -71,13 +71,15 @@ function SocialIcon({ type }) {
 
 // ── Element renderers ─────────────────────────────────────────────────────────
 
+const ALIGN_MAP = { left: 'flex-start', center: 'center', right: 'flex-end' }
+
 function renderElement(el, signInHref, signInLabel) {
   switch (el.type) {
     case 'heading': {
       const Tag = el.data.level === 1 ? 'h1' : el.data.level === 3 ? 'h3' : 'h2'
       const cls = el.data.level === 1 ? styles.elH1 : el.data.level === 3 ? styles.elH3 : styles.elH2
       return (
-        <Tag className={cls}>
+        <Tag className={cls} style={{ textAlign: el.data.align || 'left' }}>
           {(el.data.text || '').split('\n').map((line, i, arr) => (
             <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
           ))}
@@ -85,25 +87,39 @@ function renderElement(el, signInHref, signInLabel) {
       )
     }
     case 'text':
-      return <div className={styles.elText} dangerouslySetInnerHTML={{ __html: el.data.html || '' }} />
-    case 'image':
-      return el.data.url
-        ? <img src={el.data.url} alt={el.data.alt || ''} className={styles.elImage} />
-        : null
+      return <div className={styles.elText} style={{ textAlign: el.data.align || 'left' }} dangerouslySetInnerHTML={{ __html: el.data.html || '' }} />
+    case 'image': {
+      if (!el.data.url) return null
+      const radiusMap = { none: '0', sm: '4px', md: '8px', lg: '16px', full: '50%' }
+      const maxWidthMap = { full: '100%', lg: '640px', md: '400px', sm: '240px' }
+      return (
+        <img
+          src={el.data.url}
+          alt={el.data.alt || ''}
+          className={styles.elImage}
+          style={{
+            borderRadius: radiusMap[el.data.radius] ?? '8px',
+            maxWidth: maxWidthMap[el.data.maxWidth] || '100%',
+          }}
+        />
+      )
+    }
     case 'button': {
       const href = el.data.href === '/org' ? signInHref : el.data.href
       const label = el.data.href === '/org' ? signInLabel : el.data.label
       const isExt = href?.startsWith('http')
-      return (
-        isExt
-          ? <a href={href} target="_blank" rel="noopener noreferrer" className={el.data.variant === 'secondary' ? styles.ctaSecondary : styles.ctaPrimary}>{label}</a>
-          : <Link to={href || '/'} className={el.data.variant === 'secondary' ? styles.ctaSecondary : styles.ctaPrimary}>{label}</Link>
-      )
+      const justify = ALIGN_MAP[el.data.align] || 'flex-start'
+      const btn = isExt
+        ? <a href={href} target="_blank" rel="noopener noreferrer" className={el.data.variant === 'secondary' ? styles.ctaSecondary : styles.ctaPrimary}>{label}</a>
+        : <Link to={href || '/'} className={el.data.variant === 'secondary' ? styles.ctaSecondary : styles.ctaPrimary}>{label}</Link>
+      return <div style={{ display: 'flex', justifyContent: justify }}>{btn}</div>
     }
     case 'badge':
       return (
-        <div className={styles.elBadge} style={{ '--badge-color': el.data.color || '#60a5fa' }}>
-          {el.data.text}
+        <div style={{ display: 'flex', justifyContent: ALIGN_MAP[el.data.align] || 'flex-start' }}>
+          <div className={styles.elBadge} style={{ '--badge-color': el.data.color || '#60a5fa' }}>
+            {el.data.text}
+          </div>
         </div>
       )
     case 'spacer':
@@ -119,17 +135,38 @@ function renderElement(el, signInHref, signInLabel) {
         }} />
       )
     }
+    case 'card':
+      return (
+        <div
+          className={styles.elCard}
+          style={{
+            background: el.data.bgColor || undefined,
+            borderTopColor: el.data.accentColor || 'rgba(255,255,255,0.06)',
+            textAlign: el.data.align || 'left',
+          }}
+        >
+          {el.data.icon && <div className={styles.elCardIcon}>{el.data.icon}</div>}
+          {el.data.title && <div className={styles.elCardTitle}>{el.data.title}</div>}
+          {el.data.body && <div className={styles.elCardBody}>{el.data.body}</div>}
+          {el.data.badgeText && (
+            <div style={{ display: 'flex', justifyContent: ALIGN_MAP[el.data.align] || 'flex-start', marginTop: 4 }}>
+              <div className={styles.elBadge} style={{ '--badge-color': el.data.badgeColor || '#60a5fa' }}>
+                {el.data.badgeText}
+              </div>
+            </div>
+          )}
+        </div>
+      )
     case 'mock_display': {
       const sizeMap = { sm: '340px', md: '480px', lg: '620px', xl: '820px' }
-      const alignMap = { left: 'flex-start', center: 'center', right: 'flex-end' }
       const mockMaxWidth = sizeMap[el.data?.size] || sizeMap.lg
-      const mockJustify = alignMap[el.data?.align] || 'flex-start'
+      const mockJustify = ALIGN_MAP[el.data?.align] || 'flex-start'
       return (
         <div className={styles.elMockWrap} style={{ justifyContent: mockJustify }}>
-          <div style={{ width: '100%', maxWidth: mockMaxWidth }}>
+          <div style={{ width: '100%', maxWidth: mockMaxWidth, position: 'relative' }}>
             <MockDisplay people={el.data.people} eventName={el.data.eventName} />
+            <div className={styles.mockGlow} />
           </div>
-          <div className={styles.mockGlow} />
         </div>
       )
     }
@@ -155,7 +192,7 @@ function renderSection(section, signInHref, signInLabel) {
     <section
       key={section._id || section.id}
       className={styles.dynSection}
-      style={{ background: d.bgColor || '', padding, position: 'relative' }}
+      style={{ background: d.bgColor || '', padding, position: 'relative', borderTop: d.accentTop ? `2px solid ${d.accentTop}` : undefined }}
     >
       <div className={styles.container}>
         <div className={styles.dynGrid} style={{ '--cols': cols }}>

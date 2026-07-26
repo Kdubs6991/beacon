@@ -66,9 +66,10 @@ function buildGradient(dir, c1, c2) { return `linear-gradient(${dir}, ${c1} 0%, 
 const EL_TYPES = [
   { id: 'heading',      label: 'Heading',      color: '#60a5fa' },
   { id: 'text',         label: 'Text',         color: '#a78bfa' },
+  { id: 'card',         label: 'Card',         color: '#f472b6' },
   { id: 'image',        label: 'Image',        color: '#34d399' },
   { id: 'button',       label: 'Button',       color: '#fb923c' },
-  { id: 'badge',        label: 'Badge',        color: '#f472b6' },
+  { id: 'badge',        label: 'Badge',        color: '#e879f9' },
   { id: 'spacer',       label: 'Spacer',       color: '#94a3b8' },
   { id: 'divider',      label: 'Divider',      color: '#94a3b8' },
   { id: 'mock_display', label: 'Mock Display', color: '#fbbf24' },
@@ -76,13 +77,14 @@ const EL_TYPES = [
 
 function newElement(type) {
   const defaults = {
-    heading:      { level: 2, text: 'New heading', fullWidth: false },
-    text:         { html: 'Add your text here.', fullWidth: false },
-    image:        { url: '', alt: '', fullWidth: false },
-    button:       { label: 'Click here', href: '/', variant: 'primary', fullWidth: false },
-    badge:        { text: 'Badge', color: '#60a5fa', fullWidth: false },
+    heading:      { level: 2, text: 'New heading', align: 'left', fullWidth: false },
+    text:         { html: 'Add your text here.', align: 'left', fullWidth: false },
+    image:        { url: '', alt: '', radius: 'md', maxWidth: 'full', fullWidth: false },
+    button:       { label: 'Click here', href: '/', variant: 'primary', align: 'left', fullWidth: false },
+    badge:        { text: 'Badge', color: '#60a5fa', align: 'left', fullWidth: false },
     spacer:       { height: 40, fullWidth: true },
     divider:      { fullWidth: true, color: '', thickness: 'md', span: 'full' },
+    card:         { icon: '⚡', title: 'Card title', body: 'Describe this feature or item here.', badgeText: '', badgeColor: '#60a5fa', bgColor: '', accentColor: '', align: 'left', fullWidth: false },
     mock_display: { fullWidth: false, eventName: 'Sunday Service', size: 'lg', align: 'left', people: DEFAULT_MOCK_PEOPLE.map(p => ({ ...p })) },
   }
   return { _id: crypto.randomUUID(), type, data: { ...(defaults[type] ?? {}) } }
@@ -119,16 +121,38 @@ function ElPreview({ el }) {
         : <div className={styles.prevImageEmpty}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>No image — click Edit to add one</span></div>
     case 'button':
       return (
-        <div className={el.data.variant === 'secondary' ? styles.prevBtnSec : styles.prevBtnPri}>
-          {el.data.label || 'Button'}
+        <div style={{ display: 'flex', justifyContent: ({ left: 'flex-start', center: 'center', right: 'flex-end' })[el.data.align] || 'flex-start' }}>
+          <div className={el.data.variant === 'secondary' ? styles.prevBtnSec : styles.prevBtnPri}>
+            {el.data.label || 'Button'}
+          </div>
         </div>
       )
     case 'badge':
       return (
-        <div className={styles.prevBadge} style={{ '--badge-color': el.data.color || '#60a5fa' }}>
-          {el.data.text || 'Badge'}
+        <div style={{ display: 'flex', justifyContent: ({ left: 'flex-start', center: 'center', right: 'flex-end' })[el.data.align] || 'flex-start' }}>
+          <div className={styles.prevBadge} style={{ '--badge-color': el.data.color || '#60a5fa' }}>
+            {el.data.text || 'Badge'}
+          </div>
         </div>
       )
+    case 'card': {
+      return (
+        <div className={styles.prevCard} style={{
+          background: el.data.bgColor || 'rgba(255,255,255,0.04)',
+          borderTopColor: el.data.accentColor || 'transparent',
+          textAlign: el.data.align || 'left',
+        }}>
+          {el.data.icon && <div className={styles.prevCardIcon}>{el.data.icon}</div>}
+          <div className={styles.prevCardTitle}>{el.data.title || 'Card title'}</div>
+          {el.data.body && <div className={styles.prevCardBody}>{el.data.body}</div>}
+          {el.data.badgeText && (
+            <div className={styles.prevBadge} style={{ '--badge-color': el.data.badgeColor || '#60a5fa', display: 'inline-flex', marginTop: 4 }}>
+              {el.data.badgeText}
+            </div>
+          )}
+        </div>
+      )
+    }
     case 'spacer':
       return (
         <div className={styles.prevSpacer} style={{ height: Math.min(el.data.height || 40, 56) }}>
@@ -281,6 +305,141 @@ function BgColorField({ value, onChange }) {
   )
 }
 
+// ── Image form (extracted to fix Rules of Hooks — can't use hooks inside switch) ──
+
+function ImageEditForm({ el, onChange, onUpload }) {
+  const u = (k, v) => onChange({ ...el.data, [k]: v })
+  const fileRef = useRef(null)
+  const [uploading, setUploading] = useState(false)
+  async function handleFile(e) {
+    const file = e.target.files[0]; if (!file) return
+    setUploading(true)
+    const url = await onUpload(file)
+    if (url) u('url', url)
+    setUploading(false); e.target.value = ''
+  }
+  return (
+    <div className={styles.editFormFields}>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Image URL</label>
+        <div className={styles.imageRow}>
+          <input className={styles.editInput} value={el.data.url || ''} onChange={e => u('url', e.target.value)} placeholder="https://…" />
+          <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()} disabled={uploading}>
+            {uploading ? '…' : 'Upload'}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+        </div>
+        {el.data.url && <img src={el.data.url} alt="" className={styles.imageThumb} />}
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Alt text</label>
+        <input className={styles.editInput} value={el.data.alt || ''} onChange={e => u('alt', e.target.value)} placeholder="Describe the image…" />
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Corner radius</label>
+        <div className={styles.toggleRow}>
+          {[['none','None'], ['sm','S'], ['md','M'], ['lg','L'], ['full','Circle']].map(([v, l]) => (
+            <button key={v} className={(el.data.radius || 'md') === v ? styles.toggleActive : styles.toggleBtn}
+              onClick={() => u('radius', v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Max width</label>
+        <div className={styles.toggleRow}>
+          {[['full','Full'], ['lg','Large'], ['md','Medium'], ['sm','Small']].map(([v, l]) => (
+            <button key={v} className={(el.data.maxWidth || 'full') === v ? styles.toggleActive : styles.toggleBtn}
+              onClick={() => u('maxWidth', v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
+    </div>
+  )
+}
+
+// ── Card form ────────────────────────────────────────────────────────────────
+
+function CardEditForm({ el, onChange }) {
+  const u = (k, v) => onChange({ ...el.data, [k]: v })
+  return (
+    <div className={styles.editFormFields}>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Icon (emoji)</label>
+        <input className={styles.editInput} value={el.data.icon || ''} onChange={e => u('icon', e.target.value)} placeholder="⚡ — leave blank to hide" />
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Title</label>
+        <input className={styles.editInput} value={el.data.title || ''} onChange={e => u('title', e.target.value)} placeholder="Card heading" />
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Body text</label>
+        <textarea className={styles.editTextarea} rows={3} value={el.data.body || ''} onChange={e => u('body', e.target.value)} placeholder="Description…" />
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Badge label (optional)</label>
+        <input className={styles.editInput} value={el.data.badgeText || ''} onChange={e => u('badgeText', e.target.value)} placeholder="Leave blank to hide" />
+      </div>
+      {el.data.badgeText && (
+        <div className={styles.editField}>
+          <label className={styles.editLabel}>Badge color</label>
+          <AccentColorField value={el.data.badgeColor || ''} onChange={v => u('badgeColor', v)} />
+        </div>
+      )}
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Text alignment</label>
+        <div className={styles.toggleRow}>
+          {[['left','Left'], ['center','Center'], ['right','Right']].map(([v, l]) => (
+            <button key={v} className={(el.data.align || 'left') === v ? styles.toggleActive : styles.toggleBtn}
+              onClick={() => u('align', v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Card background</label>
+        <BgColorField value={el.data.bgColor || ''} onChange={v => u('bgColor', v)} />
+      </div>
+      <div className={styles.editField}>
+        <label className={styles.editLabel}>Accent color (top border)</label>
+        <AccentColorField value={el.data.accentColor || ''} onChange={v => u('accentColor', v)} />
+      </div>
+      <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
+    </div>
+  )
+}
+
+// ── Delete confirm modal ──────────────────────────────────────────────────────
+
+function ConfirmModal({ message, onConfirm, onCancel }) {
+  return (
+    <div className={styles.modalOverlay} onClick={onCancel}>
+      <div className={styles.confirmBox} onClick={e => e.stopPropagation()}>
+        <p className={styles.confirmMsg}>{message}</p>
+        <div className={styles.confirmActions}>
+          <button className={styles.confirmCancel} onClick={onCancel}>Cancel</button>
+          <button className={styles.confirmDelete} onClick={() => { onConfirm(); onCancel() }}>Delete</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Element edit forms (switch-based, hooks-free) ─────────────────────────────
+
+function AlignField({ value, onChange }) {
+  return (
+    <div className={styles.editField}>
+      <label className={styles.editLabel}>Alignment</label>
+      <div className={styles.toggleRow}>
+        {[['left','Left'], ['center','Center'], ['right','Right']].map(([v, l]) => (
+          <button key={v} className={(value || 'left') === v ? styles.toggleActive : styles.toggleBtn}
+            onClick={() => onChange(v)}>{l}</button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function ElEditForm({ el, onChange, onUpload }) {
   const u = (k, v) => onChange({ ...el.data, [k]: v })
   switch (el.type) {
@@ -300,6 +459,7 @@ function ElEditForm({ el, onChange, onUpload }) {
             <label className={styles.editLabel}>Text</label>
             <textarea className={styles.editTextarea} rows={2} value={el.data.text || ''} onChange={e => u('text', e.target.value)} />
           </div>
+          <AlignField value={el.data.align} onChange={v => u('align', v)} />
           <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
         </div>
       )
@@ -310,40 +470,12 @@ function ElEditForm({ el, onChange, onUpload }) {
             <label className={styles.editLabel}>Content</label>
             <textarea className={styles.editTextarea} rows={5} value={el.data.html || ''} onChange={e => u('html', e.target.value)} placeholder="Text or HTML…" />
           </div>
+          <AlignField value={el.data.align} onChange={v => u('align', v)} />
           <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
         </div>
       )
-    case 'image': {
-      const fileRef = useRef(null)
-      const [uploading, setUploading] = useState(false)
-      async function handleFile(e) {
-        const file = e.target.files[0]; if (!file) return
-        setUploading(true)
-        const url = await onUpload(file)
-        if (url) u('url', url)
-        setUploading(false); e.target.value = ''
-      }
-      return (
-        <div className={styles.editFormFields}>
-          <div className={styles.editField}>
-            <label className={styles.editLabel}>Image URL</label>
-            <div className={styles.imageRow}>
-              <input className={styles.editInput} value={el.data.url || ''} onChange={e => u('url', e.target.value)} placeholder="https://…" />
-              <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()} disabled={uploading}>
-                {uploading ? '…' : 'Upload'}
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
-            </div>
-            {el.data.url && <img src={el.data.url} alt="" className={styles.imageThumb} />}
-          </div>
-          <div className={styles.editField}>
-            <label className={styles.editLabel}>Alt text</label>
-            <input className={styles.editInput} value={el.data.alt || ''} onChange={e => u('alt', e.target.value)} placeholder="Describe the image…" />
-          </div>
-          <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
-        </div>
-      )
-    }
+    case 'image':
+      return <ImageEditForm el={el} onChange={onChange} onUpload={onUpload} />
     case 'button':
       return (
         <div className={styles.editFormFields}>
@@ -364,6 +496,7 @@ function ElEditForm({ el, onChange, onUpload }) {
               ))}
             </div>
           </div>
+          <AlignField value={el.data.align} onChange={v => u('align', v)} />
           <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
         </div>
       )
@@ -378,6 +511,7 @@ function ElEditForm({ el, onChange, onUpload }) {
             <label className={styles.editLabel}>Color</label>
             <AccentColorField value={el.data.color || ''} onChange={v => u('color', v)} />
           </div>
+          <AlignField value={el.data.align} onChange={v => u('align', v)} />
           <FullWidthToggle value={el.data.fullWidth} onChange={v => u('fullWidth', v)} />
         </div>
       )
@@ -418,6 +552,8 @@ function ElEditForm({ el, onChange, onUpload }) {
           </div>
         </div>
       )
+    case 'card':
+      return <CardEditForm el={el} onChange={onChange} />
     case 'mock_display':
       return <MockDisplayEditForm data={el.data} onChange={onChange} onUpload={onUpload} />
     default:
@@ -598,6 +734,10 @@ function SectionSettingsModal({ section, onSave, onClose }) {
             <div className={styles.editField}>
               <label className={styles.editLabel}>Background</label>
               <BgColorField value={draft.bgColor || ''} onChange={v => u('bgColor', v)} />
+            </div>
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>Top accent line</label>
+              <AccentColorField value={draft.accentTop || ''} onChange={v => u('accentTop', v)} />
             </div>
             <div className={styles.editField}>
               <label className={styles.editLabel}>Section divider</label>
@@ -830,6 +970,7 @@ function SectionCanvas({ section, onUpdateSection, onBack, onUpload }) {
 // ── Section list view ─────────────────────────────────────────────────────────
 
 function SectionListView({ sections, onEdit, onDelete, onDuplicate, onAdd, onDragStart, onDragMove, onDragEnd, dragRef, sectionEls }) {
+  const [confirmIdx, setConfirmIdx] = useState(null)
   const drag = dragRef.current
   return (
     <div className={styles.sectionList}>
@@ -869,7 +1010,7 @@ function SectionListView({ sections, onEdit, onDelete, onDuplicate, onAdd, onDra
                 <button className={styles.dupBtn} onClick={() => onDuplicate(idx)} title="Duplicate">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
-                <button className={styles.delBtn} onClick={() => onDelete(idx)} title="Delete">
+                <button className={styles.delBtn} onClick={() => setConfirmIdx(idx)} title="Delete">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                 </button>
               </div>
@@ -887,6 +1028,13 @@ function SectionListView({ sections, onEdit, onDelete, onDuplicate, onAdd, onDra
           Add section
         </button>
       </div>
+      {confirmIdx !== null && (
+        <ConfirmModal
+          message={`Delete "${sections[confirmIdx]?.data?.label || 'Section'}"? This can't be undone.`}
+          onConfirm={() => onDelete(confirmIdx)}
+          onCancel={() => setConfirmIdx(null)}
+        />
+      )}
     </div>
   )
 }
