@@ -320,6 +320,9 @@ const db = {
     await pool.query(`ALTER TABLE service_types ADD COLUMN IF NOT EXISTS pco_team_ids TEXT`)
     await pool.query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS timezone TEXT`)
 
+    // Migrate: track which seed version was last applied to the landing page
+    await pool.query(`ALTER TABLE site_pages ADD COLUMN IF NOT EXISTS seed_version INTEGER NOT NULL DEFAULT 0`)
+
     // Migrate: replace global email uniqueness with per-org uniqueness
     await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`)
     await pool.query(`
@@ -363,21 +366,32 @@ function generateAccessCode() {
   return Array.from(bytes).map(b => ACCESS_CODE_CHARS[b % ACCESS_CODE_CHARS.length]).join('')
 }
 
+const LANDING_SEED_VERSION = 3
+
 async function seedLandingIfEmpty(pool) {
   const { LANDING_SEED_SECTIONS } = require('./data/landingSeed')
   let pageId
 
-  const existing = await pool.query("SELECT id FROM site_pages WHERE slug = 'landing'")
+  const existing = await pool.query("SELECT id, seed_version FROM site_pages WHERE slug = 'landing'")
   if (existing.rows.length > 0) {
     pageId = existing.rows[0].id
-    // If any block uses the old specific-type format (not 'section'), re-seed with v2 format
+    const storedVersion = existing.rows[0].seed_version || 0
+
+    // Check for old pre-element format (type != 'section')
     const oldFormat = await pool.query(
       "SELECT 1 FROM site_blocks WHERE page_id = $1 AND type != 'section' LIMIT 1",
       [pageId]
     )
-    if (oldFormat.rows.length === 0) return // Already v2 format or empty
+    const isOldFormat = oldFormat.rows.length > 0
+
+    if (!isOldFormat && storedVersion >= LANDING_SEED_VERSION) return // Already current
+
     await pool.query('DELETE FROM site_blocks WHERE page_id = $1', [pageId])
-    console.log('[beacon] Migrating landing page to element-based format (v2)')
+    if (isOldFormat) {
+      console.log('[beacon] Migrating landing page to element-based format')
+    } else {
+      console.log(`[beacon] Updating landing page seed to v${LANDING_SEED_VERSION}`)
+    }
   } else {
     const newPage = await pool.query("INSERT INTO site_pages (slug, title) VALUES ('landing', 'Landing Page') RETURNING id")
     pageId = newPage.rows[0].id
@@ -390,7 +404,8 @@ async function seedLandingIfEmpty(pool) {
       [pageId, i, s.type, JSON.stringify(s.data)]
     )
   }
-  console.log(`[beacon] Seeded landing page with ${LANDING_SEED_SECTIONS.length} sections`)
+  await pool.query('UPDATE site_pages SET seed_version = $1 WHERE id = $2', [LANDING_SEED_VERSION, pageId])
+  console.log(`[beacon] Seeded landing page with ${LANDING_SEED_SECTIONS.length} sections (v${LANDING_SEED_VERSION})`)
 }
 
 async function seedDocsIfEmpty(pool) {

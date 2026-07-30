@@ -1,4 +1,4 @@
-// Landing page seed — element-based sections (v2)
+// Landing page seed — element-based sections (v3)
 const LANDING_SEED_SECTIONS = [
   {
     type: 'section',
@@ -30,20 +30,33 @@ const LANDING_SEED_SECTIONS = [
       padding: 'lg',
       columns: 3,
       elements: [
-        { _id: 'f-title', type: 'heading', data: { level: 2, text: 'Everything your team needs on screen', fullWidth: true } },
-        { _id: 'f-sub',   type: 'text',    data: { html: 'Built specifically for worship teams. No extra apps, no laminated paper lists.', fullWidth: true } },
-        { _id: 'f-1-h', type: 'heading', data: { level: 3, text: 'Any screen, any device',   fullWidth: false } },
-        { _id: 'f-1-t', type: 'text',    data: { html: 'Each display is a permanent browser URL. Point a TV, tablet, or kiosk at it and it auto-refreshes every 30 seconds.', fullWidth: false } },
-        { _id: 'f-2-h', type: 'heading', data: { level: 3, text: 'Smart automation',          fullWidth: false } },
-        { _id: 'f-2-t', type: 'text',    data: { html: "Write rules once. Beacon auto-assigns mic and IEM labels based on each person's name or position — no manual work each service.", fullWidth: false } },
-        { _id: 'f-3-h', type: 'heading', data: { level: 3, text: 'Templates & themes',        fullWidth: false } },
-        { _id: 'f-3-t', type: 'text',    data: { html: 'Custom grid layouts with per-slot modes, label pins, and 7 colour themes. Full control over what every screen shows.', fullWidth: false } },
-        { _id: 'f-4-h', type: 'heading', data: { level: 3, text: 'Scheduled push',             fullWidth: false } },
-        { _id: 'f-4-t', type: 'text',    data: { html: 'Set a schedule and displays update themselves before you arrive. Saturday at 6 PM, Sunday morning — it just runs.', fullWidth: false } },
-        { _id: 'f-5-h', type: 'heading', data: { level: 3, text: 'Manual service teams',       fullWidth: false } },
-        { _id: 'f-5-t', type: 'text',    data: { html: 'Build your roster in Beacon and assign each person a position. No external integrations needed.', fullWidth: false } },
-        { _id: 'f-6-h', type: 'heading', data: { level: 3, text: 'Self-hosted',                fullWidth: false } },
-        { _id: 'f-6-t', type: 'text',    data: { html: 'Your data stays on your server. Runs on any machine with Node.js. No subscription fees, no vendor lock-in.', fullWidth: false } },
+        { _id: 'f-title', type: 'heading', data: { level: 2, text: 'Everything your team needs on screen', fullWidth: true, align: 'center' } },
+        { _id: 'f-sub',   type: 'text',    data: { html: 'Built specifically for worship teams. No extra apps, no laminated paper lists.', fullWidth: true, align: 'center' } },
+        { _id: 'f-sp',    type: 'spacer',  data: { height: 8, fullWidth: true } },
+        {
+          _id: 'f-1', type: 'card',
+          data: { icon: '📺', title: 'Any screen, any device', body: 'Each display is a permanent browser URL. Point a TV, tablet, or kiosk at it and it auto-refreshes every 30 seconds.', accentColor: '#60a5fa', align: 'left', fullWidth: false },
+        },
+        {
+          _id: 'f-2', type: 'card',
+          data: { icon: '⚡', title: 'Smart automation', body: 'Write rules once. Beacon auto-assigns mic and IEM labels based on each person\'s name or position — no manual work each service.', accentColor: '#f59e0b', align: 'left', fullWidth: false },
+        },
+        {
+          _id: 'f-3', type: 'card',
+          data: { icon: '🎨', title: 'Templates & themes', body: 'Custom grid layouts with per-slot modes, label pins, and 7 colour themes. Full control over what every screen shows.', accentColor: '#a78bfa', align: 'left', fullWidth: false },
+        },
+        {
+          _id: 'f-4', type: 'card',
+          data: { icon: '🗓️', title: 'Scheduled push', body: 'Set a schedule and displays update themselves before you arrive. Saturday at 6 PM, Sunday morning — it just runs.', accentColor: '#34d399', align: 'left', fullWidth: false },
+        },
+        {
+          _id: 'f-5', type: 'card',
+          data: { icon: '👥', title: 'Manual service teams', body: 'Build your roster in Beacon and assign each person a position. No external integrations needed.', accentColor: '#f97316', align: 'left', fullWidth: false },
+        },
+        {
+          _id: 'f-6', type: 'card',
+          data: { icon: '🔗', title: 'Planning Center sync', body: 'Connect to Planning Center and pull your team roster automatically. Assignments flow from your service planner to the screen.', accentColor: '#ec4899', align: 'left', fullWidth: false },
+        },
       ],
     },
   },
@@ -55,14 +68,21 @@ const LANDING_SEED_SECTIONS = [
       padding: 'lg',
       columns: 3,
       elements: [
-        { _id: 's-title', type: 'heading', data: { level: 2, text: 'Up and running in minutes', fullWidth: true } },
-        { _id: 's-sub',   type: 'text',    data: { html: 'Three steps and your displays are live.', fullWidth: true } },
-        { _id: 's-1-h', type: 'heading', data: { level: 3, text: '01 — Set up your team', fullWidth: false } },
-        { _id: 's-1-t', type: 'text',    data: { html: 'Add your people, define your mic and IEM inventory, and write automation rules. Do it once, use it every week.', fullWidth: false } },
-        { _id: 's-2-h', type: 'heading', data: { level: 3, text: '02 — Create display screens', fullWidth: false } },
-        { _id: 's-2-t', type: 'text',    data: { html: 'Each screen gets a permanent URL. Point your TVs at it and assign a template to control the layout and content.', fullWidth: false } },
-        { _id: 's-3-h', type: 'heading', data: { level: 3, text: '03 — Set a schedule', fullWidth: false } },
-        { _id: 's-3-t', type: 'text',    data: { html: 'Pick a day and time. Beacon pushes assignments to your screens automatically — or hit Push any time for instant updates.', fullWidth: false } },
+        { _id: 's-title', type: 'heading', data: { level: 2, text: 'Up and running in minutes', fullWidth: true, align: 'center' } },
+        { _id: 's-sub',   type: 'text',    data: { html: 'Three steps and your displays are live.', fullWidth: true, align: 'center' } },
+        { _id: 's-sp',    type: 'spacer',  data: { height: 8, fullWidth: true } },
+        {
+          _id: 's-1', type: 'card',
+          data: { icon: '01', title: 'Set up your team', body: 'Add your people, define your mic and IEM inventory, and write automation rules. Do it once, use it every week.', accentColor: '#60a5fa', align: 'left', fullWidth: false },
+        },
+        {
+          _id: 's-2', type: 'card',
+          data: { icon: '02', title: 'Create display screens', body: 'Each screen gets a permanent URL. Point your TVs at it and assign a template to control the layout and content.', accentColor: '#60a5fa', align: 'left', fullWidth: false },
+        },
+        {
+          _id: 's-3', type: 'card',
+          data: { icon: '03', title: 'Set a schedule', body: 'Pick a day and time. Beacon pushes assignments to your screens automatically — or hit Push any time for instant updates.', accentColor: '#60a5fa', align: 'left', fullWidth: false },
+        },
       ],
     },
   },
