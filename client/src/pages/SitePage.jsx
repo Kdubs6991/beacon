@@ -309,11 +309,15 @@ export default function SitePage() {
             <Link to="/display" className={styles.footerLink}>Display login</Link>
             <Link to={signInHref} className={styles.footerLink}>Studio</Link>
             <Link to="/contact" className={styles.footerLink}>Contact</Link>
+          </div>
+        </div>
+        {footerLinks.length > 0 && (
+          <div className={styles.footerCustomRow}>
             {footerLinks.map(p => (
               <Link key={p.slug} to={`/${p.slug}`} className={styles.footerLink}>{p.title}</Link>
             ))}
           </div>
-        </div>
+        )}
         <div className={styles.footerMeta}>
           <Link to="/admin" className={styles.footerMetaLink}>Site admin</Link>
         </div>

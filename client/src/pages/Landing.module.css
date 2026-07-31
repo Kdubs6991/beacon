@@ -639,6 +639,16 @@
 }
 .footerLink:hover { color: var(--text-sec); }
 
+.footerCustomRow {
+  max-width: 1120px;
+  margin: 12px auto 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
 .footerMeta {
   max-width: 1120px;
   margin: 12px auto 0;
