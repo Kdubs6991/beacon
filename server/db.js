@@ -323,6 +323,10 @@ const db = {
     // Migrate: track which seed version was last applied to the landing page
     await pool.query(`ALTER TABLE site_pages ADD COLUMN IF NOT EXISTS seed_version INTEGER NOT NULL DEFAULT 0`)
 
+    // Migrate: per-page navigation placement flags
+    await pool.query(`ALTER TABLE site_pages ADD COLUMN IF NOT EXISTS show_in_nav BOOLEAN NOT NULL DEFAULT true`)
+    await pool.query(`ALTER TABLE site_pages ADD COLUMN IF NOT EXISTS show_in_footer BOOLEAN NOT NULL DEFAULT true`)
+
     // Migrate: replace global email uniqueness with per-org uniqueness
     await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`)
     await pool.query(`
@@ -357,6 +361,7 @@ const db = {
 
     await seedDocsIfEmpty(pool)
     await seedLandingIfEmpty(pool)
+    await seedMeetTheDevIfMissing(pool)
   },
 }
 
@@ -406,6 +411,24 @@ async function seedLandingIfEmpty(pool) {
   }
   await pool.query('UPDATE site_pages SET seed_version = $1 WHERE id = $2', [LANDING_SEED_VERSION, pageId])
   console.log(`[beacon] Seeded landing page with ${LANDING_SEED_SECTIONS.length} sections (v${LANDING_SEED_VERSION})`)
+}
+
+async function seedMeetTheDevIfMissing(pool) {
+  const existing = await pool.query("SELECT id FROM site_pages WHERE slug = 'meet-the-developer'")
+  if (existing.rows.length > 0) return
+  const { MEET_THE_DEV_SECTIONS } = require('./data/meetTheDevSeed')
+  const page = await pool.query(
+    "INSERT INTO site_pages (slug, title, show_in_nav, show_in_footer) VALUES ('meet-the-developer', 'Meet the Developer', false, true) RETURNING id"
+  )
+  const pageId = page.rows[0].id
+  for (let i = 0; i < MEET_THE_DEV_SECTIONS.length; i++) {
+    const s = MEET_THE_DEV_SECTIONS[i]
+    await pool.query(
+      'INSERT INTO site_blocks (page_id, sort_order, type, data) VALUES ($1, $2, $3, $4)',
+      [pageId, i, s.type, JSON.stringify(s.data)]
+    )
+  }
+  console.log('[beacon] Seeded Meet the Developer page')
 }
 
 async function seedDocsIfEmpty(pool) {

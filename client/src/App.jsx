@@ -29,7 +29,8 @@ import Integrations from './pages/Admin/Integrations'
 import Profile from './pages/Admin/Profile'
 import Organization from './pages/Admin/Organization'
 
-import SiteAdmin, { SiteAdminDocs, SiteAdminLanding, SiteAdminPages } from './pages/SiteAdmin/SiteAdmin'
+import SiteAdmin, { SiteAdminDocs, SiteAdminLanding, SiteAdminPages, SiteAdminPageEditor } from './pages/SiteAdmin/SiteAdmin'
+import SitePage from './pages/SitePage'
 
 function StudioRoute({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
@@ -75,9 +76,11 @@ export default function App() {
         <Route path="/admin/docs" element={<SiteAdminDocs />} />
         <Route path="/admin/landing" element={<SiteAdminLanding />} />
         <Route path="/admin/pages" element={<SiteAdminPages />} />
+        <Route path="/admin/pages/:slug" element={<SiteAdminPageEditor />} />
 
         <Route path="/" element={<Landing />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/:slug" element={<SitePage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>

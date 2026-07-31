@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import SiteAdminLogin from './SiteAdminLogin'
 import _SiteAdminDocs from './SiteAdminDocs'
 import _SiteAdminLanding from './SiteAdminLanding'
+import _SiteAdminPages from './SiteAdminPages'
 import styles from './SiteAdmin.module.css'
 
 async function siteApi(path, opts = {}) {
@@ -161,5 +162,17 @@ export function SiteAdminLanding() {
 }
 
 export function SiteAdminPages() {
-  return <StubPage title="Pages" desc="Create, edit, and delete custom site pages. Pages will appear in site navigation automatically." />
+  return <_SiteAdminPages />
+}
+
+export function SiteAdminPageEditor() {
+  const { slug } = useParams()
+  return (
+    <_SiteAdminLanding
+      slug={slug}
+      pageTitle="Page Editor"
+      backPath="/admin/pages"
+      previewPath={`/${slug}`}
+    />
+  )
 }

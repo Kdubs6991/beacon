@@ -1041,7 +1041,7 @@ function SectionListView({ sections, onEdit, onDelete, onDuplicate, onAdd, onDra
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function SiteAdminLanding() {
+export default function SiteAdminLanding({ slug = 'landing', pageTitle = 'Landing Page Editor', backPath = '/admin', previewPath = '/' }) {
   const [authenticated, setAuthenticated] = useState(null)
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1060,27 +1060,27 @@ export default function SiteAdminLanding() {
 
   useEffect(() => {
     if (!authenticated) return
-    fetch('/api/site-admin/pages/landing/blocks', { credentials: 'include' })
+    fetch(`/api/site-admin/pages/${slug}/blocks`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         setSections((d.blocks || []).map(b => ({ ...b, _id: b.id ? String(b.id) : crypto.randomUUID() })))
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [authenticated])
+  }, [authenticated, slug])
 
   const handleSave = useCallback(async (secs) => {
     const toSave = secs ?? sections
     setSaving(true); setSaveOk(false)
     try {
-      const res = await fetch('/api/site-admin/pages/landing/blocks', {
+      const res = await fetch(`/api/site-admin/pages/${slug}/blocks`, {
         method: 'PUT', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ blocks: toSave.map(s => ({ type: s.type, data: s.data })) }),
       })
       if (res.ok) { setSaveOk(true); setTimeout(() => setSaveOk(false), 2500) }
     } finally { setSaving(false) }
-  }, [sections])
+  }, [sections, slug])
 
   useEffect(() => {
     function onKey(e) {
@@ -1170,10 +1170,10 @@ export default function SiteAdminLanding() {
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
-        <Link to="/admin" className={styles.backLink}>← Landing</Link>
-        <span className={styles.topBarTitle}>Landing Page Editor</span>
+        <Link to={backPath} className={styles.backLink}>← Back</Link>
+        <span className={styles.topBarTitle}>{pageTitle}</span>
         <div className={styles.topBarRight}>
-          <a href="/" target="_blank" rel="noopener noreferrer" className={styles.previewLink}>Preview →</a>
+          <a href={previewPath} target="_blank" rel="noopener noreferrer" className={styles.previewLink}>Preview →</a>
           <button
             className={`${styles.saveBtn}${saving ? ' ' + styles.saveBtnSaving : ''}${saveOk ? ' ' + styles.saveBtnOk : ''}`}
             onClick={() => handleSave()} disabled={saving}
