@@ -174,7 +174,6 @@ async function runSchedule(scheduleId) {
           else if (rule.action_type === 'iem' && !iem) iem = resolveLabel(rule.action_value, 'iem', labels, usedIemIds)
         }
 
-        console.log(`${stamp}   include "${name}" (${teamPosition || 'no position'}) → mic: ${mic?.name ?? 'none'}, iem: ${iem?.name ?? 'none'}`)
         assignments.push({
           slot: assignments.length, personId: row.person_id,
           personName: row.person_name, personPhoto: row.person_photo,
@@ -193,7 +192,6 @@ async function runSchedule(scheduleId) {
             `, [screenId, a.personId, a.personName, a.personPhoto, a.slot, a.position, a.micLabel, a.iemLabel, service_type_name, today])
           }
         })
-        console.log(`${stamp}   pushed ${assignments.length} manual musicians to screen ${screenId}`)
       }
 
       await db.execute('UPDATE schedules SET last_run = NOW() WHERE id = ?', [scheduleId])
@@ -284,10 +282,7 @@ async function runSchedule(scheduleId) {
         else if (rule.action_type === 'iem' && !iem) iem = resolveLabel(rule.action_value, 'iem', labels, usedIemIds)
       }
 
-      if (!matched) {
-        console.log(`${stamp}   skip "${name}" (${teamPosition}) — no rule matched`)
-        continue
-      }
+      if (!matched) continue
 
       const pcoPId   = member.relationships?.person?.data?.id ?? null
       let personId   = null
@@ -310,7 +305,6 @@ async function runSchedule(scheduleId) {
         }
       }
 
-      console.log(`${stamp}   include "${personName}" (${teamPosition}) → mic: ${mic?.name ?? 'none'}, iem: ${iem?.name ?? 'none'}`)
       assignments.push({
         slot: nextSlot++, personId, personName, personPhoto,
         position: teamPosition, micLabel: mic?.name ?? null, iemLabel: iem?.name ?? null,
@@ -328,7 +322,6 @@ async function runSchedule(scheduleId) {
           `, [screenId, a.personId, a.personName, a.personPhoto, a.slot, a.position, a.micLabel, a.iemLabel, service_type_name, today])
         }
       })
-      console.log(`${stamp}   pushed ${assignments.length} musicians to screen ${screenId}`)
     }
 
     await db.execute('UPDATE schedules SET last_run = NOW() WHERE id = ?', [scheduleId])

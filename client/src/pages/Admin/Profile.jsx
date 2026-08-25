@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import AdminLayout from './_Layout'
 import styles from './Profile.module.css'
@@ -233,39 +233,6 @@ function AppearanceSection() {
   )
 }
 
-function ConnectionsSection({ isAdmin }) {
-  const [pcoConnected, setPcoConnected] = useState(null)
-
-  useEffect(() => {
-    fetch('/api/pco/status', { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => setPcoConnected(!!data.connected))
-      .catch(() => setPcoConnected(false))
-  }, [])
-
-  return (
-    <div id="connections" className={styles.section}>
-      <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>Connections</h2>
-        {isAdmin && (
-          <Link to="/studio/integrations" className={styles.editLink}>Manage →</Link>
-        )}
-      </div>
-      <div className={styles.connectionRow}>
-        <span className={`${styles.connDot} ${pcoConnected ? styles.connDotOn : styles.connDotOff}`} />
-        <div className={styles.connBody}>
-          <span className={styles.connName}>Planning Center</span>
-          <span className={styles.connStatus}>
-            {pcoConnected === null ? 'Checking…' : pcoConnected ? 'Connected' : 'Not connected'}
-          </span>
-        </div>
-        {!pcoConnected && pcoConnected !== null && isAdmin && (
-          <Link to="/studio/integrations" className={styles.connAction}>Connect →</Link>
-        )}
-      </div>
-    </div>
-  )
-}
 
 function OrgRow({ label, value, mono }) {
   return (
