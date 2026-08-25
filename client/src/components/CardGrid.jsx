@@ -88,7 +88,13 @@ function TemplateGrid({ musicians, template }) {
 
 // ── Flat auto-fill grid (preset layouts) ─────────────────────────────────────
 
-export default function CardGrid({ musicians, template }) {
+const CARD_MIN = {
+  'grid-standard': '310px',
+  'grid-compact':  '175px',
+  'cards-large':   '520px',
+}
+
+export default function CardGrid({ musicians, template, layout }) {
   if (!musicians || musicians.length === 0) {
     return (
       <div className={styles.empty}>
@@ -101,8 +107,26 @@ export default function CardGrid({ musicians, template }) {
     return <TemplateGrid musicians={musicians} template={template} />
   }
 
+  if (layout === 'list') {
+    return (
+      <div className={styles.gridList}>
+        {musicians.map(m => (
+          <MusicianCard
+            key={m.id}
+            name={m.name}
+            position={m.position}
+            photo={m.photo}
+            mic={m.mic}
+            iem={m.iem}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  const cardMin = CARD_MIN[layout] || '230px'
   return (
-    <div className={styles.grid}>
+    <div className={styles.grid} style={{ '--card-min': cardMin }}>
       {musicians.map(m => (
         <MusicianCard
           key={m.id}

@@ -82,7 +82,7 @@ const DOCS_SEED_BLOCKS = [
     'Automation rules run to assign mic and IEM labels.',
     'Assignments are sent to the screens configured in that service\'s schedule. If no schedule exists, it pushes to all screens.',
   ] } },
-  { type: 'paragraph', data: { html: 'The result shows inline: <em>"✓ N musicians pushed"</em>, a warning if no musicians were found, or an error message (e.g., if PCO isn\'t connected). This is the fastest way to update displays when your roster changes mid-week or you want to test without setting up a schedule.' } },
+  { type: 'paragraph', data: { html: 'The result shows inline: <em>"✓ N people pushed"</em>, a warning if no people were found, or an error message (e.g., if PCO isn\'t connected). This is the fastest way to update displays when your roster changes mid-week or you want to test without setting up a schedule.' } },
 
   { type: 'heading', data: { level: 2, text: 'Recent Activity Card', id: 'dashboard-activity' } },
   { type: 'paragraph', data: { html: 'Shows which screens were most recently updated, sorted newest first. The time shown (e.g. <em>"3m ago"</em>, <em>"2h ago"</em>, <em>"1d ago"</em>) reflects when musicians were last pushed to that screen.' } },
@@ -199,7 +199,7 @@ const DOCS_SEED_BLOCKS = [
   ] } },
 
   { type: 'paragraph', data: { html: '<strong>PCO push behavior:</strong> The Push button shows a plan picker — you can push today\'s plan or choose any upcoming plan by date. Schedules always fire on today\'s plan automatically.' } },
-  { type: 'paragraph', data: { html: 'Team members with a "Declined" status in PCO are skipped. Only confirmed team members are included.' } },
+  { type: 'paragraph', data: { html: 'Team members with a "Declined" status in PCO are skipped. Confirmed and Unconfirmed members are both included.' } },
   { type: 'callout', data: { variant: 'info', html: 'PCO people are matched to Beacon people by their PCO person ID. If a team member is in your Beacon roster (imported via Import from PCO on the People page), their Beacon photo and name overrides are used instead of the PCO photo. If they\'re not yet in Beacon, their PCO name and thumbnail photo are used directly.' } },
 
   { type: 'heading', data: { level: 2, text: 'Manual Mode', id: 'service-manual-mode' } },
@@ -224,7 +224,7 @@ const DOCS_SEED_BLOCKS = [
   ] } },
   { type: 'paragraph', data: { html: '<strong>Example:</strong> Saturday at 6:00 PM — loads Sunday\'s team so displays are ready before anyone arrives.' } },
   { type: 'paragraph', data: { html: 'You can trigger a schedule manually any time by clicking <strong>Run now</strong> — useful for testing or mid-week changes.' } },
-  { type: 'callout', data: { variant: 'info', html: 'Schedules only push to <strong>live screens</strong> — screens that are currently open in a browser. If a screen isn\'t live when the schedule fires, it will pick up the new assignments next time it polls (every 30 seconds).' } },
+  { type: 'callout', data: { variant: 'info', html: 'Schedules only push to <strong>live screens</strong> — screens that are currently open in a browser (heartbeat within 90 seconds). If none of the target screens are live when the schedule fires, the push is skipped entirely. To ensure a screen gets the latest assignments, keep it open in a browser or use the <strong>Run now</strong> button after the screen is live.' } },
   { type: 'spacer', data: { size: 'sm' } },
 
   // ── Templates ────────────────────────────────────────────────────────────────
@@ -282,7 +282,7 @@ const DOCS_SEED_BLOCKS = [
 
   { type: 'heading', data: { level: 2, text: 'Display URL', id: 'display-url' } },
   { type: 'paragraph', data: { html: 'Every screen gets a unique URL like:' } },
-  { type: 'code', data: { text: 'http://your-domain.com/display/abc123def456' } },
+  { type: 'code', data: { text: 'http://your-domain.com/display/a1b2c3d4e5f6a7b8' } },
   { type: 'paragraph', data: { html: 'Point any browser at this URL and it will show the card grid for that screen, auto-refreshing every 30 seconds to pick up new assignments. The URL is permanent — it doesn\'t change when you update assignments or rename the screen.' } },
   { type: 'paragraph', data: { html: 'For a TV, use your browser\'s kiosk/fullscreen mode. On Chrome: <code>--kiosk</code> flag. On a Raspberry Pi you can set Chromium to auto-launch in kiosk mode at startup.' } },
 
@@ -301,7 +301,7 @@ const DOCS_SEED_BLOCKS = [
     '<strong>Standard Grid</strong> — 5 portrait cards per row. Works for most team sizes.',
     '<strong>Compact Grid</strong> — 7 thinner cards per row. Fits larger teams on one screen.',
     '<strong>Large Cards</strong> — 3 wider cards per row. Best for smaller teams or high-visibility screens.',
-    '<strong>List</strong> — Horizontal rows with a small avatar and name. Maximizes the number of people visible.',
+    '<strong>List</strong> — Single-column stacked rows. Best when you want each person to have maximum screen space.',
   ] } },
   { type: 'paragraph', data: { html: 'If you\'ve created <strong>custom templates</strong> on the Templates page, they appear in the layout picker below the presets. Custom templates give you full control over slot positions, per-slot label defaults, and per-slot display modes. See the <a href="/docs#templates">Templates</a> section for details.' } },
 
@@ -444,7 +444,7 @@ const DOCS_SEED_BLOCKS = [
     '<strong>Account</strong> — change your display name or email address. Your current role (Admin or Team Member) is shown as a badge. Changes take effect immediately.',
     '<strong>Security</strong> — change your password. Requires your current password first. New password must be at least 8 characters. If you\'ve forgotten your current password, use the <strong>Forgot password?</strong> link on the sign-in page — a reset link will be emailed to you.',
     '<strong>Appearance</strong> — switch between <em>Dark</em> and <em>Light</em> theme. Preference is stored in the browser and applies across the whole Studio.',
-    '<strong>Connections</strong> — shows whether Planning Center is connected. Admins see a <em>Manage →</em> link to the Integrations page and a <em>Connect →</em> link if PCO is disconnected. Team members see the status only.',
+    '<strong>Dashboard</strong> — drag to reorder your Dashboard cards and toggle card visibility. Settings are saved to your account and persist across devices.',
     '<strong>Organization</strong> — a read-only summary of your organization\'s name, slug, timezone, and address. Admins see an <em>Edit settings →</em> link to the full Organization page.',
   ] } },
   { type: 'paragraph', data: { html: 'The <strong>Sign out</strong> button is at the bottom of the Settings page (and also available via the icon next to your name in the sidebar).' } },
@@ -487,8 +487,8 @@ const DOCS_SEED_BLOCKS = [
   { type: 'heading', data: { level: 2, text: 'Staying Up to Date', id: 'hosting-updates' } },
   { type: 'paragraph', data: { html: 'Beacon does not auto-update. New versions are published to the <a href="https://github.com/Kdubs6991/beacon" target="_blank" rel="noopener noreferrer">GitHub repository</a> and you pull them manually when you\'re ready.' } },
   { type: 'paragraph', data: { html: '<strong>Recommended: check for updates once a month.</strong> To update:' } },
-  { type: 'code', data: { text: 'git pull\nnpm run build\nnpm start' } },
-  { type: 'paragraph', data: { html: 'The <code>git pull</code> fetches the latest code, <code>npm run build</code> rebuilds the frontend with any changes, and <code>npm start</code> restarts the server. Your database and settings are not affected — they live in <code>server/beacon.db</code> which is never touched by a pull.' } },
+  { type: 'code', data: { text: 'git pull\nnpm run setup\nnpm start' } },
+  { type: 'paragraph', data: { html: 'The <code>git pull</code> fetches the latest code, <code>npm run setup</code> installs any new dependencies and rebuilds the frontend, and <code>npm start</code> restarts the server. Your database and settings are not affected — they live in <code>server/beacon.db</code> which is never touched by a pull.' } },
   { type: 'callout', data: { variant: 'tip', html: 'To get notified automatically: go to the <a href="https://github.com/Kdubs6991/beacon" target="_blank" rel="noopener noreferrer">GitHub repository</a>, click <strong>Watch → Custom → Releases</strong>. GitHub will email you whenever a new version is published.' } },
 ]
 

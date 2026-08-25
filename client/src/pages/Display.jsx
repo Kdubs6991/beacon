@@ -177,7 +177,7 @@ function DisplayView({ screenToken }) {
         </div>
       </header>
       <main className={`${styles.main} ${data.template ? styles.mainTemplate : ''}`}>
-        <CardGrid musicians={data.musicians} template={data.template} />
+        <CardGrid musicians={data.musicians} template={data.template} layout={data.screen?.layout} />
       </main>
       <button
         className={`${styles.exitBtn} ${exitVisible ? styles.exitBtnVisible : ''}`}
